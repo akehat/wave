@@ -89,7 +89,6 @@
     
 
  @component('components.sidenav')
-     
  @endcomponent
 
       <main class="main-content border-radius-lg ">
