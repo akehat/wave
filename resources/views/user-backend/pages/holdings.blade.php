@@ -40,10 +40,10 @@
 </head>
 
 <body class="g-sidenav-show  bg-gray-200">
-  @component('components.sidenav',["active"=>"tables"])
+  @component('components.sidenav',["active"=>"holdings"])
   @endcomponent
   <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
-    @component('components.navbar',["active"=>"signup"])
+    @component('components.navbar',["active"=>"holdings"])
         @endcomponent
     <div class="container-fluid py-4">
       <div class="row">

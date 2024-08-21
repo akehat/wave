@@ -23,14 +23,14 @@ class TestGearmanCommand extends Command
         $client->addServer('localhost', 4730);
 
         // Load environment variables
-        $tradierToken = env('TRADIER', '');
+        $tradierToken = env('TRADIER', 'SANDBOXBYLlMdC5Y1ZtGMjFEv341FHpdPAu');
 
         // Define the test command with environment variables
         $testCommand = [
             'env' => [
                 'TRADIER' => $tradierToken,
             ],
-            'args' => ['BUY', '1', 'AAPL', 'tradier', 'false']  // Example command to buy 1 share of AAPL using Tradier
+            'args' => ['HOLDINGS', 'tradier', 'false']  // Example command to buy 1 share of AAPL using Tradier
         ];
 
         // JSON encode the command

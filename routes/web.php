@@ -23,7 +23,16 @@ Auth::routes();
 Route::group(['prefix' => 'admin'], function () {
     Voyager::routes();
 });
-Route::get('testbackend', [UserBackendController::class, 'test'])->name('test');
-Route::get('pages/{page}', [UserBackendController::class, 'page'])->name('pages');
+Route::group(['middleware' => 'auth'], function(){
+    Route::get('portal', [UserBackendController::class, 'portal'])->name('user-backend.index');
+    Route::get('contact', [UserBackendController::class, 'contact'])->name('contact');
+    Route::get('howto', [UserBackendController::class, 'howto'])->name('howto');
+    Route::get('menu', [UserBackendController::class, 'menu'])->name('menu');
+    Route::get('site', [UserBackendController::class, 'site'])->name('site');
+    Route::get('general', [UserBackendController::class, 'general'])->name('general');
+    Route::get('pages/{page}', [UserBackendController::class, 'page'])->name('pages');
+    Route::post('save_brokers', [UserBackendController::class, 'save_brokers'])->name('save_brokers');
+});
+
 // Wave routes
 Wave::routes();
