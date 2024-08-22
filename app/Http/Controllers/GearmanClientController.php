@@ -57,29 +57,27 @@ class GearmanClientController extends Controller
             'VANGUARD' => $vanguard_username && $vanguard_password ? implode(':', array_filter([$vanguard_username, $vanguard_password, $vanguard_phone_last_four, $vanguard_debug])) : null,
             'WEBULL' => $webull_username && $webull_password ? implode(':', array_filter([$webull_username, $webull_password, $webull_did, $webull_trading_pin])) : null,
         ];
-    
+
         // Filter out any null values
         $envArray = array_filter($envArray, function ($value) {
             return !is_null($value);
         });
-    
+
         return $envArray;
     }
     /**
      * Static function to generate a command string based on the given parameters.
-     * 
-     * @param string $prefix The prefix for the command (e.g., !rsa or python autoRSA.py)
+     *
      * @param string $action The action to perform ("buy", "sell", "holdings", etc.)
      * @param string|int $amount The amount of stocks to buy or sell (can be null for some actions like "holdings")
      * @param string $ticker The stock ticker(s) to buy or sell, comma-separated with no spaces (e.g., "AAPL,GOOG")
      * @param string $accounts The brokerages to run the command in, comma-separated with no spaces (e.g., "robinhood,schwab,all")
      * @param string $not_accounts Brokerages to exclude, comma-separated with no spaces, prefixed with "not" (e.g., "not schwab,vanguard")
      * @param string|bool $dry Whether to run in dry mode (true/false, or "dry" for true)
-     * 
+     *
      * @return string The generated command string
      */
     public static function generateCommand(
-        $prefix,
         $action,
         $amount = null,
         $ticker = null,
@@ -87,42 +85,43 @@ class GearmanClientController extends Controller
         $not_accounts = null,
         $dry = true
     ) {
-        // Start building the command string
-        $command = $prefix . ' ' . $action;
+        // Add the prefix and action to the command array
+        $command[] = $action;
 
-        // Append amount and ticker if provided
+        // Add amount and ticker if provided
         if ($amount !== null) {
-            $command .= ' ' . $amount;
+            $command[] = $amount;
         }
 
         if ($ticker !== null) {
-            $command .= ' ' . $ticker;
+            $command[] = $ticker;
         }
 
-        // Append accounts if provided
+        // Add accounts if provided
         if ($accounts !== null) {
-            $command .= ' ' . $accounts;
+            $command[] = $accounts;
         }
 
-        // Append not accounts if provided
+        // Add not accounts if provided
         if ($not_accounts !== null) {
-            $command .= ' not ' . $not_accounts;
+            $command[] = 'not ' . $not_accounts;
         }
 
-        // Append dry mode if set
+        // Add dry mode if set
         if ($dry !== null) {
-            $command .= ' ' . ($dry === true || $dry === 'dry' ? 'dry' : 'false');
+            $command[] = $dry === true || $dry === 'dry' ? 'dry' : 'false';
         }
 
         return $command;
     }
+
     /**
      * Static function to generate a command string based on the given parameters.
-     * 
+     *
      * @param string $command generateCommand()
      * @param array $broker_data prepareEnvContent()
      * @param string $extra_params N/A
-     * 
+     *
      * @return json The result
      */
     public static function sendTaskToWorker($command,$broker_data,$params=null)
@@ -154,5 +153,5 @@ class GearmanClientController extends Controller
             'data' => $resultData,
         ]);
     }
-    
+
 }
