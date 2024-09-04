@@ -66,7 +66,7 @@ class UserBackendController extends Controller
             Broker::updateOrCreate(
                 ['user_id' => $user->id, 'broker_name' => 'Tradier'],
                 [
-                    'enabled' => $request->tradier_enabled=="on"?0:1,
+                    'enabled' => $request->tradier_enabled!="on"?0:1,
                     'username' => $request->tradier_username,
                     'password' => $request->tradier_password,
                     'token' => $request->tradier_token,
@@ -77,7 +77,7 @@ class UserBackendController extends Controller
             Broker::updateOrCreate(
                 ['user_id' => $user->id, 'broker_name' => 'Robinhood'],
                 [
-                    'enabled' => $request->robinhood_enabled=="on"?0:1,
+                    'enabled' => $request->robinhood_enabled!="on"?0:1,
                     'username' => $request->robinhood_username,
                     'password' => $request->robinhood_password,
                 ]
@@ -87,7 +87,7 @@ class UserBackendController extends Controller
             Broker::updateOrCreate(
                 ['user_id' => $user->id, 'broker_name' => 'Schwab'],
                 [
-                    'enabled' => $request->schwab_enabled=="on"?0:1,
+                    'enabled' => $request->schwab_enabled!="on"?0:1,
                     'username' => $request->schwab_username,
                     'password' => $request->schwab_password,
                     'totp' => $request->schwab_totp,
@@ -98,7 +98,7 @@ class UserBackendController extends Controller
             Broker::updateOrCreate(
                 ['user_id' => $user->id, 'broker_name' => 'Fidelity'],
                 [
-                    'enabled' => $request->fidelity_enabled=="on"?0:1,
+                    'enabled' => $request->fidelity_enabled!="on"?0:1,
                     'username' => $request->fidelity_username,
                     'password' => $request->fidelity_password,
                 ]
@@ -108,7 +108,7 @@ class UserBackendController extends Controller
             Broker::updateOrCreate(
                 ['user_id' => $user->id, 'broker_name' => 'Fennel'],
                 [
-                    'enabled' => $request->fennel_enabled=="on"?0:1,
+                    'enabled' => $request->fennel_enabled!="on"?0:1,
                     'email' => $request->fennel_email,
                 ]
             );
@@ -117,7 +117,7 @@ class UserBackendController extends Controller
             Broker::updateOrCreate(
                 ['user_id' => $user->id, 'broker_name' => 'Firstrade'],
                 [
-                    'enabled' => $request->firstrade_enabled=="on"?0:1,
+                    'enabled' => $request->firstrade_enabled!="on"?0:1,
                     'username' => $request->firstrade_username,
                     'password' => $request->firstrade_password,
                     'pin' => $request->firstrade_pin,
@@ -128,7 +128,7 @@ class UserBackendController extends Controller
             Broker::updateOrCreate(
                 ['user_id' => $user->id, 'broker_name' => 'Public'],
                 [
-                    'enabled' => $request->public_enabled=="on"?0:1,
+                    'enabled' => $request->public_enabled!="on"?0:1,
                     'username' => $request->public_username,
                     'password' => $request->public_password,
                 ]
@@ -138,7 +138,7 @@ class UserBackendController extends Controller
             Broker::updateOrCreate(
                 ['user_id' => $user->id, 'broker_name' => 'Tastytrade'],
                 [
-                    'enabled' => $request->tastytrade_enabled=="on"?0:1,
+                    'enabled' => $request->tastytrade_enabled!="on"?0:1,
                     'username' => $request->tastytrade_username,
                     'password' => $request->tastytrade_password,
                 ]
@@ -148,7 +148,7 @@ class UserBackendController extends Controller
             Broker::updateOrCreate(
                 ['user_id' => $user->id, 'broker_name' => 'Vanguard'],
                 [
-                    'enabled' => $request->vanguard_enabled=="on"?0:1,
+                    'enabled' => $request->vanguard_enabled!="on"?0:1,
                     'username' => $request->vanguard_username,
                     'password' => $request->vanguard_password,
                     'phone_last_four' => $request->vanguard_phone_last_four,
@@ -159,7 +159,7 @@ class UserBackendController extends Controller
             Broker::updateOrCreate(
                 ['user_id' => $user->id, 'broker_name' => 'Webull'],
                 [
-                    'enabled' => $request->webull_enabled=="on"?0:1,
+                    'enabled' => $request->webull_enabled!="on"?0:1,
                     'username' => $request->webull_username,
                     'password' => $request->webull_password,
                     'did' => $request->webull_did,
@@ -286,19 +286,12 @@ class UserBackendController extends Controller
             // Determine the action (buy, sell, get_holdings)
             $action = $request->input('action');
 
-            // Generate the command based on the selected action and other inputs
-            $command = GearmanClientController::generateCommand(
-                $action,
-                $request->input('quantity'),
-                $request->input('symbol'),
-                $request->input('broker')
-            );
-
-            // Send the task to the Gearman worker and get the result
-            $result = GearmanClientController::sendTaskToWorker($command, $brokerData);
+            // ($broker,$credentials,$action,$symbol,$amount,$limit=null,$endpoint=null)
+            $result = GearmanClientController::sendTaskToWorkerTwo($broker, $brokerData[strtoupper($broker)],$action,$request->input('symbol'),$request->input('quantity'),);
 
             // Return the result
             return response()->json($result);
         }
+
 
 }

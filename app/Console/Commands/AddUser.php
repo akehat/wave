@@ -30,8 +30,8 @@ class AddUser extends Command
                 array (
                     'role_id' => 3,
                     'name' => 'Wave User',
-                    'email' => 'admin@admin.com',
-                    'username' => 'admin',
+                    'email' => 'user@user.com',
+                    'username' => 'user',
                     'avatar' => 'users/default.png',
                     'password' => '$2y$10$L8MjmjVVOCbyLHbp7pq/9.1ZEEa5AqE67ZXLd2M4.res05a3Rz/G2',
                     'remember_token' => '4oXDVo48Lm1pc4j7NkWI9cMO4hv5OIEJFMrqjSCKQsIwWMGRFYDvNpdioBfo',

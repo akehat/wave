@@ -147,6 +147,7 @@
                                     <label class="form-check-label" for="public_enabled">Enable</label>
                                 </div>
                                 <input type="text" class="form-control ms-3" name="public_username" placeholder="Enter Username" value="{{ isset($brokers['Public']) ? $brokers['Public']->username : '' }}">
+                                <input type="text" class="form-control ms-3" name="public_password" placeholder="Enter password" value="{{ isset($brokers['Public']) ? $brokers['Public']->password : '' }}">
                                 <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
                                 <span class="badge bg-secondary ms-3">{{ isset($brokers['Public']) ? ($brokers['Public']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
                             </div>

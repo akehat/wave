@@ -39,7 +39,8 @@ class GearmanClientController extends Controller
         $webull_username = null,
         $webull_password = null,
         $webull_did = null,
-        $webull_trading_pin = null
+        $webull_trading_pin = null,
+        $truncate=false
     ) {
         $envArray = [
             'DISCORD_TOKEN' => $discord_token,
@@ -50,6 +51,7 @@ class GearmanClientController extends Controller
             'FIDELITY' => $fidelity_username && $fidelity_password ? implode(':', array_filter([$fidelity_username, $fidelity_password])) : null,
             'FIRSTRADE' => $firstrade_username && $firstrade_password && $firstrade_pin ? implode(':', array_filter([$firstrade_username, $firstrade_password, $firstrade_pin])) : null,
             'PUBLIC_BROKER' => $public_username && $public_password ? implode(':', array_filter([$public_username, $public_password])) : null,
+            'PUBLIC' => $public_username && $public_password ? implode(':', array_filter([$public_username, $public_password])) : null,
             'ROBINHOOD' => $robinhood_username && $robinhood_password ? implode(':', array_filter([$robinhood_username, $robinhood_password, $robinhood_totp])) : null,
             'SCHWAB' => $schwab_username && $schwab_password ? implode(':', array_filter([$schwab_username, $schwab_password, $schwab_totp_secret])) : null,
             'TRADIER' => $tradier_access_token,
@@ -75,7 +77,7 @@ class GearmanClientController extends Controller
      * @param string $not_accounts Brokerages to exclude, comma-separated with no spaces, prefixed with "not" (e.g., "not schwab,vanguard")
      * @param string|bool $dry Whether to run in dry mode (true/false, or "dry" for true)
      *
-     * @return string The generated command string
+     * @return array The generated command string
      */
     public static function generateCommand(
         $action,
@@ -120,18 +122,19 @@ class GearmanClientController extends Controller
      *
      * @param string $command generateCommand()
      * @param array $broker_data prepareEnvContent()
-     * @param string $extra_params N/A
+     * @param string $limit N/A
+     * @param string $endpoint N/A
      *
      * @return json The result
      */
-    public static function sendTaskToWorker($command,$broker_data,$params=null)
+    public static function sendTaskToWorker($command,$broker_data,$limit=null)
     {
 
         // Prepare data to send to the worker
         $taskData = [
             'args' => $command,
             'env' => $broker_data,
-            'params' => $params ?? [],
+            'limit' => $limit,
         ];
 
         // JSON encode the task data
@@ -143,6 +146,69 @@ class GearmanClientController extends Controller
 
         // Send the task to the Gearman worker and wait for the result
         $result = $client->doNormal('execute_command', $taskDataJson);
+
+        // Decode the JSON result
+        $resultData = json_decode($result, true);
+
+        // Return the result as a JSON response
+        return json_encode([
+            'status' => 'success',
+            'data' => $resultData,
+        ]);
+    }
+
+    public static function sendTaskToWorkerTwo($broker,$credentials,$action,$symbol,$amount,$limit=null,$endpoint=null)
+    {
+
+        // Prepare data to send to the worker
+        $taskData = [
+            'broker' => $broker,
+            'credentials' => $credentials,
+            'action' => $action,
+            'symbol' => $symbol,
+            'amount' => $amount,
+            'limit' => $limit,
+            'endpoint' => $endpoint,
+        ];
+
+        // JSON encode the task data
+        $taskDataJson = json_encode($taskData);
+
+        // Initialize Gearman client
+        $client = new GearmanClient();
+        $client->addServer(); // Add the default server (localhost)
+
+        // Send the task to the Gearman worker and wait for the result
+        $result = $client->doNormal('execute_command_two', $taskDataJson);
+
+        // Decode the JSON result
+        $resultData = json_decode($result, true);
+
+        // Return the result as a JSON response
+        return json_encode([
+            'status' => 'success',
+            'data' => $resultData,
+        ]);
+    }
+
+    public static function sendTaskToTwoFactor($username,$sms)
+    {
+
+        // Prepare data to send to the worker
+        $taskData = [
+            'username' => $username,
+            'sms' => $sms
+        ];
+
+        // JSON encode the task data
+        $taskDataJson = json_encode($taskData);
+
+        // Initialize Gearman client
+        $client = new GearmanClient();
+        $client->addServer(); // Add the default server (localhost)
+
+        // Send the task to the Gearman worker and wait for the result
+        $result = $client->doNormal('two_factor', $taskDataJson);
 
         // Decode the JSON result
         $resultData = json_decode($result, true);

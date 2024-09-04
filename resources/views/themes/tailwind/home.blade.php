@@ -91,7 +91,7 @@
     </svg>
 
     <!-- BEGINNING OF TESTIMONIALS SECTION -->
-    <div id="testimonials">
+    {{-- <div id="testimonials">
         <div class="relative flex items-center justify-center pt-32 pb-12 bg-gray-100 md:pb-32 lg:pb-64 min-w-screen">
             <div class="max-w-6xl px-10 pb-20 mx-auto bg-gray-100">
                 <div class="flex flex-col items-center lg:flex-row">
@@ -184,7 +184,7 @@
             </svg>
 
         </div>
-    </div>
+    </div> --}}
     <!-- END OF TESTIMONIALS SECTION -->
 
     <!-- BEGINNING OF PRICING SECTION -->
