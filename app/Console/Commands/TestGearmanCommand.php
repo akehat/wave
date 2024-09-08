@@ -23,7 +23,7 @@ class TestGearmanCommand extends Command
         $client->addServer('localhost', 4730);
 
         // Load environment variables
-        $tradierToken = env('TRADIER', 'SANDBOXBYLlMdC5Y1ZtGMjFEv341FHpdPAu');
+        $tradierToken = env('TRADIER', '');
 
         // Define the test command with environment variables
         $testCommand = [

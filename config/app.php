@@ -29,7 +29,7 @@ return [
     */
 
     'env' => env('APP_ENV', 'production'),
-
+    'send_email_limit' => env('SEND_EMAIL_LIMIT',10),
     /*
     |--------------------------------------------------------------------------
     | Application Debug Mode
