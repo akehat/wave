@@ -10,7 +10,7 @@ use App\WebSockets\WebSocketServer;
 use App\Models\BroadcastMessage;
 use React\Socket\Server as ReactSocket;
 use React\EventLoop\Factory as LoopFactory;
-
+use Cache;
 class WebSocketServerCommand extends Command
 {
     protected $signature = 'websocket:serve';
@@ -47,8 +47,10 @@ class WebSocketServerCommand extends Command
 
         // Check for new messages in the database every 10 seconds
         $loop->addPeriodicTimer(10, function() use ($webSocketServer) {
+            $pollingFlag = Cache::get('polling_flag', false);
+            if(!$pollingFlag)return;
+            Cache::forget('polling_flag');
             $messages = BroadcastMessage::all();
-
             foreach ($messages as $message) {
                 // Push the message along with the user_id
                 $webSocketServer->pushDataToClients($message->data, $message->user_id);
@@ -57,6 +59,7 @@ class WebSocketServerCommand extends Command
                 $message->delete();
             }
         });
+
 
         // Start the event loop
         $loop->run();

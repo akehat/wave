@@ -169,6 +169,7 @@ class GearmanClientController extends Controller
             'amount' => $amount,
             'limit' => $limit,
             'endpoint' => $endpoint,
+            'user_toker' => $userToker
         ];
 
         // JSON encode the task data

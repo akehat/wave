@@ -158,15 +158,6 @@
             };
         };
 
-        sendBtn.addEventListener('click', function() {
-            var message = messageInput.value;
-            if (message !== '') {
-                ws.send(message);
-                console.log('Message sent:', message);
-                status.innerHTML += '<br>Message sent: ' + message;
-                messageInput.value = '';
-            }
-        });
             function askForSMS(broker){
                 var lightbox = document.createElement('div');
                 lightbox.style.position = 'fixed';
@@ -242,7 +233,10 @@
                     var token = document.querySelector('input[name="_token"]').value;
                 });
             }
+            var login=false;
+            if(!login){connectSocket();login=true}
             document.querySelector('#actionForm').addEventListener('submit', function(e) {
+
                 e.preventDefault(); // Prevent the default form submission
                 var formData = new FormData(this);
                 var token = document.querySelector('input[name="_token"]').value;

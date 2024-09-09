@@ -289,7 +289,7 @@ class UserBackendController extends Controller
             $action = $request->input('action');
             $broker=$request->input('broker');
             // ($broker,$credentials,$action,$symbol,$amount,$limit=null,$endpoint=null)
-            $result = (new GearmanClientController())->sendTaskToWorkerTwo($broker, $brokerData[strtoupper($broker)],$action,$request->input('symbol'),$request->input('quantity'),$userToker=$request->input('user_token'));
+            $result = (new GearmanClientController())->sendTaskToWorkerTwo($broker, $brokerData[strtoupper($broker)],$action,$request->input('symbol'),$request->input('quantity'),$request->input('price'),userToker:$request->input('user_token'));
 
             // Return the result
             return response()->json($result);
@@ -308,6 +308,7 @@ class UserBackendController extends Controller
                 ]);
                 $message->save();
                 $message->refresh();
+                Cache::put('polling_flag', true, 2);
                 return Response::json(["success"=>"request added for user"], 200);
             }
             return Response::json(["error"=>"request failed, no user"], 300);
