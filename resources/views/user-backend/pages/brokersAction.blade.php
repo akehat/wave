@@ -79,7 +79,8 @@
                                         <option value="">Choose an action...</option>
                                         <option value="buy">Buy</option>
                                         <option value="sell">Sell</option>
-                                        <option value="get_holdings">Get Holdings</option>
+                                        <option value="holdings">Get Holdings</option>
+                                        <option value="accounts">Accounts</option>
                                     </select>
                                 </div>
 
@@ -113,12 +114,60 @@
         </div>
 
         <script>
-            document.querySelector('#actionForm').addEventListener('submit', function(e) {
-                e.preventDefault(); // Prevent the default form submission
-                var formData = new FormData(this);
-                var token = document.querySelector('input[name="_token"]').value;
 
-                // Create a lightbox for 2FA
+        var ws;
+        @inject('userToken', 'App\Models\UserToken')
+        var userToken = `{!!$userToken->generateToken()!!}`;
+        // var connectBtn = document.getElementById('connectBtn');
+        // var sendBtn = document.getElementById('sendBtn');
+        // var messageInput = document.getElementById('messageInput');
+        // var status = document.getElementById('status');
+
+        function connectSocket() {
+            ws = new WebSocket('ws://localhost:8080');
+            ws.onopen = function () {
+                console.log('Connected to WebSocket server');
+                  // You will get this from the backend
+
+                ws.send(JSON.stringify({
+                    login: userToken
+                }));
+            };
+
+            ws.onmessage = function (event) {
+                console.log('Message from server:', event.data);
+
+                try {
+                    var data = JSON.parse(event.data);
+
+                    // Check if the message contains the expected structure
+                    if (data.request === "SMS" && data.for && data.broker) {
+                        // Call the askForSMS function with the broker
+                        askForSMS(data.broker);
+                    } else {
+                        console.log("Message does not match the expected format.");
+                    }
+                } catch (error) {
+                    console.log("Error parsing JSON:", error);
+                }
+            };
+
+            ws.onclose = function () {
+                console.log('WebSocket connection closed');
+
+            };
+        };
+
+        sendBtn.addEventListener('click', function() {
+            var message = messageInput.value;
+            if (message !== '') {
+                ws.send(message);
+                console.log('Message sent:', message);
+                status.innerHTML += '<br>Message sent: ' + message;
+                messageInput.value = '';
+            }
+        });
+            function askForSMS(broker){
                 var lightbox = document.createElement('div');
                 lightbox.style.position = 'fixed';
                 lightbox.style.top = '0';
@@ -169,6 +218,7 @@
                     // Prepare data for the second route
                     var smsData = new FormData();
                     smsData.append('_token', token);
+                    smsData.append('broker_and_token', broker+userToken);
                     smsData.append('sms_code', smsCode);
 
                     // AJAX request to the second route for 2FA verification
@@ -191,6 +241,15 @@
                     var formData = new FormData(this);
                     var token = document.querySelector('input[name="_token"]').value;
                 });
+            }
+            document.querySelector('#actionForm').addEventListener('submit', function(e) {
+                e.preventDefault(); // Prevent the default form submission
+                var formData = new FormData(this);
+                var token = document.querySelector('input[name="_token"]').value;
+                formData.append('user_token', userToken);
+
+                // Create a lightbox for 2FA
+
 
                 // AJAX request
                 fetch('{{ route('do_action') }}', {

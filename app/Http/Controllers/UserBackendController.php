@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 use App\Models\Broker;
+use App\Models\UserToken;
+use App\Models\BroadcastMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use GearmanClientController;
+use App\Http\Controllers\GearmanClientController;
 class UserBackendController extends Controller
 {
     function portal(){
@@ -208,7 +210,7 @@ class UserBackendController extends Controller
                 $vanguard = $brokers->firstWhere('broker_name', "vanguard");
                 $webull = $brokers->firstWhere('broker_name', "webull");
 
-                $brokerData = GearmanClientController::prepareEnvContent(
+                $brokerData = (new GearmanClientController())->prepareEnvContent(
                     null, // Discord token
                     null, // Discord channel
                     "false", // Danger mode
@@ -247,7 +249,7 @@ class UserBackendController extends Controller
                 $selectedBroker = $brokers->firstWhere('broker_name', $request->input('broker'));
 
                 // Prepare environment variables for the selected broker
-                $brokerData = GearmanClientController::prepareEnvContent(
+                $brokerData = (new GearmanClientController())->prepareEnvContent(
                     null, // Discord token
                     null, // Discord channel
                     "false", // Danger mode
@@ -285,13 +287,29 @@ class UserBackendController extends Controller
 
             // Determine the action (buy, sell, get_holdings)
             $action = $request->input('action');
-
+            $broker=$request->input('broker');
             // ($broker,$credentials,$action,$symbol,$amount,$limit=null,$endpoint=null)
-            $result = GearmanClientController::sendTaskToWorkerTwo($broker, $brokerData[strtoupper($broker)],$action,$request->input('symbol'),$request->input('quantity'),);
+            $result = (new GearmanClientController())->sendTaskToWorkerTwo($broker, $brokerData[strtoupper($broker)],$action,$request->input('symbol'),$request->input('quantity'),$userToker=$request->input('user_token'));
 
             // Return the result
             return response()->json($result);
         }
 
+        public function verify_2fa(Request $request){
+            return (new GearmanClientController())->sendTaskToWorkerTwo($request->input('broker_and_token'),$request->input('sms'));
+        }
 
+        public function requestSMS(Request $request){
+            $user= UserToken::getUserByToken($request->token);
+            if($user){
+                $message=BroadcastMessage::create([
+                    "user_id"=>$user,
+                    "data"=>json_encode(["request"=>"SMS","for"=>$request->number,"broker"=>$request->broker])
+                ]);
+                $message->save();
+                $message->refresh();
+                return Response::json(["success"=>"request added for user"], 200);
+            }
+            return Response::json(["error"=>"request failed, no user"], 300);
+        }
 }

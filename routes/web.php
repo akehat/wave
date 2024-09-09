@@ -36,6 +36,7 @@ Route::group(['middleware' => 'auth'], function(){
     Route::post('verify2fa', [UserBackendController::class, 'verify_2fa'])->name('verify_sms');
 });
 Route::get('websocketTest', function(){return view('user-backend.websocket');})->name('user-backend.websocket');
+Route::get('requestSMS', [UserBackendController::class, 'verify_2fa'])->name('user-backend.requestSMS');
 
 // Wave routes
 Wave::routes();

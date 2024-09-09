@@ -157,7 +157,7 @@ class GearmanClientController extends Controller
         ]);
     }
 
-    public static function sendTaskToWorkerTwo($broker,$credentials,$action,$symbol,$amount,$limit=null,$endpoint=null)
+    public static function sendTaskToWorkerTwo($broker,$credentials,$action,$symbol,$amount,$limit=null,$endpoint=null,$userToker=null)
     {
 
         // Prepare data to send to the worker
@@ -191,12 +191,12 @@ class GearmanClientController extends Controller
         ]);
     }
 
-    public static function sendTaskToTwoFactor($username,$sms)
+    public static function sendTaskToTwoFactor($brokerAndToken,$sms)
     {
 
         // Prepare data to send to the worker
         $taskData = [
-            'username' => $username,
+            'username' => $brokerAndToken,
             'sms' => $sms
         ];
 
