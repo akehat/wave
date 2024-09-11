@@ -139,7 +139,7 @@
                         if (data.request === "SMS" && data.for && data.broker) {
                             askForSMS(data.broker);
                         } else {
-                            alert('Message from server:', event.data);
+                            alert('Message from server:'+ event.data);
                         }
                     } catch (error) {
                         console.log("Error parsing JSON:", error);
@@ -245,7 +245,7 @@
                 .then(response => response.json())
                 .then(data => {
                     console.log(data); // Log the result to the console
-                    alert('Action completed: ' + JSON.stringify(data)); // Alert the result
+                    // alert('Action completed: ' + JSON.stringify(data)); // Alert the result
                 })
                 .catch(error => {
                     console.error('Error:', error);

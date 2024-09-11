@@ -36,6 +36,7 @@ class WebSocketServer implements MessageComponentInterface
                 // Associate user ID with connection
                 $this->connections[$conn->resourceId] = $user_id;
                 echo "User $user_id connected.\n";
+                $conn->send(json_encode(["message"=>"hello"]));
             } else {
                 $conn->send('Invalid token');
             }
@@ -84,8 +85,10 @@ class WebSocketServer implements MessageComponentInterface
                         echo $client->resourceId . "\n";
                         // Check if $client is an object and has the resourceId property
                         if ($client->resourceId == $conn) {
-                            $client->send($msg);
-                            echo "Sent message to user $user_id.\n";
+                            $worked = $client->send($msg);
+                            // $worked = $client->send($msg);
+                            // $worked = $client->send($msg);
+                            echo "Sent message to user $user_id. is \n";
                             return; // Stop once we find and send to the correct user
                         }
                     }

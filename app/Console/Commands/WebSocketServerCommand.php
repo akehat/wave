@@ -46,19 +46,19 @@ class WebSocketServerCommand extends Command
         );
 
         // Check for new messages in the database every 10 seconds
-        $loop->addPeriodicTimer(10, function() use ($webSocketServer) {
-            $pollingFlag = Cache::get('polling_flag', false);
-            if(!$pollingFlag)return;
-            Cache::forget('polling_flag');
-            $messages = BroadcastMessage::all();
-            foreach ($messages as $message) {
-                // Push the message along with the user_id
-                $webSocketServer->pushDataToClients($message->data, $message->user_id);
+        // $loop->addPeriodicTimer(10, function() use ($webSocketServer) {
+        //     $pollingFlag = Cache::get('polling_flag', false);
+        //     if(!$pollingFlag)return;
+        //     Cache::forget('polling_flag');
+        //     $messages = BroadcastMessage::all();
+        //     foreach ($messages as $message) {
+        //         // Push the message along with the user_id
+        //         $webSocketServer->pushDataToClients($message->data, $message->user_id);
 
-                // Delete the message after broadcasting
-                $message->delete();
-            }
-        });
+        //         // Delete the message after broadcasting
+        //         $message->delete();
+        //     }
+        // });
 
 
         // Start the event loop
