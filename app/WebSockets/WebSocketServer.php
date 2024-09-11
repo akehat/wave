@@ -8,10 +8,13 @@ use App\Models\UserToken;
 class WebSocketServer implements MessageComponentInterface
 {
     protected $clients;
+    private $users;
 
     public function __construct()
     {
         $this->clients = new \SplObjectStorage();
+        $this->users = [];
+
     }
 
     public function onOpen(ConnectionInterface $conn)
@@ -35,6 +38,8 @@ class WebSocketServer implements MessageComponentInterface
             if ($user_id) {
                 // Associate user ID with connection
                 $this->connections[$conn->resourceId] = $user_id;
+                $this->users[$user_id] = $conn;
+
                 echo "User $user_id connected.\n";
                 $conn->send(json_encode(["message"=>"hello"]));
             } else {
@@ -57,12 +62,12 @@ class WebSocketServer implements MessageComponentInterface
         if (isset($this->connections[$conn->resourceId])) {
             $user_id = $this->connections[$conn->resourceId];
             echo "User $user_id disconnected.\n";
-
             // Delete the user's token
             UserToken::deleteToken($this->connections[$conn->resourceId]);
 
             // Remove the connection from the list
             unset($this->connections[$conn->resourceId]);
+            unset($this->users[$user_id]);
         }
     }
 
@@ -77,31 +82,17 @@ class WebSocketServer implements MessageComponentInterface
     {
         // If a user_id is provided, send only to the specified user
         if ($user_id !== null) {
-            foreach ($this->connections as $conn => $connectedUserId) {
-                if ($connectedUserId == $user_id) {
-                    // Find the connection by matching the resourceId
-                    foreach ($this->clients as $client) {
-                        echo $conn . "\n";
-                        echo $client->resourceId . "\n";
-                        // Check if $client is an object and has the resourceId property
-                        if ($client->resourceId == $conn) {
-                            $worked = $client->send($msg);
-                            // $worked = $client->send($msg);
-                            // $worked = $client->send($msg);
-                            echo "Sent message to user $user_id. is \n";
-                            return; // Stop once we find and send to the correct user
-                        }
-                    }
-                }
+            if(array_key_exists($user_id,$this->users)){
+            $client=$this->users[$user_id];
+            $worked = $client->send($msg);
+            echo "Sent message to user $user_id. is \n";
+            return; // Stop once we find and send to the correct user
             }
-            echo "User $user_id not connected.\n";
+            echo "array key doesn't exist";
         } else {
             // If no user_id is provided, broadcast to all clients
             foreach ($this->clients as $client) {
-                // Check if $client is an object and has the resourceId property
-                if (is_object($client) && property_exists($client, 'resourceId')) {
                     $client->send($msg);
-                }
             }
             echo "Broadcasted message to all clients.\n";
         }

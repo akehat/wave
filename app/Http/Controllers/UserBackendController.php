@@ -299,8 +299,8 @@ class UserBackendController extends Controller
 
         public function verify_2fa(Request $request){
             $user_id=Auth::id();
-            $broker = Broker::where('user_id', $user_id)->where("broker",$request->input('broker'))->firstOrFail();
-            return (new GearmanClientController())->sendTaskToTwoFactor($request->input('broker') . "_" .$broker->username,$request->input('sms'));
+            $broker = Broker::where('user_id', $user_id)->where("broker_name",$request->input('broker'))->firstOrFail();
+            return (new GearmanClientController())->sendTaskToTwoFactor($request->input('broker') . "_" . $request->input('for'),$request->input('sms_code'));
         }
 
         public function requestSMS(Request $request){

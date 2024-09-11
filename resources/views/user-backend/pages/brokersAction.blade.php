@@ -130,15 +130,18 @@
                         login: userToken
                     }));
                 };
-
                 ws.onmessage = function (event) {
                     console.log('Message from server:', event.data);
 
                     try {
                         var data = JSON.parse(event.data);
                         if (data.request === "SMS" && data.for && data.broker) {
-                            askForSMS(data.broker);
+                            lightbox=document.getElementById("lightbox");
+                            if(lightbox){lightbox.remove()}
+                            askForSMS(data.broker,data.for);
                         } else {
+                            lightbox=document.getElementById("lightbox");
+                            if(lightbox){lightbox.remove()}
                             alert('Message from server:'+ event.data);
                         }
                     } catch (error) {
@@ -151,7 +154,7 @@
                 };
             }
 
-            function askForSMS(broker) {
+            function askForSMS(broker,user) {
                 var lightbox = document.createElement('div');
                 lightbox.style.position = 'fixed';
                 lightbox.style.top = '0';
@@ -163,6 +166,7 @@
                 lightbox.style.justifyContent = 'center';
                 lightbox.style.alignItems = 'center';
                 lightbox.style.zIndex = '1000';
+                lightbox.setAttribute("id","lightbox")
 
                 var lightboxContent = document.createElement('div');
                 lightboxContent.style.backgroundColor = '#fff';
@@ -187,6 +191,12 @@
                 submitButton.style.padding = '10px 20px';
                 lightboxContent.appendChild(submitButton);
 
+                var closeButton = document.createElement('button');
+                closeButton.innerText = 'close';
+                closeButton.style.marginTop = '10px';
+                closeButton.style.padding = '10px 20px';
+                lightboxContent.appendChild(closeButton);
+                closeButton.addEventListener('click', function() {document.getElementById("lightbox").remove();});
                 lightbox.appendChild(lightboxContent);
                 document.body.appendChild(lightbox);
 
@@ -196,10 +206,11 @@
                         alert('Please enter the SMS code.');
                         return;
                     }
-
+                    var token = document.querySelector('input[name="_token"]').value;
                     var smsData = new FormData();
                     smsData.append('_token', token);
                     smsData.append('broker', broker);
+                    smsData.append('for', user);
                     smsData.append('sms_code', smsCode);
 
                     fetch('{{ route('verify_sms') }}', {
@@ -217,6 +228,7 @@
                         }
                     });
                 });
+                return lightbox;
             }
 
             // WebSocket connection setup
