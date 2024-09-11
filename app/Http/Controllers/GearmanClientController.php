@@ -169,7 +169,7 @@ class GearmanClientController extends Controller
             'amount' => $amount,
             'limit' => $limit,
             'endpoint' => $endpoint,
-            'user_toker' => $userToker
+            'user_token' => $userToker
         ];
 
         // JSON encode the task data
@@ -192,12 +192,12 @@ class GearmanClientController extends Controller
         ]);
     }
 
-    public static function sendTaskToTwoFactor($brokerAndToken,$sms)
+    public static function sendTaskToTwoFactor($brokerAndUsername,$sms)
     {
 
         // Prepare data to send to the worker
         $taskData = [
-            'username' => $brokerAndToken,
+            'username' => $brokerAndUsername,
             'sms' => $sms
         ];
 

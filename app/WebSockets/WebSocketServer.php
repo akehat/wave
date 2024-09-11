@@ -22,6 +22,7 @@ class WebSocketServer implements MessageComponentInterface
 
     // Store the mapping of connection resource IDs to user IDs
     protected $connections = [];
+    private $websocketSecret= "secretCodeForGearmanToWebsocet";
 
     public function onMessage(ConnectionInterface $conn, $msg)
     {
@@ -37,6 +38,14 @@ class WebSocketServer implements MessageComponentInterface
                 echo "User $user_id connected.\n";
             } else {
                 $conn->send('Invalid token');
+            }
+        }
+        if (isset($data['gearmanCode'])) {
+            if($this->websocketSecret==$data['gearmanCode']){
+                echo "gearman is talking\n";
+                if(isset($data['action'])&&$data['action']=="broadcast"){
+                    $this->broadcast($data['msg'], $data['user']);
+                }
             }
         }
     }
@@ -67,21 +76,29 @@ class WebSocketServer implements MessageComponentInterface
     {
         // If a user_id is provided, send only to the specified user
         if ($user_id !== null) {
-            foreach ($this->connections as $resourceId => $connectedUserId) {
+            foreach ($this->connections as $conn => $connectedUserId) {
                 if ($connectedUserId == $user_id) {
-                    // Find the connection associated with this user_id
-                    if (isset($this->clients[$resourceId])) {
-                        $this->clients[$resourceId]->send($msg);
-                        echo "Sent message to user $user_id.\n";
+                    // Find the connection by matching the resourceId
+                    foreach ($this->clients as $client) {
+                        echo $conn . "\n";
+                        echo $client->resourceId . "\n";
+                        // Check if $client is an object and has the resourceId property
+                        if ($client->resourceId == $conn) {
+                            $client->send($msg);
+                            echo "Sent message to user $user_id.\n";
+                            return; // Stop once we find and send to the correct user
+                        }
                     }
-                    return; // Stop once we find and send to the correct user
                 }
             }
             echo "User $user_id not connected.\n";
         } else {
             // If no user_id is provided, broadcast to all clients
             foreach ($this->clients as $client) {
-                $client->send($msg);
+                // Check if $client is an object and has the resourceId property
+                if (is_object($client) && property_exists($client, 'resourceId')) {
+                    $client->send($msg);
+                }
             }
             echo "Broadcasted message to all clients.\n";
         }

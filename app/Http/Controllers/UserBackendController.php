@@ -7,6 +7,8 @@ use App\Models\BroadcastMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\GearmanClientController;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Response;
 class UserBackendController extends Controller
 {
     function portal(){
@@ -289,14 +291,16 @@ class UserBackendController extends Controller
             $action = $request->input('action');
             $broker=$request->input('broker');
             // ($broker,$credentials,$action,$symbol,$amount,$limit=null,$endpoint=null)
-            $result = (new GearmanClientController())->sendTaskToWorkerTwo($broker, $brokerData[strtoupper($broker)],$action,$request->input('symbol'),$request->input('quantity'),$request->input('price'),userToker:$request->input('user_token'));
+            $result = (new GearmanClientController())->sendTaskToWorkerTwo($broker, $brokerData[strtoupper($broker)],$action,$request->input('symbol'),$request->input('quantity'),$request->input('price'),userToker:$user->id);
 
             // Return the result
             return response()->json($result);
         }
 
         public function verify_2fa(Request $request){
-            return (new GearmanClientController())->sendTaskToWorkerTwo($request->input('broker_and_token'),$request->input('sms'));
+            $user_id=Auth::id();
+            $broker = Broker::where('user_id', $user_id)->where("broker",$request->input('broker'))->firstOrFail();
+            return (new GearmanClientController())->sendTaskToTwoFactor($request->input('broker') . "_" .$broker->username,$request->input('sms'));
         }
 
         public function requestSMS(Request $request){

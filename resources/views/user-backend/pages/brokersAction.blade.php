@@ -114,51 +114,44 @@
         </div>
 
         <script>
+            var ws;
+            @inject('userToken', 'App\Models\UserToken')
+            @php
+                $token = $userToken->generateToken();
+            @endphp
+            var userToken = `{!! $token !!}`;
 
-        var ws;
-        @inject('userToken', 'App\Models\UserToken')
-        var userToken = `{!!$userToken->generateToken()!!}`;
-        // var connectBtn = document.getElementById('connectBtn');
-        // var sendBtn = document.getElementById('sendBtn');
-        // var messageInput = document.getElementById('messageInput');
-        // var status = document.getElementById('status');
+            function connectSocket() {
+                ws = new WebSocket('ws://localhost:8080');
 
-        function connectSocket() {
-            ws = new WebSocket('ws://localhost:8080');
-            ws.onopen = function () {
-                console.log('Connected to WebSocket server');
-                  // You will get this from the backend
+                ws.onopen = function () {
+                    console.log('Connected to WebSocket server');
+                    ws.send(JSON.stringify({
+                        login: userToken
+                    }));
+                };
 
-                ws.send(JSON.stringify({
-                    login: userToken
-                }));
-            };
+                ws.onmessage = function (event) {
+                    console.log('Message from server:', event.data);
 
-            ws.onmessage = function (event) {
-                console.log('Message from server:', event.data);
-
-                try {
-                    var data = JSON.parse(event.data);
-
-                    // Check if the message contains the expected structure
-                    if (data.request === "SMS" && data.for && data.broker) {
-                        // Call the askForSMS function with the broker
-                        askForSMS(data.broker);
-                    } else {
-                        console.log("Message does not match the expected format.");
+                    try {
+                        var data = JSON.parse(event.data);
+                        if (data.request === "SMS" && data.for && data.broker) {
+                            askForSMS(data.broker);
+                        } else {
+                            alert('Message from server:', event.data);
+                        }
+                    } catch (error) {
+                        console.log("Error parsing JSON:", error);
                     }
-                } catch (error) {
-                    console.log("Error parsing JSON:", error);
-                }
-            };
+                };
 
-            ws.onclose = function () {
-                console.log('WebSocket connection closed');
+                ws.onclose = function () {
+                    console.log('WebSocket connection closed');
+                };
+            }
 
-            };
-        };
-
-            function askForSMS(broker){
+            function askForSMS(broker) {
                 var lightbox = document.createElement('div');
                 lightbox.style.position = 'fixed';
                 lightbox.style.top = '0';
@@ -199,87 +192,81 @@
 
                 submitButton.addEventListener('click', function() {
                     var smsCode = inputField.value;
-
-                    // Validate SMS code input
                     if (!smsCode) {
                         alert('Please enter the SMS code.');
                         return;
                     }
 
-                    // Prepare data for the second route
                     var smsData = new FormData();
                     smsData.append('_token', token);
-                    smsData.append('broker_and_token', broker+userToken);
+                    smsData.append('broker', broker);
                     smsData.append('sms_code', smsCode);
 
-                    // AJAX request to the second route for 2FA verification
                     fetch('{{ route('verify_sms') }}', {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': token,
-                                'Accept': 'application/json'
-                            },
-                            body: smsData
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                // Close the lightbox
-                                document.body.removeChild(lightbox);
-                            }
-                        })
-                    // Prepare form data
-                    var formData = new FormData(this);
-                    var token = document.querySelector('input[name="_token"]').value;
-                });
-            }
-            var login=false;
-            if(!login){connectSocket();login=true}
-            document.querySelector('#actionForm').addEventListener('submit', function(e) {
-
-                e.preventDefault(); // Prevent the default form submission
-                var formData = new FormData(this);
-                var token = document.querySelector('input[name="_token"]').value;
-                formData.append('user_token', userToken);
-
-                // Create a lightbox for 2FA
-
-
-                // AJAX request
-                fetch('{{ route('do_action') }}', {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': token,
                             'Accept': 'application/json'
                         },
-                        body: formData
+                        body: smsData
                     })
                     .then(response => response.json())
                     .then(data => {
-                        console.log(data); // Log the result to the console
-                        alert('Action completed: ' + JSON.stringify(data)); // Alert the result
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('An error occurred. Please try again.');
+                        if (data.success) {
+                            document.body.removeChild(lightbox);
+                        }
                     });
+                });
+            }
+
+            // WebSocket connection setup
+            var login = false;
+            if (!login) {
+                connectSocket();
+                login = true;
+            }
+
+            document.querySelector('#actionForm').addEventListener('submit', function(e) {
+                e.preventDefault(); // Prevent default form submission
+
+                var formData = new FormData(this);
+                var token = document.querySelector('input[name="_token"]').value;
+                formData.append('user_token', userToken);
+
+                // Start the fetch request asynchronously
+                fetch('{{ route('do_action') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': token,
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data); // Log the result to the console
+                    alert('Action completed: ' + JSON.stringify(data)); // Alert the result
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                });
             });
 
-            // JavaScript to show/hide price and symbol input based on action
+            // Handle input visibility for buy/sell
             document.getElementById('action').addEventListener('change', function() {
                 var inputContainer = document.getElementById('inputContainer');
 
                 if (this.value === 'buy' || this.value === 'sell') {
-                    inputs = document.querySelectorAll('#inputContainer input')
+                    var inputs = document.querySelectorAll('#inputContainer input');
                     inputs.forEach(element => {
                         element.setAttribute('required', "true");
                     });
                     inputContainer.style.display = 'block';
                 } else {
-                    inputs = document.querySelectorAll('#inputContainer input');
+                    var inputs = document.querySelectorAll('#inputContainer input');
                     inputs.forEach(element => {
                         element.removeAttribute('required');
-
                         if (element.getAttribute("type") == "number") {
                             element.value = 0;
                         } else {
@@ -290,6 +277,7 @@
                 }
             });
         </script>
+
 
 
 
