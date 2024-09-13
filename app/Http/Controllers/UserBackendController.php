@@ -170,6 +170,17 @@ class UserBackendController extends Controller
                     'trading_pin' => $request->webull_trading_pin,
                 ]
             );
+
+            Broker::updateOrCreate(
+                ['user_id' => $user->id, 'broker_name' => 'Tornado'],
+                [
+                    'enabled' => $request->tornado_enabled!="on"?0:1,
+                    'username' => $request->tornado_username,
+                    'password' => $request->tornado_password,
+                    'did' => $request->tornado_did,
+                    'trading_pin' => $request->tornado_trading_pin,
+                ]
+            );
             // Redirect back with success message
             return redirect()->back()->with('success', 'Broker information saved successfully!');
         }
@@ -200,17 +211,18 @@ class UserBackendController extends Controller
             $brokers = Broker::where('user_id', $user->id)->get();
 
             if ($request->input('broker') == "all") {
-                $chase = $brokers->firstWhere('broker_name', "chase");
-                $fennel = $brokers->firstWhere('broker_name', "fennel");
-                $fidelity = $brokers->firstWhere('broker_name', "fidelity");
-                $firstrade = $brokers->firstWhere('broker_name', "firstrade");
-                $public = $brokers->firstWhere('broker_name', "public");
-                $robinhood = $brokers->firstWhere('broker_name', "robinhood");
-                $schwab = $brokers->firstWhere('broker_name', "schwab");
-                $tradier = $brokers->firstWhere('broker_name', "tradier");
-                $tastytrade = $brokers->firstWhere('broker_name', "tastytrade");
-                $vanguard = $brokers->firstWhere('broker_name', "vanguard");
-                $webull = $brokers->firstWhere('broker_name', "webull");
+                $chase = $brokers->firstWhere('broker_name', "Chase");
+                $fennel = $brokers->firstWhere('broker_name', "Fennel");
+                $fidelity = $brokers->firstWhere('broker_name', "Fidelity");
+                $firstrade = $brokers->firstWhere('broker_name', "Firstrade");
+                $public = $brokers->firstWhere('broker_name', "Public");
+                $robinhood = $brokers->firstWhere('broker_name', "Robinhood");
+                $schwab = $brokers->firstWhere('broker_name', "Schwab");
+                $tradier = $brokers->firstWhere('broker_name', "Tradier");
+                $tastytrade = $brokers->firstWhere('broker_name', "Tastytrade");
+                $vanguard = $brokers->firstWhere('broker_name', "Vanguard");
+                $webull = $brokers->firstWhere('broker_name', "Webull");
+                $tornado = $brokers->firstWhere('broker_name', "Tornado");
 
                 $brokerData = (new GearmanClientController())->prepareEnvContent(
                     null, // Discord token
@@ -244,7 +256,9 @@ class UserBackendController extends Controller
                     optional($webull)->username, // Webull
                     optional($webull)->password, // Webull
                     optional($webull)->did, // Webull DID
-                    optional($webull)->pin // Webull Trading PIN
+                    optional($webull)->pin, // Webull Trading PIN
+                    optional($tornado)->username, // Tornado
+                    optional($tornado)->password, // Tornado
                 );
             } else {
                 // Find the selected broker and its credentials
@@ -283,15 +297,22 @@ class UserBackendController extends Controller
                     optional($selectedBroker)->username, // Webull
                     optional($selectedBroker)->password, // Webull
                     optional($selectedBroker)->did, // Webull DID
-                    optional($selectedBroker)->pin // Webull Trading PIN
+                    optional($selectedBroker)->pin, // Webull Trading PIN
+                    optional($selectedBroker)->username, // Tornado
+                    optional($selectedBroker)->password, // Tornado
                 );
             }
 
             // Determine the action (buy, sell, get_holdings)
             $action = $request->input('action');
             $broker=$request->input('broker');
-            // ($broker,$credentials,$action,$symbol,$amount,$limit=null,$endpoint=null)
-            $result = (new GearmanClientController())->sendTaskToWorkerTwo($broker, $brokerData[strtoupper($broker)],$action,$request->input('symbol'),$request->input('quantity'),$request->input('price'),userToker:$user->id);
+            $creds=$brokerData[strtoupper($broker)];
+            $endpoint=null;
+            if(strtolower($broker)=="tradier" && str_starts_with($creds,"SANDBOX")){
+                $creds=substr($creds,strlen("SANDBOX"));
+                $endpoint="sandbox.tradier.com";
+            }
+            $result = (new GearmanClientController())->sendTaskToWorkerTwo($broker,$creds,$action,$request->input('symbol'),$request->input('quantity'),$request->input('price')??null,endpoint:$endpoint,userToker:$user->id);
 
             // Return the result
             return response()->json($result);

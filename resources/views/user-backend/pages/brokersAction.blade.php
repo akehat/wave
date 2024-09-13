@@ -272,6 +272,7 @@
                 if (this.value === 'buy' || this.value === 'sell') {
                     var inputs = document.querySelectorAll('#inputContainer input');
                     inputs.forEach(element => {
+                        if(element.getAttribute("name")=="price")element.removeAttribute('required');return;
                         element.setAttribute('required', "true");
                     });
                     inputContainer.style.display = 'block';

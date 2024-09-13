@@ -40,6 +40,8 @@ class GearmanClientController extends Controller
         $webull_password = null,
         $webull_did = null,
         $webull_trading_pin = null,
+        $tornado_username = null,
+        $tornado_password = null,
         $truncate=false
     ) {
         $envArray = [
@@ -58,6 +60,7 @@ class GearmanClientController extends Controller
             'TASTYTRADE' => $tastytrade_username && $tastytrade_password ? implode(':', array_filter([$tastytrade_username, $tastytrade_password])) : null,
             'VANGUARD' => $vanguard_username && $vanguard_password ? implode(':', array_filter([$vanguard_username, $vanguard_password, $vanguard_phone_last_four, $vanguard_debug])) : null,
             'WEBULL' => $webull_username && $webull_password ? implode(':', array_filter([$webull_username, $webull_password, $webull_did, $webull_trading_pin])) : null,
+            'TORNADO' => $tornado_username && $tornado_password ? implode(':', array_filter([$tornado_username, $tornado_password])) : null,
         ];
 
         // Filter out any null values

@@ -208,6 +208,18 @@
                                 <span class="badge bg-secondary ms-3">{{ isset($brokers['Webull']) ? ($brokers['Webull']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
                             </div>
 
+                            <div class="d-flex mb-3">
+                                <label class="form-label">Tornado</label>
+                                <div class="form-check form-switch ms-3">
+                                    <input class="form-check-input" type="checkbox" id="tornado_enabled" name="tornado_enabled" {{ isset($brokers['Tornado']) && $brokers['Tornado']->enabled ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="tornado_enabled">Enable</label>
+                                </div>
+                                <input type="text" class="form-control ms-3" name="tornado_username" placeholder="Enter Username" value="{{ isset($brokers['Tornado']) ? $brokers['Tornado']->username : '' }}">
+                                <input type="password" class="form-control ms-3" name="tornado_password" placeholder="Enter Password" value="{{ isset($brokers['Tornado']) ? $brokers['Tornado']->password : '' }}">
+                                <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
+                                <span class="badge bg-secondary ms-3">{{ isset($brokers['Tornado']) ? ($brokers['Tornado']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
+                            </div>
+
                         </form>
                     </div>
                 </div>
