@@ -42,8 +42,9 @@ class GearmanClientController extends Controller
         $webull_trading_pin = null,
         $tornado_username = null,
         $tornado_password = null,
-        $truncate=false
+        $turnArray=false
     ) {
+        if(!$turnArray){
         $envArray = [
             'DISCORD_TOKEN' => $discord_token,
             'DISCORD_CHANNEL' => $discord_channel,
@@ -61,8 +62,28 @@ class GearmanClientController extends Controller
             'VANGUARD' => $vanguard_username && $vanguard_password ? implode(':', array_filter([$vanguard_username, $vanguard_password, $vanguard_phone_last_four, $vanguard_debug])) : null,
             'WEBULL' => $webull_username && $webull_password ? implode(':', array_filter([$webull_username, $webull_password, $webull_did, $webull_trading_pin])) : null,
             'TORNADO' => $tornado_username && $tornado_password ? implode(':', array_filter([$tornado_username, $tornado_password])) : null,
-        ];
+        ];}
+        else{
+            $envArray = [
+                'DISCORD_TOKEN' => $discord_token,
+                'DISCORD_CHANNEL' => $discord_channel,
+                'DANGER_MODE' => $danger_mode,
+                'CHASE' => $chase_username && $chase_password ? [$chase_username, $chase_password, $chase_phone_last_four, $chase_debug] : null,
+                'FENNEL' => $fennel_email,
+                'FIDELITY' => $fidelity_username && $fidelity_password ? [$fidelity_username, $fidelity_password] : null,
+                'FIRSTRADE' => $firstrade_username && $firstrade_password && $firstrade_pin ? [$firstrade_username, $firstrade_password, $firstrade_pin] : null,
+                'PUBLIC_BROKER' => $public_username && $public_password ? [$public_username, $public_password] : null,
+                'PUBLIC' => $public_username && $public_password ? [$public_username, $public_password] : null,
+                'ROBINHOOD' => $robinhood_username && $robinhood_password ? [$robinhood_username, $robinhood_password, $robinhood_totp] : null,
+                'SCHWAB' => $schwab_username && $schwab_password ? [$schwab_username, $schwab_password, $schwab_totp_secret] : null,
+                'TRADIER' => $tradier_access_token,
+                'TASTYTRADE' => $tastytrade_username && $tastytrade_password ? [$tastytrade_username, $tastytrade_password] : null,
+                'VANGUARD' => $vanguard_username && $vanguard_password ? [$vanguard_username, $vanguard_password, $vanguard_phone_last_four, $vanguard_debug] : null,
+                'WEBULL' => $webull_username && $webull_password ? [$webull_username, $webull_password, $webull_did, $webull_trading_pin] : null,
+                'TORNADO' => $tornado_username && $tornado_password ? [$tornado_username, $tornado_password] : null,
+            ];
 
+        }
         // Filter out any null values
         $envArray = array_filter($envArray, function ($value) {
             return !is_null($value);

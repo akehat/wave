@@ -167,7 +167,7 @@ class UserBackendController extends Controller
                     'username' => $request->webull_username,
                     'password' => $request->webull_password,
                     'did' => $request->webull_did,
-                    'trading_pin' => $request->webull_trading_pin,
+                    'pin' => $request->webull_trading_pin,
                 ]
             );
 
@@ -177,8 +177,6 @@ class UserBackendController extends Controller
                     'enabled' => $request->tornado_enabled!="on"?0:1,
                     'username' => $request->tornado_username,
                     'password' => $request->tornado_password,
-                    'did' => $request->tornado_did,
-                    'trading_pin' => $request->tornado_trading_pin,
                 ]
             );
             // Redirect back with success message
@@ -259,6 +257,7 @@ class UserBackendController extends Controller
                     optional($webull)->pin, // Webull Trading PIN
                     optional($tornado)->username, // Tornado
                     optional($tornado)->password, // Tornado
+                    turnArray:true
                 );
             } else {
                 // Find the selected broker and its credentials
@@ -300,6 +299,7 @@ class UserBackendController extends Controller
                     optional($selectedBroker)->pin, // Webull Trading PIN
                     optional($selectedBroker)->username, // Tornado
                     optional($selectedBroker)->password, // Tornado
+                    turnArray:true
                 );
             }
 
@@ -321,7 +321,7 @@ class UserBackendController extends Controller
         public function verify_2fa(Request $request){
             $user_id=Auth::id();
             $broker = Broker::where('user_id', $user_id)->where("broker_name",$request->input('broker'))->firstOrFail();
-            return (new GearmanClientController())->sendTaskToTwoFactor($request->input('broker') . "_" . $request->input('for'),$request->input('sms_code'));
+            return (new GearmanClientController())->sendTaskToTwoFactor($request->input('broker') . "_" . $user_id . "_". $request->input('for'),$request->input('sms_code'));
         }
 
         public function requestSMS(Request $request){

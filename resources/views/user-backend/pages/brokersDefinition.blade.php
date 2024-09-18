@@ -203,7 +203,7 @@
                                 <input type="text" class="form-control ms-3" name="webull_username" placeholder="Enter Username" value="{{ isset($brokers['Webull']) ? $brokers['Webull']->username : '' }}">
                                 <input type="password" class="form-control ms-3" name="webull_password" placeholder="Enter Password" value="{{ isset($brokers['Webull']) ? $brokers['Webull']->password : '' }}">
                                 <input type="text" class="form-control ms-3" name="webull_did" placeholder="Enter did" value="{{ isset($brokers['Webull']) ? $brokers['Webull']->did : '' }}">
-                                <input type="text" class="form-control ms-3" name="webull_trading_pin" placeholder="Enter Trading Pin" value="{{ isset($brokers['Webull']) ? $brokers['Webull']->trading_pin : '' }}">
+                                <input type="text" class="form-control ms-3" name="webull_trading_pin" placeholder="Enter Trading Pin" value="{{ isset($brokers['Webull']) ? $brokers['Webull']->pin : '' }}">
                                 <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
                                 <span class="badge bg-secondary ms-3">{{ isset($brokers['Webull']) ? ($brokers['Webull']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
                             </div>
