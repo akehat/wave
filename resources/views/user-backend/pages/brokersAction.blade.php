@@ -139,6 +139,7 @@
                             lightbox=document.getElementById("lightbox");
                             if(lightbox){lightbox.remove()}
                             askForSMS(data.broker,data.for);
+
                         } else {
                             lightbox=document.getElementById("lightbox");
                             if(lightbox){lightbox.remove()}
