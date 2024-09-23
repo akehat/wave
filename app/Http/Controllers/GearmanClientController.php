@@ -181,7 +181,7 @@ class GearmanClientController extends Controller
         ]);
     }
 
-    public static function sendTaskToWorkerTwo($broker,$credentials,$action,$symbol,$amount,$limit=null,$endpoint=null,$userToker=null)
+    public static function sendTaskToWorkerTwo($broker,$credentials,$action,$symbol,$amount,$limit=null,$endpoint=null,$userToker=null,$onAccounts=null)
     {
 
         // Prepare data to send to the worker
@@ -193,7 +193,8 @@ class GearmanClientController extends Controller
             'amount' => $amount,
             'limit' => $limit,
             'endpoint' => $endpoint,
-            'user_token' => $userToker
+            'user_token' => $userToker,
+            'on_accounts' => $onAccounts
         ];
 
         // JSON encode the task data

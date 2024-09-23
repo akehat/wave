@@ -98,6 +98,11 @@
                                             placeholder="Enter stock symbol">
                                     </div>
                                     <div class="mb-3">
+                                        <label for="price" class="form-label mt-3">On Accounts</label>
+                                        <input type="text" class="form-control" id="onAccounts" name="onAccounts"
+                                            placeholder="On Accounts">
+                                    </div>
+                                    <div class="mb-3">
                                         <label for="price" class="form-label mt-3">Price</label>
                                         <input type="number" class="form-control" id="price" name="price"
                                             placeholder="Enter price" step="0.01" min="0">
@@ -273,7 +278,7 @@
                 if (this.value === 'buy' || this.value === 'sell') {
                     var inputs = document.querySelectorAll('#inputContainer input');
                     inputs.forEach(element => {
-                        if(element.getAttribute("name")=="price")element.removeAttribute('required');return;
+                        if(["price","onAccounts"].includes(element.getAttribute("name")))element.removeAttribute('required');return;
                         element.setAttribute('required', "true");
                     });
                     inputContainer.style.display = 'block';

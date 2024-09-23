@@ -312,7 +312,11 @@ class UserBackendController extends Controller
                 $creds=substr($creds,strlen("SANDBOX"));
                 $endpoint="sandbox.tradier.com";
             }
-            $result = (new GearmanClientController())->sendTaskToWorkerTwo($broker,$creds,$action,$request->input('symbol'),$request->input('quantity'),$request->input('price')??null,endpoint:$endpoint,userToker:$user->id);
+            $onAccounts=$request->input('onAccounts')??null;
+            if($onAccounts!=null){
+                $onAccounts=$onAccounts.split(",");
+            }
+            $result = (new GearmanClientController())->sendTaskToWorkerTwo($broker,$creds,$action,$request->input('symbol'),$request->input('quantity'),$request->input('price')??null,endpoint:$endpoint,userToker:$user->id,onAccounts:$onAccounts);
 
             // Return the result
             return response()->json($result);
