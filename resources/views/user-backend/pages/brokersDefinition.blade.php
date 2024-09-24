@@ -219,6 +219,18 @@
                                 <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
                                 <span class="badge bg-secondary ms-3">{{ isset($brokers['Tornado']) ? ($brokers['Tornado']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
                             </div>
+                            <div class="d-flex mb-3">
+                                <label class="form-label">DSPAC</label>
+                                <div class="form-check form-switch ms-3">
+                                    <input class="form-check-input" type="checkbox" id="DSPAC_enabled" name="DSPAC_enabled" {{ isset($brokers['DSPAC']) && $brokers['DSPAC']->enabled ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="DSPAC_enabled">Enable</label>
+                                </div>
+                                <input type="text" class="form-control ms-3" name="DSPAC_username" placeholder="Enter Username" value="{{ isset($brokers['DSPAC']) ? $brokers['DSPAC']->username : '' }}">
+                                <input type="password" class="form-control ms-3" name="DSPAC_password" placeholder="Enter Password" value="{{ isset($brokers['DSPAC']) ? $brokers['DSPAC']->password : '' }}">
+                                <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
+                                <span class="badge bg-secondary ms-3">{{ isset($brokers['DSPAC']) ? ($brokers['DSPAC']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
+                            </div>
+
 
                         </form>
                     </div>

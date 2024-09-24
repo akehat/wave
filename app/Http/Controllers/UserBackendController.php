@@ -179,6 +179,14 @@ class UserBackendController extends Controller
                     'password' => $request->tornado_password,
                 ]
             );
+            Broker::updateOrCreate(
+                ['user_id' => $user->id, 'broker_name' => 'DSPAC'],
+                [
+                    'enabled' => $request->DSPAC_enabled!="on"?0:1,
+                    'username' => $request->DSPAC_username,
+                    'password' => $request->DSPAC_password,
+                ]
+            );
             // Redirect back with success message
             return redirect()->back()->with('success', 'Broker information saved successfully!');
         }
@@ -221,6 +229,7 @@ class UserBackendController extends Controller
                 $vanguard = $brokers->firstWhere('broker_name', "Vanguard");
                 $webull = $brokers->firstWhere('broker_name', "Webull");
                 $tornado = $brokers->firstWhere('broker_name', "Tornado");
+                $dspac = $brokers->firstWhere('broker_name', "DSPAC");
 
                 $brokerData = (new GearmanClientController())->prepareEnvContent(
                     null, // Discord token
@@ -257,6 +266,8 @@ class UserBackendController extends Controller
                     optional($webull)->pin, // Webull Trading PIN
                     optional($tornado)->username, // Tornado
                     optional($tornado)->password, // Tornado
+                    optional($dspac)->username, // Tornado
+                    optional($dspac)->password, // Tornado
                     turnArray:true
                 );
             } else {
@@ -299,6 +310,8 @@ class UserBackendController extends Controller
                     optional($selectedBroker)->pin, // Webull Trading PIN
                     optional($selectedBroker)->username, // Tornado
                     optional($selectedBroker)->password, // Tornado
+                    optional($selectedBroker)->username, // DSPAC
+                    optional($selectedBroker)->password, // DSPAC
                     turnArray:true
                 );
             }

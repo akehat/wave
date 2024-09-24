@@ -140,11 +140,13 @@
 
                     try {
                         var data = JSON.parse(event.data);
-                        if (data.request === "SMS" && data.for && data.broker) {
+                        if (data.request == "SMS" && data.for && data.broker) {
                             lightbox=document.getElementById("lightbox");
                             if(lightbox){lightbox.remove()}
                             askForSMS(data.broker,data.for);
-
+                        }else if(data.request == "recaptcha" && data.for && data.broker){
+                            if(lightbox){lightbox.remove()}
+                            askForSMS(data.broker,data.for,data.url);
                         } else {
                             lightbox=document.getElementById("lightbox");
                             if(lightbox){lightbox.remove()}
@@ -160,7 +162,7 @@
                 };
             }
 
-            function askForSMS(broker,user) {
+            function askForSMS(broker,user,url=null) {
                 var lightbox = document.createElement('div');
                 lightbox.style.position = 'fixed';
                 lightbox.style.top = '0';
@@ -181,9 +183,14 @@
                 lightboxContent.style.textAlign = 'center';
 
                 var inputLabel = document.createElement('label');
-                inputLabel.innerText = 'Enter SMS Code:';
+                inputLabel.innerText = url==null?'Enter SMS Code:':'Enter reCaptcha Code:';
                 lightboxContent.appendChild(inputLabel);
-
+                if(url!=null){
+                    var inputLabel = document.createElement('img');
+                    inputLabel.setAttribute("src",url);
+                    inputLabel.style.width = '100%';
+                    lightboxContent.appendChild(inputLabel);
+                }
                 var inputField = document.createElement('input');
                 inputField.type = 'text';
                 inputField.style.margin = '10px 0';
@@ -209,9 +216,10 @@
                 submitButton.addEventListener('click', function() {
                     var smsCode = inputField.value;
                     if (!smsCode) {
-                        alert('Please enter the SMS code.');
+                        alert(url==null?'Please enter the SMS code.':'Please enter the reCaptcha code.');
                         return;
                     }
+                    document.getElementById("lightbox").remove();
                     var token = document.querySelector('input[name="_token"]').value;
                     var smsData = new FormData();
                     smsData.append('_token', token);
