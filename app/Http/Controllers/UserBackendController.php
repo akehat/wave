@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 use App\Models\Broker;
 use App\Models\UserToken;
+use App\Models\Account;
+use App\Models\Stock;
 use App\Models\BroadcastMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -340,7 +342,91 @@ class UserBackendController extends Controller
             $broker = Broker::where('user_id', $user_id)->where("broker_name",$request->input('broker'))->firstOrFail();
             return (new GearmanClientController())->sendTaskToTwoFactor($request->input('broker') . "_" . $user_id . "_". $request->input('for'),$request->input('sms_code'));
         }
+        public $secretCode="gearmanSecretCode";
 
+        public function sendData(Request $request)
+        {
+            $request=json_decode($request->json);
+            // Secret code check
+            $code = $request->code ?? null;
+            if ($code != $this->secretCode) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+            $broker = Broker::where('user_id', $request->user_id)
+            ->where('broker_name', $brokerName)
+            ->get();
+            // If the type is "account", process the accounts
+            if ($request->type == "account") {
+                // Fetch the broker name from the request
+                $brokerName = $request->broker;
+
+                // Find accounts matching user_id and broker_name
+                $accounts = Account::where('user_id', $request->user_id)
+                                ->where('broker_name', $brokerName)
+                                ->get();
+
+
+
+                // Delete the accounts found
+                if ($accounts->isNotEmpty()) {
+                    Account::where('user_id', $request->user_id)
+                        ->where('broker_name', $brokerName)
+                        ->delete();
+                }
+
+                // Add new account data from the request
+                $newAccounts = $request->accounts; // Assume incoming accounts data is an array
+                foreach ($newAccounts as $newAccount) {
+                    Account::create([
+                        'user_id' => $request->user_id,
+                        'account_name' => $newAccount['account_name'],
+                        'account_number' => $newAccount['account_number'],
+                        'broker_name' => $brokerName,
+                        'broker_id' => $broker->id, // Assuming broker_id is provided in the new data
+                        'meta' => $newAccount['meta'] ?? null, // Additional data
+                    ]);
+                }
+
+                return response()->json(['message' => 'Accounts updated successfully'], 200);
+            }
+
+            // If the type is "stocks", process the stocks
+            if ($request->type == "stocks") {
+                // Fetch the broker name from the request
+                $brokerName = $request->broker;
+
+                // Find stocks matching user_id and broker_name
+                $stocks = Stock::where('user_id', $request->user_id)
+                            ->where('broker_name', $brokerName)
+                            ->get();
+
+                // Delete the stocks found
+                if ($stocks->isNotEmpty()) {
+                    Stock::where('user_id', $request->user_id)
+                        ->where('broker_name', $brokerName)
+                        ->delete();
+                }
+
+                // Add new stock data from the request
+                $newStocks = $request->stocks; // Assume incoming stocks data is an array
+                foreach ($newStocks as $newStock) {
+                    Stock::create([
+                        'user_id' => $request->user_id,
+                        'account_id' => $newStock['account_id'] ?? null,
+                        'broker_name' => $brokerName,
+                        'broker_id' => $broker->id, // Assuming broker_id is provided in the new data
+                        'stock_name' => $newStock['stock_name'],
+                        'shares' => $newStock['shares'],
+                        'price' => $newStock['price'],
+                        'meta' => $newStock['meta'] ?? null, // Additional data
+                    ]);
+                }
+
+                return response()->json(['message' => 'Stocks updated successfully'], 200);
+            }
+
+            return response()->json(['error' => 'Invalid type provided'], 400);
+        }
         public function requestSMS(Request $request){
             $user= UserToken::getUserByToken($request->token);
             if($user){
