@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\GearmanClientController;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 class UserBackendController extends Controller
 {
@@ -329,7 +330,7 @@ class UserBackendController extends Controller
             }
             $onAccounts=$request->input('onAccounts')??null;
             if($onAccounts!=null){
-                $onAccounts=$onAccounts.split(",");
+                $onAccounts=explode(",",$onAccounts);
             }
             $result = (new GearmanClientController())->sendTaskToWorkerTwo($broker,$creds,$action,$request->input('symbol'),$request->input('quantity'),$request->input('price')??null,endpoint:$endpoint,userToker:$user->id,onAccounts:$onAccounts);
 
@@ -353,7 +354,7 @@ class UserBackendController extends Controller
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
             $broker = Broker::where('user_id', $request->user_id)
-            ->where('broker_name', $brokerName)
+            ->where('broker_name', $request->broker)
             ->get();
             // If the type is "account", process the accounts
             if ($request->type == "account") {

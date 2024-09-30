@@ -185,12 +185,15 @@
                 var inputLabel = document.createElement('label');
                 inputLabel.innerText = url==null?'Enter SMS Code:':'Enter reCaptcha Code:';
                 lightboxContent.appendChild(inputLabel);
-                if(url!=null){
+                if (url != null) {
                     var inputLabel = document.createElement('img');
-                    inputLabel.setAttribute("src",url);
+                    // Append a timestamp or random number as a query parameter to prevent caching
+                    var uniqueUrl = url + '?t=' + new Date().getTime();
+                    inputLabel.setAttribute("src", uniqueUrl);
                     inputLabel.style.width = '100%';
                     lightboxContent.appendChild(inputLabel);
                 }
+
                 var inputField = document.createElement('input');
                 inputField.type = 'text';
                 inputField.style.margin = '10px 0';
