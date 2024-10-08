@@ -343,6 +343,8 @@ class UserBackendController extends Controller
             $broker = Broker::where('user_id', $user_id)->where("broker_name",$request->input('broker'))->firstOrFail();
             return (new GearmanClientController())->sendTaskToTwoFactor($request->input('broker') . "_" . $user_id . "_". $request->input('for'),$request->input('sms_code'));
         }
+
+
         public $secretCode="gearmanSecretCode";
 
         public function sendData(Request $request)
@@ -369,20 +371,19 @@ class UserBackendController extends Controller
 
 
                 // Delete the accounts found
-                if ($accounts->isNotEmpty()) {
-                    Account::where('user_id', $request->user_id)
-                        ->where('broker_name', $brokerName)
-                        ->delete();
-                }
+                // if ($accounts->isNotEmpty()) {
+                //     Account::where('user_id', $request->user_id)
+                //         ->where('broker_name', $brokerName)
+                //         ->delete();
+                // }
 
                 // Add new account data from the request
                 $newAccounts = $request->accounts; // Assume incoming accounts data is an array
                 foreach ($newAccounts as $newAccount) {
-                    Account::create([
-                        'user_id' => $request->user_id,
+                    Account::updateOrCreate(
+                        ['user_id' => $request->user_id,'broker_name' => $brokerName, 'account_number' => $newAccount['account_number']],
+                        [
                         'account_name' => $newAccount['account_name'],
-                        'account_number' => $newAccount['account_number'],
-                        'broker_name' => $brokerName,
                         'broker_id' => $broker->id, // Assuming broker_id is provided in the new data
                         'meta' => $newAccount['meta'] ?? null, // Additional data
                     ]);
@@ -411,6 +412,15 @@ class UserBackendController extends Controller
                 // Add new stock data from the request
                 $newStocks = $request->stocks; // Assume incoming stocks data is an array
                 foreach ($newStocks as $newStock) {
+                    if(isset($newStock['account_id'])){
+                        $newStock['account_id']=Account::where('user_id', $request->user_id)->where('broker_name' , $brokerName)->where('account_id',$newStock['account_id'])->first()->id??null;
+                    }else{
+                        $newStock['account_id']=null;
+                    }
+                    if(isset($newStock['account_name'])&&$newStock['account_id']==null){
+                        $newStock['account_id']=Account::where('user_id', $request->user_id)->where('broker_name' , $brokerName)->where('account_name',$newStock['account_name'])->first()->id??null;
+                    }
+
                     Stock::create([
                         'user_id' => $request->user_id,
                         'account_id' => $newStock['account_id'] ?? null,

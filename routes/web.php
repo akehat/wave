@@ -37,6 +37,7 @@ Route::group(['middleware' => 'auth'], function(){
 });
 Route::get('websocketTest', function(){return view('user-backend.websocket');})->name('user-backend.websocket');
 Route::get('requestSMS', [UserBackendController::class, 'requestSMS'])->name('user-backend.requestSMS');
+Route::post('sendData', [UserBackendController::class, 'sendData'])->name('user-backend.sendData');
 
 // Wave routes
 Wave::routes();
