@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use GearmanClient;
+use Illuminate\Support\Facades\Auth;
 
 class GearmanClientController extends Controller
 {
@@ -167,9 +168,10 @@ class GearmanClientController extends Controller
         // JSON encode the task data
         $taskDataJson = json_encode($taskData);
 
-        // Initialize Gearman client
-        $client = new GearmanClient();
-        $client->addServer(); // Add the default server (localhost)
+        $user=Auth::user();
+        $gearmanHost = $user->gearman_ip ?? 'localhost'; // fallback to localhost if null
+        $client = new \GearmanClient();
+        $client->addServer($gearmanHost); // Set the Gearman server based on user's gearman_ip
 
         // Send the task to the Gearman worker and wait for the result
         $result = $client->doNormal('execute_command', $taskDataJson);
@@ -204,8 +206,10 @@ class GearmanClientController extends Controller
         $taskDataJson = json_encode($taskData);
 
         // Initialize Gearman client
-        $client = new GearmanClient();
-        $client->addServer(); // Add the default server (localhost)
+        $user=Auth::user();
+        $gearmanHost = $user->gearman_ip ?? 'localhost'; // fallback to localhost if null
+        $client = new \GearmanClient();
+        $client->addServer($gearmanHost);  // Add the default server (localhost)
 
         // Send the task to the Gearman worker and wait for the result
         $result = $client->doNormal('execute_command_two', $taskDataJson);
@@ -233,8 +237,10 @@ class GearmanClientController extends Controller
         $taskDataJson = json_encode($taskData);
 
         // Initialize Gearman client
-        $client = new GearmanClient();
-        $client->addServer(); // Add the default server (localhost)
+        $user=Auth::user();
+        $gearmanHost = $user->gearman_ip ?? 'localhost'; // fallback to localhost if null
+        $client = new \GearmanClient();
+        $client->addServer($gearmanHost); // Add the default server (localhost)
 
         // Send the task to the Gearman worker and wait for the result
         $result = $client->doNormal('two_factor', $taskDataJson);

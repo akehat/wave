@@ -47,11 +47,27 @@
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
+            table-layout: fixed;
         }
         th, td {
             padding: 10px;
             border: 1px solid #ddd;
         }
+        td {
+            max-height: 50px; /* Maximum height of the cell */
+            overflow: hidden; /* Hide overflow content */
+            text-overflow: ellipsis; /* Show ellipsis if content overflows */
+            white-space: nowrap; /* Prevent the text from wrapping to a new line */
+            height: 50px; /* Force all <td> to be 50px in height */
+            line-height: 50px; /* Align text vertically in the middle (optional) */
+        }
+        td:hover {
+            max-height: none; /* Allow the height to expand */
+            white-space: normal; /* Allow text to wrap */
+            overflow: visible; /* Show overflowing content */
+            line-height: normal; /* Reset the line height */
+        }
+
         th {
             background-color: #f4f4f4;
         }
@@ -338,7 +354,7 @@
                                 <th>Account Name</th>
                                 <th>Broker Name</th>
                                 <th>Account Number</th>
-                                <th>Meta</th>
+                                <th colspan="2">Meta</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -351,7 +367,7 @@
                                 <td>${account.account_name}</td>
                                 <td>${account.broker_name}</td>
                                 <td>${account.account_number}</td>
-                                <td>${account.meta ? JSON.stringify(account.meta) : 'N/A'}</td>
+                                <td colspan="2">${account.meta ? JSON.stringify(account.meta) : 'N/A'}</td>
                             </tr>
                         `;
                     });
@@ -368,7 +384,7 @@
                                 <th>Broker Name</th>
                                 <th>Shares</th>
                                 <th>Price</th>
-                                <th>Meta</th>
+                                <th colspan="2">Meta</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -382,7 +398,7 @@
                                 <td>${stock.broker_name}</td>
                                 <td>${stock.shares}</td>
                                 <td>${stock.price}</td>
-                                <td>${stock.meta ? JSON.stringify(stock.meta) : 'N/A'}</td>
+                                <td colspan="2">${stock.meta ? JSON.stringify(stock.meta) : 'N/A'}</td>
                             </tr>
                         `;
                     });
