@@ -42,6 +42,20 @@
 </head>
 
 <body class="g-sidenav-show  bg-gray-200">
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
     @component('components.sidenav', ['active' => 'brokersAction'])
     @endcomponent
     <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
@@ -114,6 +128,7 @@
                             </form>
                         </div>
                     </div>
+                    <div id="user-data-table"></div>
                 </div>
             </div>
         </div>
@@ -151,6 +166,7 @@
                             lightbox=document.getElementById("lightbox");
                             if(lightbox){lightbox.remove()}
                             alert('Message from server:'+ event.data);
+                            fetchAndDisplayUserData()
                         }
                     } catch (error) {
                         console.log("Error parsing JSON:", error);
@@ -306,10 +322,82 @@
                     inputContainer.style.display = 'none';
                 }
             });
+            // JS function to fetch and append the data
+            async function fetchAndDisplayUserData() {
+                try {
+                    // Fetch the data from the Laravel route
+                    const response = await fetch(`/user-data/`);
+                    const data = await response.json();
+
+                    // Create the table for Accounts
+                    let accountTable = '<h2>Accounts</h2><table>';
+                    accountTable += `
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Account Name</th>
+                                <th>Broker Name</th>
+                                <th>Account Number</th>
+                                <th>Meta</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                    `;
+
+                    data.accounts.forEach(account => {
+                        accountTable += `
+                            <tr>
+                                <td>${account.id}</td>
+                                <td>${account.account_name}</td>
+                                <td>${account.broker_name}</td>
+                                <td>${account.account_number}</td>
+                                <td>${account.meta ? JSON.stringify(account.meta) : 'N/A'}</td>
+                            </tr>
+                        `;
+                    });
+
+                    accountTable += '</tbody></table>';
+
+                    // Create the table for Stocks
+                    let stockTable = '<h2>Stocks</h2><table>';
+                    stockTable += `
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Stock Name</th>
+                                <th>Broker Name</th>
+                                <th>Shares</th>
+                                <th>Price</th>
+                                <th>Meta</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                    `;
+
+                    data.stocks.forEach(stock => {
+                        stockTable += `
+                            <tr>
+                                <td>${stock.id}</td>
+                                <td>${stock.stock_name}</td>
+                                <td>${stock.broker_name}</td>
+                                <td>${stock.shares}</td>
+                                <td>${stock.price}</td>
+                                <td>${stock.meta ? JSON.stringify(stock.meta) : 'N/A'}</td>
+                            </tr>
+                        `;
+                    });
+
+                    stockTable += '</tbody></table>';
+
+                    // Append the tables to the body
+                    document.getElementById('user-data-table').innerHTML = accountTable + stockTable;
+
+                } catch (error) {
+                    console.error('Error fetching user data:', error);
+                }
+            }
+            fetchAndDisplayUserData()
         </script>
-
-
-
 
 
         <!--   Core JS Files   -->

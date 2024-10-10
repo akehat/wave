@@ -9,9 +9,13 @@ use App\Models\BroadcastMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\GearmanClientController;
+use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
+
+use function Laravel\Prompts\confirm;
+
 class UserBackendController extends Controller
 {
     function portal(){
@@ -345,28 +349,31 @@ class UserBackendController extends Controller
         }
 
 
-        public $secretCode="gearmanSecretCode";
 
         public function sendData(Request $request)
         {
-            $request=json_decode($request->json);
+            $request=(object)request()->all();
+            $request->user_id=$request->user;
+            Log::info(json_encode($request));
             // Secret code check
-            $code = $request->code ?? null;
-            if ($code != $this->secretCode) {
+            $code = $request->gearmanSecretCode ?? null;
+            if ($code != config("app.secretcode", "defaultSecretCode")) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
             $broker = Broker::where('user_id', $request->user_id)
-            ->where('broker_name', $request->broker)
-            ->get();
+            ->where('broker_name', ucfirst($request->broker))
+            ->first();
+            Log::info(json_encode($broker));
+
             // If the type is "account", process the accounts
             if ($request->type == "account") {
                 // Fetch the broker name from the request
-                $brokerName = $request->broker;
+                $brokerName = ucfirst($request->broker);
 
                 // Find accounts matching user_id and broker_name
-                $accounts = Account::where('user_id', $request->user_id)
-                                ->where('broker_name', $brokerName)
-                                ->get();
+                // $accounts = Account::where('user_id', $request->user_id)
+                //                 ->where('broker_name', $brokerName)
+                //                 ->get();
 
 
 
@@ -380,13 +387,19 @@ class UserBackendController extends Controller
                 // Add new account data from the request
                 $newAccounts = $request->accounts; // Assume incoming accounts data is an array
                 foreach ($newAccounts as $newAccount) {
+                    $newAccount=(array)$newAccount;
+                    $accountName=isset($newAccount['account_name'])?$newAccount['account_name']:$newAccount['account_number'];
+                    try{
                     Account::updateOrCreate(
                         ['user_id' => $request->user_id,'broker_name' => $brokerName, 'account_number' => $newAccount['account_number']],
                         [
-                        'account_name' => $newAccount['account_name'],
+                        'account_name' => $accountName,
                         'broker_id' => $broker->id, // Assuming broker_id is provided in the new data
                         'meta' => $newAccount['meta'] ?? null, // Additional data
                     ]);
+                    }catch(Exception $e){
+                        log::info($e);
+                    }
                 }
 
                 return response()->json(['message' => 'Accounts updated successfully'], 200);
@@ -395,7 +408,7 @@ class UserBackendController extends Controller
             // If the type is "stocks", process the stocks
             if ($request->type == "stocks") {
                 // Fetch the broker name from the request
-                $brokerName = $request->broker;
+                $brokerName = ucfirst($request->broker);
 
                 // Find stocks matching user_id and broker_name
                 $stocks = Stock::where('user_id', $request->user_id)
@@ -413,7 +426,7 @@ class UserBackendController extends Controller
                 $newStocks = $request->stocks; // Assume incoming stocks data is an array
                 foreach ($newStocks as $newStock) {
                     if(isset($newStock['account_id'])){
-                        $newStock['account_id']=Account::where('user_id', $request->user_id)->where('broker_name' , $brokerName)->where('account_id',$newStock['account_id'])->first()->id??null;
+                        $newStock['account_id']=Account::where('user_id', $request->user_id)->where('broker_name' , $brokerName)->where('account_number',$newStock['account_id'])->first()->id??null;
                     }else{
                         $newStock['account_id']=null;
                     }
@@ -451,5 +464,15 @@ class UserBackendController extends Controller
                 return Response::json(["success"=>"request added for user"], 200);
             }
             return Response::json(["error"=>"request failed, no user"], 300);
+        }
+        function getUserData(){
+            $userId=Auth::id();
+            $accounts = Account::where('user_id', $userId)->get();
+            $stocks = Stock::where('user_id', $userId)->get();
+            // Return as JSON
+            return response()->json([
+                'accounts' => $accounts,
+                'stocks' => $stocks
+            ]);
         }
 }

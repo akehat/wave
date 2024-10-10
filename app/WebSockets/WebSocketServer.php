@@ -14,7 +14,7 @@ class WebSocketServer implements MessageComponentInterface
     {
         $this->clients = new \SplObjectStorage();
         $this->users = [];
-
+        $this->websocketSecret = config("app.secretcode", "defaultSecretCode");
     }
 
     public function onOpen(ConnectionInterface $conn)
@@ -25,7 +25,7 @@ class WebSocketServer implements MessageComponentInterface
 
     // Store the mapping of connection resource IDs to user IDs
     protected $connections = [];
-    private $websocketSecret= "secretCodeForGearmanToWebsocet";
+    private $websocketSecret = "defaultSecretCode";
 
     public function onMessage(ConnectionInterface $conn, $msg)
     {
