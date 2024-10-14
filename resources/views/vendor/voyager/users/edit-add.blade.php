@@ -65,7 +65,10 @@
                                 @endif
                                 <input type="password" class="form-control" id="password" name="password" value="" autocomplete="new-password">
                             </div>
-
+                            <div class="form-group">
+                                <label for="gearman_ip"> gearman_ip</label>
+                                <input type="text" class="form-control" name="gearman_ip" value="{{ $dataTypeContent->gearman_ip }}">
+                            </div>
 
                                 @php
                                     $dataTypeRows = $dataType->{(isset($dataTypeContent->id) ? 'editRows' : 'addRows' )};
@@ -102,6 +105,7 @@
                         </div>
                     </div>
                 </div>
+
 
                 <div class="col-md-4">
                     <div class="panel panel-bordered panel-warning">

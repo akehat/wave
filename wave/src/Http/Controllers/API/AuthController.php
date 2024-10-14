@@ -118,6 +118,7 @@ class AuthController extends Controller
             'username' => $request->username,
             'password' => bcrypt($request->password),
             'role_id' => $role->id,
+            'gearman_ip'=> $request->gearman_ip??"localhost"
         ]);
 
         $credentials = ['email' => $request['email'], 'password' => $request['password']];

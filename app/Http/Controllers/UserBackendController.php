@@ -9,6 +9,8 @@ use App\Models\BroadcastMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\GearmanClientController;
+use App\Models\ArchivedAccount;
+use App\Models\ArchivedStock;
 use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -364,46 +366,99 @@ class UserBackendController extends Controller
             ->where('broker_name', ucfirst($request->broker))
             ->first();
             Log::info(json_encode($broker));
-
             // If the type is "account", process the accounts
             if ($request->type == "account") {
                 // Fetch the broker name from the request
                 $brokerName = ucfirst($request->broker);
 
                 // Find accounts matching user_id and broker_name
-                // $accounts = Account::where('user_id', $request->user_id)
-                //                 ->where('broker_name', $brokerName)
-                //                 ->get();
+                $accounts = Account::where('user_id', $request->user_id)
+                                    ->where('broker_name', $brokerName)
+                                    ->get();
+                $now = now();
 
+                // Get the last slice_time from archived_accounts
+                $lastArchivedSliceTime = ArchivedAccount::where('user_id', $request->user_id)
+                                                        ->where('broker_name', $brokerName)
+                                                        ->max('slice_time');
 
+                // Fetch all accounts from the last archived slice for this broker
+                $lastArchivedAccounts = ArchivedAccount::where('user_id', $request->user_id)
+                                                       ->where('broker_name', $brokerName)
+                                                       ->where('slice_time', $lastArchivedSliceTime)
+                                                       ->get();
 
-                // Delete the accounts found
-                // if ($accounts->isNotEmpty()) {
-                //     Account::where('user_id', $request->user_id)
-                //         ->where('broker_name', $brokerName)
-                //         ->delete();
-                // }
+                $identical = false;
+
+                // Check if the length of the accounts is different from the last slice
+                if ($accounts->count() !== $lastArchivedAccounts->count()) {
+                    $identical = false;
+                } else {
+                    // Compare the content of each account (excluding slice_time, created_at, updated_at)
+                    $identical = true;
+                    foreach ($accounts as $account) {
+                        $matchingAccount = $lastArchivedAccounts->first(function($archivedAccount) use ($account) {
+                            return $archivedAccount->user_id === $account->user_id &&
+                                   $archivedAccount->account_name === $account->account_name &&
+                                   $archivedAccount->broker_name === $account->broker_name &&
+                                   $archivedAccount->broker_id === $account->broker_id &&
+                                   $archivedAccount->account_number === $account->account_number &&
+                                   $archivedAccount->meta === $account->meta;
+                        });
+
+                        // If no matching account is found, they are not identical
+                        if (!$matchingAccount) {
+                            $identical = false;
+                            break;
+                        }
+                    }
+                }
+
+                // If the accounts are not identical, archive them
+                if (!$identical) {
+                    foreach ($accounts as $account) {
+                        ArchivedAccount::create([
+                            'user_id' => $account->user_id,
+                            'account_name' => $account->account_name,
+                            'broker_name' => $account->broker_name,
+                            'broker_id' => $account->broker_id,
+                            'account_number' => $account->account_number,
+                            'meta' => $account->meta,
+                            'slice_time' => $now,  // Current timestamp as slice time
+                            'created_at' => $account->created_at,
+                            'updated_at' => $account->updated_at,
+                        ]);
+                    }
+                }
+
+                // Delete the accounts (whether archived or not)
+                Account::where('user_id', $request->user_id)
+                       ->where('broker_name', $brokerName)
+                       ->delete();
 
                 // Add new account data from the request
                 $newAccounts = $request->accounts; // Assume incoming accounts data is an array
                 foreach ($newAccounts as $newAccount) {
-                    $newAccount=(array)$newAccount;
-                    $accountName=isset($newAccount['account_name'])?$newAccount['account_name']:$newAccount['account_number'];
-                    try{
-                    Account::updateOrCreate(
-                        ['user_id' => $request->user_id,'broker_name' => $brokerName, 'account_number' => $newAccount['account_number']],
-                        [
-                        'account_name' => $accountName,
-                        'broker_id' => $broker->id, // Assuming broker_id is provided in the new data
-                        'meta' => $newAccount['meta'] ?? null, // Additional data
-                    ]);
-                    }catch(Exception $e){
-                        log::info($e);
+                    $newAccount = (array) $newAccount;
+                    $accountName = isset($newAccount['account_name']) ? $newAccount['account_name'] : $newAccount['account_number'];
+
+                    try {
+                        Account::updateOrCreate(
+                            ['user_id' => $request->user_id, 'broker_name' => $brokerName, 'account_number' => $newAccount['account_number']],
+                            [
+                                'account_name' => $accountName,
+                                'broker_id' => $broker->id, // Assuming broker_id is provided in the new data
+                                'meta' => $newAccount['meta'] ?? null, // Additional data
+                            ]
+                        );
+                    } catch (Exception $e) {
+                        Log::info($e);
                     }
                 }
 
                 return response()->json(['message' => 'Accounts updated successfully'], 200);
             }
+
 
             // If the type is "stocks", process the stocks
             if ($request->type == "stocks") {
@@ -414,13 +469,67 @@ class UserBackendController extends Controller
                 $stocks = Stock::where('user_id', $request->user_id)
                             ->where('broker_name', $brokerName)
                             ->get();
-
+                $now=now();
                 // Delete the stocks found
-                if ($stocks->isNotEmpty()) {
-                    Stock::where('user_id', $request->user_id)
-                        ->where('broker_name', $brokerName)
-                        ->delete();
+                $lastArchivedSliceTime = ArchivedStock::where('user_id', $request->user_id)
+                                        ->where('broker_name', $brokerName)
+                                        ->max('slice_time');
+
+                // Fetch all stocks from the last archived slice for this broker
+                $lastArchivedStocks = ArchivedStock::where('user_id', $request->user_id)
+                                                    ->where('broker_name', $brokerName)
+                                                    ->where('slice_time', $lastArchivedSliceTime)
+                                                    ->get();
+                $identical = false;
+                // Check if the length of the stocks is different from the last slice
+                if ($stocks->count() !== $lastArchivedStocks->count()) {
+                    $identical = false;
+                } else {
+                    // Compare the content of each stock (excluding slice_time, created_at, updated_at)
+                    $identical = true;
+                    foreach ($stocks as $stock) {
+                        $matchingStock = $lastArchivedStocks->first(function($archivedStock) use ($stock) {
+                            return $archivedStock->user_id === $stock->user_id &&
+                                $archivedStock->account_id === $stock->account_id &&
+                                $archivedStock->broker_name === $stock->broker_name &&
+                                $archivedStock->broker_id === $stock->broker_id &&
+                                $archivedStock->stock_name === $stock->stock_name &&
+                                $archivedStock->shares === $stock->shares &&
+                                $archivedStock->price === $stock->price &&
+                                $archivedStock->meta === $stock->meta;
+                        });
+
+                        // If no matching stock is found, they are not identical
+                        if (!$matchingStock) {
+                            $identical = false;
+                            break;
+                        }
+                    }
                 }
+                // If the stocks are not identical, archive them
+                if (!$identical) {
+                    foreach ($stocks as $stock) {
+                        ArchivedStock::create([
+                            'user_id' => $stock->user_id,
+                            'account_id' => $stock->account_id,
+                            'broker_name' => $stock->broker_name,
+                            'broker_id' => $stock->broker_id,
+                            'stock_name' => $stock->stock_name,
+                            'shares' => $stock->shares,
+                            'price' => $stock->price,
+                            'meta' => $stock->meta,
+                            'slice_time' => $now,  // Current timestamp as slice time
+                            'created_at' => $stock->created_at,
+                            'updated_at' => $stock->updated_at,
+                        ]);
+                    }
+                }
+
+                // Delete the stocks (whether archived or not)
+                Stock::where('user_id', $request->user_id)
+                    ->where('broker_name', $brokerName)
+                    ->delete();
+
 
                 // Add new stock data from the request
                 $newStocks = $request->stocks; // Assume incoming stocks data is an array

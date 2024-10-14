@@ -12,8 +12,8 @@ class LoginController extends AuthLoginController
         if (!$user->hasRole('admin')) {
             return redirect()->route('user-backend.index');
         }
-    
+
         // If the user is an admin, redirect them to the default admin dashboard or another route
-        return redirect()->route('admin.dashboard'); // Adjust this route as needed
+        return redirect()->route('wave.dashboard'); // Adjust this route as needed
     }
 }
