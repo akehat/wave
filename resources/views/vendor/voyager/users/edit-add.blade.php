@@ -65,10 +65,7 @@
                                 @endif
                                 <input type="password" class="form-control" id="password" name="password" value="" autocomplete="new-password">
                             </div>
-                            <div class="form-group">
-                                <label for="gearman_ip"> gearman_ip</label>
-                                <input type="text" class="form-control" name="gearman_ip" value="{{ $dataTypeContent->gearman_ip }}">
-                            </div>
+
 
                                 @php
                                     $dataTypeRows = $dataType->{(isset($dataTypeContent->id) ? 'editRows' : 'addRows' )};
@@ -80,7 +77,10 @@
                                         $options = $row->details;
                                     }
                                 @endphp
-
+                                <div class="form-group">
+                                    <label for="gearman_ip"> gearman_ip</label>
+                                    <input type="text" class="form-control" name="gearman_ip" value="{{ $dataTypeContent->gearman_ip }}">
+                                </div>
                                 <div class="form-group">
                                     <label for="role_id">Primary Role</label>
                                     @php $roles = TCG\Voyager\Models\Role::all(); @endphp

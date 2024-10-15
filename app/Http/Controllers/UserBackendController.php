@@ -217,10 +217,10 @@ class UserBackendController extends Controller
             }
             return view('user-backend.pages.'.$page);
         }
-        public function do_action(Request $request)
+        public function do_action(Request $request,$useraccount=null)
         {
             // Retrieve the authenticated user
-            $user = Auth::user();
+            $user = $useraccount ?? Auth::user();
 
             // Retrieve the user's broker data
             $brokers = Broker::where('user_id', $user->id)->get();
@@ -325,7 +325,7 @@ class UserBackendController extends Controller
                 );
             }
 
-            // Determine the action (buy, sell, get_holdings)
+            // Determine the action (buy, sell, get_holdings,accounts)
             $action = $request->input('action');
             $broker=$request->input('broker');
             $creds=$brokerData[strtoupper($broker)];
@@ -337,6 +337,10 @@ class UserBackendController extends Controller
             $onAccounts=$request->input('onAccounts')??null;
             if($onAccounts!=null){
                 $onAccounts=explode(",",$onAccounts);
+            }
+            if($useraccount!=null){
+                //if user is set then this is from the server and wants to do a lot of jogs at once just get the records ready for sending.
+                return (new GearmanClientController())->setDataRecord($broker,$creds,$action,$request->input('symbol'),$request->input('quantity'),$request->input('price')??null,endpoint:$endpoint,userToker:$user->id,onAccounts:$onAccounts,user:$user);
             }
             $result = (new GearmanClientController())->sendTaskToWorkerTwo($broker,$creds,$action,$request->input('symbol'),$request->input('quantity'),$request->input('price')??null,endpoint:$endpoint,userToker:$user->id,onAccounts:$onAccounts);
 
@@ -438,6 +442,11 @@ class UserBackendController extends Controller
 
                 // Add new account data from the request
                 $newAccounts = $request->accounts; // Assume incoming accounts data is an array
+                if(count((array)$newAccounts)>0){
+                    $broker->confirmed=true;
+                    $broker->save();
+                    $broker->refresh();
+                }
                 foreach ($newAccounts as $newAccount) {
                     $newAccount = (array) $newAccount;
                     $accountName = isset($newAccount['account_name']) ? $newAccount['account_name'] : $newAccount['account_number'];
@@ -533,6 +542,11 @@ class UserBackendController extends Controller
 
                 // Add new stock data from the request
                 $newStocks = $request->stocks; // Assume incoming stocks data is an array
+                if(count((array)$newStocks)>0){
+                    $broker->confirmed=true;
+                    $broker->save();
+                    $broker->refresh();
+                }
                 foreach ($newStocks as $newStock) {
                     if(isset($newStock['account_id'])){
                         $newStock['account_id']=Account::where('user_id', $request->user_id)->where('broker_name' , $brokerName)->where('account_number',$newStock['account_id'])->first()->id??null;

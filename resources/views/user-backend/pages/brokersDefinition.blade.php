@@ -68,8 +68,8 @@
                                 </div>
                                 <input type="text" class="form-control ms-3" name="tradier_token" placeholder="Enter Token" value="{{ isset($brokers['Tradier']) ? $brokers['Tradier']->token : '' }}">
                                 <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge bg-secondary ms-3">{{ isset($brokers['Tradier']) ? ($brokers['Tradier']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                            </div>
+                                <span class="badge {{ isset($brokers['Tradier']) ? ($brokers['Tradier']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Tradier']) ? ($brokers['Tradier']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
+                                </div>
 
                             <!-- Robinhood -->
                             <div class="d-flex mb-3">
@@ -82,8 +82,9 @@
                                 <input type="password" class="form-control ms-3" name="robinhood_password" placeholder="Enter Password" value="{{ isset($brokers['Robinhood']) ? $brokers['Robinhood']->password : '' }}">
                                 <input type="text" class="form-control ms-3" name="robinhood_totp" placeholder="Enter TOTP (if 2FA enabled)" value="{{ isset($brokers['Robinhood']) ? $brokers['Robinhood']->totp : '' }}">
                                 <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge bg-secondary ms-3">{{ isset($brokers['Robinhood']) ? ($brokers['Robinhood']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                            </div>
+                                <span class="badge {{ isset($brokers['Robinhood']) ? ($brokers['Robinhood']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Robinhood']) ? ($brokers['Robinhood']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
+                                </div>
+
 
                             <!-- Chase -->
                             <div class="d-flex mb-3">
@@ -97,8 +98,8 @@
                                 <input type="text" class="form-control ms-3" name="chase_phone_last_four" placeholder="Enter Phone Last Four" value="{{ isset($brokers['Chase']) ? $brokers['Chase']->phone_last_four : '' }}">
                                 <input type="text" class="form-control ms-3" name="chase_debug" placeholder="Debug (Optional)" value="{{ isset($brokers['Chase']) ? $brokers['Chase']->debug : '' }}">
                                 <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge bg-secondary ms-3">{{ isset($brokers['Chase']) ? ($brokers['Chase']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                            </div>
+                                <span class="badge {{ isset($brokers['Chase']) ? ($brokers['Chase']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Chase']) ? ($brokers['Chase']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
+                                </div>
 
                             <!-- Fennel -->
                             <div class="d-flex mb-3">
@@ -109,8 +110,8 @@
                                 </div>
                                 <input type="text" class="form-control ms-3" name="fennel_email" placeholder="Enter Email" value="{{ isset($brokers['Fennel']) ? $brokers['Fennel']->email : '' }}">
                                 <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge bg-secondary ms-3">{{ isset($brokers['Fennel']) ? ($brokers['Fennel']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                            </div>
+                                <span class="badge {{ isset($brokers['Fennel']) ? ($brokers['Fennel']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Fennel']) ? ($brokers['Fennel']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
+                                </div>
 
                             <!-- Fidelity -->
                             <div class="d-flex mb-3">
@@ -122,8 +123,8 @@
                                 <input type="text" class="form-control ms-3" name="fidelity_username" placeholder="Enter Username" value="{{ isset($brokers['Fidelity']) ? $brokers['Fidelity']->username : '' }}">
                                 <input type="password" class="form-control ms-3" name="fidelity_password" placeholder="Enter Password" value="{{ isset($brokers['Fidelity']) ? $brokers['Fidelity']->password : '' }}">
                                 <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge bg-secondary ms-3">{{ isset($brokers['Fidelity']) ? ($brokers['Fidelity']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                            </div>
+                                <span class="badge {{ isset($brokers['Fidelity']) ? ($brokers['Fidelity']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Fidelity']) ? ($brokers['Fidelity']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
+                                </div>
 
                             <!-- Firstrade -->
                             <div class="d-flex mb-3">
@@ -136,8 +137,8 @@
                                 <input type="password" class="form-control ms-3" name="firstrade_password" placeholder="Enter Password" value="{{ isset($brokers['Firstrade']) ? $brokers['Firstrade']->password : '' }}">
                                 <input type="text" class="form-control ms-3" name="firstrade_pin" placeholder="Enter PIN" value="{{ isset($brokers['Firstrade']) ? $brokers['Firstrade']->pin : '' }}">
                                 <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge bg-secondary ms-3">{{ isset($brokers['Firstrade']) ? ($brokers['Firstrade']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                            </div>
+                                <span class="badge {{ isset($brokers['Firstrade']) ? ($brokers['Firstrade']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Firstrade']) ? ($brokers['Firstrade']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
+                                </div>
 
                             <!-- Public -->
                             <div class="d-flex mb-3">
@@ -149,8 +150,8 @@
                                 <input type="text" class="form-control ms-3" name="public_username" placeholder="Enter Username" value="{{ isset($brokers['Public']) ? $brokers['Public']->username : '' }}">
                                 <input type="text" class="form-control ms-3" name="public_password" placeholder="Enter password" value="{{ isset($brokers['Public']) ? $brokers['Public']->password : '' }}">
                                 <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge bg-secondary ms-3">{{ isset($brokers['Public']) ? ($brokers['Public']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                            </div>
+                                <span class="badge {{ isset($brokers['Public']) ? ($brokers['Public']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Public']) ? ($brokers['Public']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
+                                </div>
 
                             <!-- Schwab -->
                             <div class="d-flex mb-3">
@@ -163,8 +164,8 @@
                                 <input type="password" class="form-control ms-3" name="schwab_password" placeholder="Enter Password" value="{{ isset($brokers['Schwab']) ? $brokers['Schwab']->password : '' }}">
                                 <input type="text" class="form-control ms-3" name="schwab_totp" placeholder="Enter totp" value="{{ isset($brokers['Schwab']) ? $brokers['Schwab']->totp : '' }}">
                                 <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge bg-secondary ms-3">{{ isset($brokers['Schwab']) ? ($brokers['Schwab']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                            </div>
+                                <span class="badge {{ isset($brokers['Schwab']) ? ($brokers['Schwab']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Schwab']) ? ($brokers['Schwab']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
+                                </div>
 
                             <!-- Tradier -->
                             <div class="d-flex mb-3">
@@ -176,8 +177,8 @@
                                 <input type="text" class="form-control ms-3" name="tastytrade_username" placeholder="Enter Username" value="{{ isset($brokers['Tastytrade']) ? $brokers['Tastytrade']->username : '' }}">
                                 <input type="password" class="form-control ms-3" name="tastytrade_password" placeholder="Enter Password" value="{{ isset($brokers['Tastytrade']) ? $brokers['Tastytrade']->password : '' }}">
                                 <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge bg-secondary ms-3">{{ isset($brokers['Tastytrade']) ? ($brokers['Tastytrade']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                            </div>
+                                <span class="badge {{ isset($brokers['Tastytrade']) ? ($brokers['Tastytrade']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Tastytrade']) ? ($brokers['Tastytrade']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
+                                </div>
 
                             <!-- Vanguard -->
                             <div class="d-flex mb-3">
@@ -190,8 +191,8 @@
                                 <input type="password" class="form-control ms-3" name="vanguard_password" placeholder="Enter Password" value="{{ isset($brokers['Vanguard']) ? $brokers['Vanguard']->password : '' }}">
                                 <input type="text" class="form-control ms-3" name="vanguard_phone_last_four" placeholder="Enter Phone Last Four" value="{{ isset($brokers['Vanguard']) ? $brokers['Vanguard']->phone_last_four : '' }}">
                                 <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge bg-secondary ms-3">{{ isset($brokers['Vanguard']) ? ($brokers['Vanguard']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                            </div>
+                                <span class="badge {{ isset($brokers['Vanguard']) ? ($brokers['Vanguard']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Vanguard']) ? ($brokers['Vanguard']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
+                                </div>
 
                             <!-- Webull -->
                             <div class="d-flex mb-3">
@@ -205,8 +206,8 @@
                                 <input type="text" class="form-control ms-3" name="webull_did" placeholder="Enter did" value="{{ isset($brokers['Webull']) ? $brokers['Webull']->did : '' }}">
                                 <input type="text" class="form-control ms-3" name="webull_trading_pin" placeholder="Enter Trading Pin" value="{{ isset($brokers['Webull']) ? $brokers['Webull']->pin : '' }}">
                                 <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge bg-secondary ms-3">{{ isset($brokers['Webull']) ? ($brokers['Webull']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                            </div>
+                                <span class="badge {{ isset($brokers['Webull']) ? ($brokers['Webull']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Webull']) ? ($brokers['Webull']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
+                                </div>
 
                             <div class="d-flex mb-3">
                                 <label class="form-label">Tornado</label>
@@ -217,8 +218,8 @@
                                 <input type="text" class="form-control ms-3" name="tornado_username" placeholder="Enter Username" value="{{ isset($brokers['Tornado']) ? $brokers['Tornado']->username : '' }}">
                                 <input type="password" class="form-control ms-3" name="tornado_password" placeholder="Enter Password" value="{{ isset($brokers['Tornado']) ? $brokers['Tornado']->password : '' }}">
                                 <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge bg-secondary ms-3">{{ isset($brokers['Tornado']) ? ($brokers['Tornado']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                            </div>
+                                <span class="badge {{ isset($brokers['Tornado']) ? ($brokers['Tornado']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Tornado']) ? ($brokers['Tornado']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
+                                </div>
                             <div class="d-flex mb-3">
                                 <label class="form-label">DSPAC</label>
                                 <div class="form-check form-switch ms-3">
@@ -228,8 +229,8 @@
                                 <input type="text" class="form-control ms-3" name="DSPAC_username" placeholder="Enter Username" value="{{ isset($brokers['DSPAC']) ? $brokers['DSPAC']->username : '' }}">
                                 <input type="password" class="form-control ms-3" name="DSPAC_password" placeholder="Enter Password" value="{{ isset($brokers['DSPAC']) ? $brokers['DSPAC']->password : '' }}">
                                 <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge bg-secondary ms-3">{{ isset($brokers['DSPAC']) ? ($brokers['DSPAC']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                            </div>
+                                <span class="badge {{ isset($brokers['DSPAC']) ? ($brokers['DSPAC']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['DSPAC']) ? ($brokers['DSPAC']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
+                                </div>
 
 
                         </form>

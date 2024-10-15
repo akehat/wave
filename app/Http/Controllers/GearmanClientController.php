@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use GearmanClient;
 use Illuminate\Support\Facades\Auth;
 
+
 class GearmanClientController extends Controller
 {
     public static function prepareEnvContent(
@@ -186,7 +187,7 @@ class GearmanClientController extends Controller
         ]);
     }
 
-    public static function sendTaskToWorkerTwo($broker,$credentials,$action,$symbol,$amount,$limit=null,$endpoint=null,$userToker=null,$onAccounts=null)
+    public static function sendTaskToWorkerTwo($broker,$credentials,$action,$symbol,$amount,$limit=null,$endpoint=null,$userToker=null,$onAccounts=null,$user=null)
     {
 
         // Prepare data to send to the worker
@@ -206,7 +207,7 @@ class GearmanClientController extends Controller
         $taskDataJson = json_encode($taskData);
 
         // Initialize Gearman client
-        $user=Auth::user();
+        $user=$user??Auth::user();
         $gearmanHost = $user->gearman_ip ?? 'localhost'; // fallback to localhost if null
         $client = new \GearmanClient();
         $client->addServer($gearmanHost);  // Add the default server (localhost)
@@ -223,6 +224,60 @@ class GearmanClientController extends Controller
             'data' => $resultData,
         ]);
     }
+    public static function setDataRecord($broker,$credentials,$action,$symbol,$amount,$limit=null,$endpoint=null,$userToker=null,$onAccounts=null,$user=null){
+        return [$broker,$credentials,$action,$symbol,$amount,$limit,$endpoint,$userToker,$onAccounts,$user];
+    }
+    public static function sendTasksToWorkerTwo($records)
+    {
+        $taskData = [];
+        $user=null;
+        foreach($records as $record){
+            $broker=$record[0];
+            $credentials=$record[1];
+            $action=$record[2];
+            $symbol=$record[3];
+            $amount=$record[4];
+            $limit=$record[5];
+            $endpoint=$record[6];
+            $userToker=$record[7];
+            $onAccounts=$record[8];
+            $user=$record[9];
+            // Prepare data to send to the worker
+            $taskData[]=[
+                'broker' => $broker,
+                'credentials' => $credentials,
+                'action' => $action,
+                'symbol' => $symbol,
+                'amount' => $amount,
+                'limit' => $limit,
+                'endpoint' => $endpoint,
+                'user_token' => $userToker,
+                'on_accounts' => $onAccounts,
+                'automation' => $user!=null
+            ];
+        }
+        // JSON encode the task data
+        $taskDataJson = json_encode($taskData);
+
+        // Initialize Gearman client
+        $user=$user??Auth::user();
+        $gearmanHost = $user->gearman_ip ?? 'localhost'; // fallback to localhost if null
+        $client = new \GearmanClient();
+        $client->addServer($gearmanHost);  // Add the default server (localhost)
+
+        // Send the task to the Gearman worker and wait for the result
+        $result = $client->doNormal('execute_commands_two', $taskDataJson);
+
+        // Decode the JSON result
+        $resultData = json_decode($result, true);
+
+        // Return the result as a JSON response
+        return json_encode([
+            'status' => 'success',
+            'data' => $resultData,
+        ]);
+    }
+
 
     public static function sendTaskToTwoFactor($brokerAndUsername,$sms)
     {
