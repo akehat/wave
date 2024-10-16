@@ -44,7 +44,7 @@ class autoUpdate extends Command
                 foreach ($enabledBrokers as $broker) {
                     try {
                         // Call the do_action function for "get_accounts"
-                        $records[]=$this->callDoAction($user, $broker, 'get_accounts');
+                        $records[]=$this->callDoAction($user, $broker, 'accounts');
                         // Call the do_action function for "holdings"
                         $records[]=$this->callDoAction($user, $broker, 'holdings');
 
