@@ -335,8 +335,28 @@ class UserBackendController extends Controller
                 $endpoint="sandbox.tradier.com";
             }
             $onAccounts=$request->input('onAccounts')??null;
-            if($onAccounts!=null){
-                $onAccounts=explode(",",$onAccounts);
+            if ($onAccounts != null) {
+                $onAccounts = explode(",", $onAccounts);
+
+                // Define which field to use for each broker
+                $brokerFieldMap = [
+                    'public' => 'account_name',
+                    'fidelity' => 'account_number',
+                    'fennel' => 'account_name',
+                    'robinhood' => 'account_name',
+                    'schwab' => 'account_number',
+                    'tradier' => 'account_number',
+                    'webull' => 'account_name',
+                ];
+
+                // Determine the field to use based on the broker
+                $field = $brokerFieldMap[strtolower($broker)] ?? 'account_name';  // Default to account_name
+
+                // Fetch accounts using the determined field
+                $onAccounts = Account::where('user_id', $user->id)
+                                    ->where('broker_name', ucfirst($broker))
+                                    ->whereIn('account_number', $onAccounts)->pluck($field)
+                                    ->toArray();
             }
             if($useraccount!=null){
                 //if user is set then this is from the server and wants to do a lot of jogs at once just get the records ready for sending.

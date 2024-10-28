@@ -39,6 +39,9 @@
     <!-- Nepcha Analytics (nepcha.com) -->
     <!-- Nepcha is a easy-to-use web analytics. No cookies and fully compliant with GDPR, CCPA and PECR. -->
     <script defer data-site="YOUR_DOMAIN_HERE" src="https://api.nepcha.com/js/nepcha-analytics.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.css" />
+    <script src="https://cdn.datatables.net/2.1.8/js/dataTables.js"></script>
 </head>
 
 <body class="g-sidenav-show  bg-gray-200">
@@ -129,7 +132,8 @@
                                     </div>
                                     <div class="mb-3">
                                         <label for="price" class="form-label mt-3">On Accounts</label>
-                                        <input type="text" class="form-control" id="onAccounts" name="onAccounts"
+                                        <div id="accountCheckboxes"></div>
+                                        <input type="text" disabled class="form-control" id="onAccounts" name="onAccounts"
                                             placeholder="On Accounts">
                                     </div>
                                     <div class="mb-3">
@@ -144,7 +148,14 @@
                             </form>
                         </div>
                     </div>
-                    <div id="user-data-table"></div>
+                    <div id="user-data-table">
+                        <h2>Accounts</h2>
+                        <table id="accounts-table" class="display"></table>
+
+                        <h2>Stocks</h2>
+                        <table id="stocks-table" class="display"></table>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -313,6 +324,16 @@
                     alert('An error occurred. Please try again.');
                 });
             });
+            function updateOnAccounts() {
+                var selectedAccounts = [];
+                document.querySelectorAll('#accountCheckboxes input[name="accountCheckbox"]:checked').forEach(checkbox => {
+                    selectedAccounts.push(checkbox.value);
+                });
+                document.querySelector('input[name="onAccounts"]').value = selectedAccounts.join(',');
+            }
+            document.getElementById('broker').addEventListener('change', function() {
+                document.getElementById('action').dispatchEvent(new Event("change"))
+            })
 
             // Handle input visibility for buy/sell
             document.getElementById('action').addEventListener('change', function() {
@@ -323,6 +344,26 @@
                     inputs.forEach(element => {
                         if(["price","onAccounts"].includes(element.getAttribute("name")))element.removeAttribute('required');return;
                         element.setAttribute('required', "true");
+                    });
+                    var checkboxsDiv=document.getElementById('accountCheckboxes');
+                    checkboxsDiv.innerHTML='';
+                    var broker = document.getElementById('broker').value;
+                    var filteredAccounts = accounts.filter(account => account['broker_name'] === broker);
+                    filteredAccounts.forEach(account => {
+                        // Create a checkbox for each account
+                        var checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.name = 'accountCheckbox';
+                        checkbox.value = account.account_number;
+                        checkbox.addEventListener('change', updateOnAccounts);  // Add change event to update onAccounts
+
+                        var label = document.createElement('label');
+                        label.textContent = account.account_name + " " + account.account_number;
+                        label.style.marginRight = "10px"; // Optional styling for spacing
+                        label.appendChild(checkbox);
+
+                        // Append to the checkbox container
+                        checkboxsDiv.appendChild(label);
                     });
                     inputContainer.style.display = 'block';
                 } else {
@@ -338,80 +379,72 @@
                     inputContainer.style.display = 'none';
                 }
             });
-            // JS function to fetch and append the data
+            var accounts = null;
+            var stocks = null;
+
+// JS function to fetch and display user data using DataTables
             async function fetchAndDisplayUserData() {
                 try {
                     // Fetch the data from the Laravel route
                     const response = await fetch(`/user-data/`);
                     const data = await response.json();
 
-                    // Create the table for Accounts
-                    let accountTable = '<h2>Accounts</h2><table>';
-                    accountTable += `
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Account Name</th>
-                                <th>Broker Name</th>
-                                <th>Account Number</th>
-                                <th colspan="2">Meta</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                    `;
+                    // Store data in global variables for future use
+                    accounts = data.accounts;
+                    stocks = data.stocks;
 
-                    data.accounts.forEach(account => {
-                        accountTable += `
-                            <tr>
-                                <td>${account.id}</td>
-                                <td>${account.account_name}</td>
-                                <td>${account.broker_name}</td>
-                                <td>${account.account_number}</td>
-                                <td colspan="2">${account.meta ? JSON.stringify(account.meta) : 'N/A'}</td>
-                            </tr>
-                        `;
-                    });
+                    // Initialize DataTable for Accounts if it hasn't been created yet
+                    if (!$.fn.DataTable.isDataTable('#accounts-table')) {
+                        $('#accounts-table').DataTable({
+                            data: accounts,
+                            columns: [
+                                { title: "ID", data: "id" },
+                                { title: "Account Name", data: "account_name" },
+                                { title: "Broker Name", data: "broker_name" },
+                                { title: "Account Number", data: "account_number" },
+                                {
+                                    title: "Meta",
+                                    data: "meta",
+                                    render: function(data) {
+                                        return data ? JSON.stringify(data) : 'N/A';
+                                    }
+                                }
+                            ]
+                        });
+                    } else {
+                        // Update data if DataTable already exists
+                        $('#accounts-table').DataTable().clear().rows.add(accounts).draw();
+                    }
 
-                    accountTable += '</tbody></table>';
-
-                    // Create the table for Stocks
-                    let stockTable = '<h2>Stocks</h2><table>';
-                    stockTable += `
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Stock Name</th>
-                                <th>Broker Name</th>
-                                <th>Shares</th>
-                                <th>Price</th>
-                                <th colspan="2">Meta</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                    `;
-
-                    data.stocks.forEach(stock => {
-                        stockTable += `
-                            <tr>
-                                <td>${stock.id}</td>
-                                <td>${stock.stock_name}</td>
-                                <td>${stock.broker_name}</td>
-                                <td>${stock.shares}</td>
-                                <td>${stock.price}</td>
-                                <td colspan="2">${stock.meta ? JSON.stringify(stock.meta) : 'N/A'}</td>
-                            </tr>
-                        `;
-                    });
-
-                    stockTable += '</tbody></table>';
-
-                    // Append the tables to the body
-                    document.getElementById('user-data-table').innerHTML = accountTable + stockTable;
-
+                    // Initialize DataTable for Stocks if it hasn't been created yet
+                    if (!$.fn.DataTable.isDataTable('#stocks-table')) {
+                        $('#stocks-table').DataTable({
+                            data: stocks,
+                            columns: [
+                                { title: "ID", data: "id" },
+                                { title: "Stock Name", data: "stock_name" },
+                                { title: "Broker Name", data: "broker_name" },
+                                { title: "Shares", data: "shares" },
+                                { title: "Price", data: "price" },
+                                {
+                                    title: "Meta",
+                                    data: "meta",
+                                    render: function(data) {
+                                        return data ? JSON.stringify(data) : 'N/A';
+                                    }
+                                }
+                            ]
+                        });
+                    } else {
+                        // Update data if DataTable already exists
+                        $('#stocks-table').DataTable().clear().rows.add(stocks).draw();
+                    }
                 } catch (error) {
                     console.error('Error fetching user data:', error);
                 }
             }
+
+
             fetchAndDisplayUserData()
         </script>
 
