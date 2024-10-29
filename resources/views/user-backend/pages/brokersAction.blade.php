@@ -83,7 +83,8 @@
         <!-- Brokers Form -->
         <div class="container-fluid py-4">
             <div class="row">
-                <div class="col-lg-12 col-md-12 mb-4">
+                <!-- Existing form on the left -->
+                <div class="col-md-8">
                     <div class="card">
                         <div class="card-header pb-0">
                             <h6>Brokers Action</h6>
@@ -117,29 +118,24 @@
                                     </select>
                                 </div>
 
-
                                 <!-- Additional Inputs for Buy/Sell -->
                                 <div id="inputContainer" class="mb-3" style="display:none;">
                                     <div class="mb-3">
                                         <label for="quantity" class="form-label">Quantity</label>
-                                        <input type="number" class="form-control" id="quantity" name="quantity"
-                                            placeholder="Enter quantity" min="0">
+                                        <input type="number" class="form-control" id="quantity" name="quantity" placeholder="Enter quantity" min="0">
                                     </div>
                                     <div class="mb-3">
                                         <label for="symbol" class="form-label">Stock Symbol</label>
-                                        <input type="text" class="form-control" id="symbol" name="symbol"
-                                            placeholder="Enter stock symbol">
+                                        <input type="text" class="form-control" id="symbol" name="symbol" placeholder="Enter stock symbol">
                                     </div>
                                     <div class="mb-3">
                                         <label for="price" class="form-label mt-3">On Accounts</label>
                                         <div id="accountCheckboxes"></div>
-                                        <input type="text" disabled class="form-control" id="onAccounts" name="onAccounts"
-                                            placeholder="On Accounts">
+                                        <input type="text" disabled class="form-control" id="onAccounts" name="onAccounts" placeholder="On Accounts">
                                     </div>
                                     <div class="mb-3">
                                         <label for="price" class="form-label mt-3">Price</label>
-                                        <input type="number" class="form-control" id="price" name="price"
-                                            placeholder="Enter price" step="0.01" min="0">
+                                        <input type="number" class="form-control" id="price" name="price" placeholder="Enter price" step="0.01" min="0">
                                     </div>
                                 </div>
 
@@ -148,6 +144,36 @@
                             </form>
                         </div>
                     </div>
+                </div>
+
+                <!-- Console log area on the right -->
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header pb-0">
+                            <h6>Console Output</h6>
+                        </div>
+                        <div class="card-body">
+                            <textarea id="consoleOutput" class="form-control" rows="15" readonly></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                // Override console.log to display output in the textarea
+                (function() {
+                    const consoleOutput = document.getElementById('consoleOutput');
+                    const originalConsoleLog = console.log;
+
+                    console.log = function(message) {
+                        // Append the message to the console output area
+                        consoleOutput.value += message + '\n';
+                        consoleOutput.scrollTop = consoleOutput.scrollHeight; // Auto-scroll to the bottom
+                        originalConsoleLog.apply(console, arguments); // Call the original console.log
+                    };
+                })();
+            </script>
+
                     <div id="user-data-table">
                         <h2>Accounts</h2>
                         <table id="accounts-table" class="display"></table>
@@ -178,7 +204,7 @@
                     }));
                 };
                 ws.onmessage = function (event) {
-                    console.log('Message from server:', event.data);
+                    console.log('Message from server:'+ event.data);
 
                     try {
                         var data = JSON.parse(event.data);
@@ -196,7 +222,7 @@
                             fetchAndDisplayUserData()
                         }
                     } catch (error) {
-                        console.log("Error parsing JSON:", error);
+                        console.log("Error parsing JSON:"+ error);
                     }
                 };
 
@@ -320,7 +346,7 @@
                     // alert('Action completed: ' + JSON.stringify(data)); // Alert the result
                 })
                 .catch(error => {
-                    console.error('Error:', error);
+                    console.error('Error:'+ error);
                     alert('An error occurred. Please try again.');
                 });
             });
@@ -440,7 +466,7 @@
                         $('#stocks-table').DataTable().clear().rows.add(stocks).draw();
                     }
                 } catch (error) {
-                    console.error('Error fetching user data:', error);
+                    console.error('Error fetching user data:'+ error);
                 }
             }
 
