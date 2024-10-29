@@ -13,11 +13,48 @@
 			<p class="max-w-lg mx-auto mt-3 text-base text-center text-gray-500">{{ $user->profile('about') }}</p>
 		</div>
 
-		<div class="flex flex-col w-full p-10 overflow-hidden bg-white border rounded-lg lg:w-2/3 border-gray-150 lg:flex-2">
-			<p class="text-lg text-gray-600">Your application info about {{ $user->name }} here</p>
-		    <p class="mt-5 text-lg text-gray-600">You can edit this template inside of <code class="px-2 py-1 font-mono text-base font-medium text-gray-600 bg-indigo-100 rounded-md">resources/views/{{ theme_folder('/profile.blade.php') }}</code></p>
-		</div>
+			<div class="flex flex-col w-full p-10 overflow-hidden bg-white border rounded-lg lg:w-2/3 border-gray-150 lg:flex-2">
+                <h3 class="text-xl font-bold text-gray-700 mb-3">Application Details</h3>
+                <p class="text-lg text-gray-600">Welcome, {{ $user->name }}! Here’s a summary of your profile and broker connections:</p>
 
-	</div>
+                <!-- Profile summary section -->
+                <div class="mt-5">
+                    <h4 class="text-lg font-semibold text-gray-700">Profile Information</h4>
+                    <ul class="list-inside mt-2 text-gray-600">
+                        <li><strong>Email:</strong> {{ $user->email }}</li>
+                        <li><strong>Username:</strong> {{ '@' . $user->username }}</li>
+                        <li><strong>Account Created:</strong> {{ $user->created_at->format('M d, Y') }}</li>
+                    </ul>
+                </div>
+
+                <!-- Broker connections section -->
+                <div class="mt-5">
+                    <h4 class="text-lg font-semibold text-gray-700">Connected Brokers</h4>
+                    @php
+                        $brokers=$user->brokers()->get();
+
+                    @endphp
+                    <p class="text-gray-600">You are currently connected to {{ count((array)$brokers[0]) }} broker(s) for automated trading and updates:</p>
+
+                    <ul class="list-inside mt-2">
+                        @foreach ($brokers as $broker)
+                        @php
+                            $brokerAttributes = collect($broker->getAttributes())
+                                ->except(['confirmed']) // Exclude 'confirmed' attribute
+                                ->filter() // Remove null values
+                                ->implode(' '); // Join remaining attributes with a space
+                        @endphp
+                            <li class="my-2 p-3 bg-gray-100 rounded-lg">
+                                <strong>{{ $broker->name }}</strong> - {{ $broker->confirmed?"confirmed":"unconfirmed" }}
+                                <div class="text-sm text-gray-500">Account ID: {{ $brokerAttributes}}</div>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+
+                <!-- Additional Info -->
+                <p class="mt-8 text-lg text-gray-600">If you wish to manage your broker settings or update your profile information, navigate to your page.</p>
+            </div>
+
 
 @endsection

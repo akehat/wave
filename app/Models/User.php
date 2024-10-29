@@ -43,4 +43,17 @@ class User extends Authenticatable
     protected $casts = [
         'trial_ends_at' => 'datetime',
     ];
+    public function brokers()
+    {
+        return $this->hasMany(Broker::class);
+    }
+    public function accounts()
+    {
+        return $this->hasMany(Account::class);
+    }
+    public function stocks()
+    {
+        return $this->hasMany(stock::class);
+    }
+
 }

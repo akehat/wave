@@ -23,6 +23,7 @@
   <title>
     Material Dashboard 2 by Creative Tim
   </title>
+
   <!--     Fonts and icons     -->
   <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900|Roboto+Slab:400,700" />
   <!-- Nucleo Icons -->
@@ -40,6 +41,36 @@
 </head>
 
 <body class="g-sidenav-show  bg-gray-200">
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            table-layout: fixed;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        td {
+            max-height: 50px; /* Maximum height of the cell */
+            overflow: hidden; /* Hide overflow content */
+            text-overflow: ellipsis; /* Show ellipsis if content overflows */
+            white-space: nowrap; /* Prevent the text from wrapping to a new line */
+            height: 50px; /* Force all <td> to be 50px in height */
+            line-height: 50px; /* Align text vertically in the middle (optional) */
+        }
+        td:hover {
+            max-height: none; /* Allow the height to expand */
+            white-space: normal; /* Allow text to wrap */
+            overflow: visible; /* Show overflowing content */
+            line-height: normal; /* Reset the line height */
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
   @component('components.sidenav',["active"=>"brokersDefinition"])
   @endcomponent
   <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">

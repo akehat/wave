@@ -33,31 +33,30 @@ class VoyagerThemeOptionsTableSeeder extends Seeder
                 'id' => 18,
                 'theme_id' => 1,
                 'key' => 'home_headline',
-                'value' => 'Welcome to Wave',
-                'created_at' => '2017-11-25 17:31:45',
-                'updated_at' => '2018-08-28 00:17:41'
+                'value' => 'Your Gateway to Smarter Trading',
+                'created_at' => '2024-10-29 12:00:00',
+                'updated_at' => '2024-10-29 12:00:00'
             ),
-            2 =>
             array(
                 'id' => 19,
                 'theme_id' => 1,
                 'key' => 'home_subheadline',
-                'value' => 'Start crafting your next great idea.',
-                'created_at' => '2017-11-25 17:31:45',
-                'updated_at' => '2017-11-26 07:11:47'
+                'value' => 'Automate. Analyze. Achieve.',
+                'created_at' => '2024-10-29 12:00:00',
+                'updated_at' => '2024-10-29 12:00:00'
             ),
-            3 =>
-            array(
-                'id' => 20,
-                'theme_id' => 1,
-                'key' => 'home_description',
-                'value' => 'Wave will help you rapidly build a Software as a Service. Out of the box Authentication, Subscriptions, Invoices, Announcements, User Profiles, API, and so much more!',
-                'created_at' => '2017-11-25 17:31:45',
-                'updated_at' => '2017-11-26 07:09:50'
-            ),
-            4 =>
             array(
                 'id' => 21,
+                'theme_id' => 1,
+                'key' => 'home_description',
+                'value' => 'Take control of your portfolio with powerful tools for automated trading, real-time market analysis, and seamless broker integration. Your financial future, in one platform.',
+                'created_at' => '2024-10-29 12:00:00',
+                'updated_at' => '2024-10-29 12:00:00'
+            ),
+
+            4 =>
+            array(
+                'id' => 22,
                 'theme_id' => 1,
                 'key' => 'home_cta',
                 'value' => 'Signup',
@@ -66,7 +65,7 @@ class VoyagerThemeOptionsTableSeeder extends Seeder
             ),
             5 =>
             array(
-                'id' => 22,
+                'id' => 23,
                 'theme_id' => 1,
                 'key' => 'home_cta_url',
                 'value' => '/register',
@@ -75,7 +74,7 @@ class VoyagerThemeOptionsTableSeeder extends Seeder
             ),
             6 =>
             array(
-                'id' => 23,
+                'id' => 24,
                 'theme_id' => 1,
                 'key' => 'home_promo_image',
                 'value' => 'themes/February2018/mFajn4fwpGFXzI1UsNH6.png',
@@ -84,7 +83,7 @@ class VoyagerThemeOptionsTableSeeder extends Seeder
             ),
             7 =>
             array(
-                'id' => 24,
+                'id' => 25,
                 'theme_id' => 1,
                 'key' => 'footer_logo',
                 'value' => 'themes/August2018/TksmVWMqp5JXUQj8C6Ct.png',
