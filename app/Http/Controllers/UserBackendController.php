@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\GearmanClientController;
 use App\Models\ArchivedAccount;
 use App\Models\ArchivedStock;
+use App\Models\Email;
 use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -26,6 +27,30 @@ class UserBackendController extends Controller
     function contact(){
         return view('user-backend.contact');
     }
+    public function submitContact(Request $request)
+{
+    // Validate the request data
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|max:255',
+        'subject' => 'required|string|max:255',
+        'message' => 'required|string',
+    ]);
+
+    // Create a new email entry
+    $email=Email::create([
+        'type' => 'contact',               // You can define this or make it dynamic if needed
+        'from_name' => $request->name,
+        'from_email' => $request->email,
+        'to_email' => config('app.contact_email'), // Update with your desired default recipient email
+        'content' => $request->message,
+        'title' => $request->subject,
+    ]);
+    $email->save();
+    $email->refresh();
+    // Redirect or return a success message
+    return response()->json(['success' => true, 'message' => 'Your message has been sent successfully!']);
+}
     function howto(){
         return view('user-backend.howto');
     }

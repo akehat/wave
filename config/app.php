@@ -96,7 +96,7 @@ return [
     */
 
     'fallback_locale' => 'en',
-
+    "contact_email"=>env("CONTACT_EMAIL",'contact@yourdomain.com'),
     /*
     |--------------------------------------------------------------------------
     | Faker Locale

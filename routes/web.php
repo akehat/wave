@@ -34,6 +34,8 @@ Route::group(['middleware' => 'auth'], function(){
     Route::post('save_brokers', [UserBackendController::class, 'save_brokers'])->name('save_brokers');
     Route::post('do_action', [UserBackendController::class, 'do_action'])->name('do_action');
     Route::post('verify2fa', [UserBackendController::class, 'verify_2fa'])->name('verify_sms');
+    Route::post('submit-contact', [UserBackendController::class, 'submitContact'])->name("submitContact");
+
 });
 Route::get('websocketTest', function(){return view('user-backend.websocket');})->name('user-backend.websocket');
 Route::get('requestSMS', [UserBackendController::class, 'requestSMS'])->name('user-backend.requestSMS');

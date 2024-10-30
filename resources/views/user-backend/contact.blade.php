@@ -105,7 +105,7 @@
             <h3 class="text-warning">Contact Us</h3>
           </div>
           <div class="card-body p-4">
-            <form action="/submit-contact" method="POST">
+            <form action="{{ route('submitContact') }}" method="POST" id="contact">
                 @csrf
               <!-- Name Field -->
               <div class="form-group mb-3">
@@ -143,7 +143,37 @@
   </div>
 </div>
 
+<script>
+    document.getElementById('contact').addEventListener('submit', function(e) {
+        e.preventDefault(); // Prevent the default form submission
 
+        // Get form data
+        let formData = new FormData(this);
+
+        // AJAX request
+        fetch("{{ route('submitContact') }}", {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Replace form with success message
+                document.getElementById('contact').innerHTML = `<div class="alert alert-success text-light h4">${data.message}</div>`;
+            } else {
+                // Handle validation or other errors
+                alert('There was an error. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+    });
+</script>
 
 <script>
   var win = navigator.platform.indexOf('Win') > -1;
