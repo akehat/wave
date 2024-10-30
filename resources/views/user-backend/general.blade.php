@@ -1,6 +1,3 @@
-
-
-
 <!--
 =========================================================
 * Material Dashboard 2 - v3.1.0
@@ -15,603 +12,272 @@
 
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 -->
-
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-<link rel="apple-touch-icon" sizes="76x76" href="{{url('')}}/storage/assets/img/apple-icon.png">
-<link rel="icon" type="image/png" href="{{url('')}}/storage/assets/img/favicon.png">
-
-<title>
-  
-   Material Dashboard 2  by Creative Tim
-  
-
-  
-
-  
-</title>
-
-
-
-<!--     Fonts and icons     -->
-<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900|Roboto+Slab:400,700" />
-
-<!-- Nucleo Icons -->
-<link href="{{url('')}}/storage/assets/css/nucleo-icons.css" rel="stylesheet" />
-<link href="{{url('')}}/storage/assets/css/nucleo-svg.css" rel="stylesheet" />
-
-<!-- Font Awesome Icons -->
-<script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
-
-<!-- Material Icons -->
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-
-<!-- CSS Files -->
-
-
-
-<link id="pagestyle" href="{{url('')}}/storage/assets/css/material-dashboard.css?v=3.1.0" rel="stylesheet" />
-
-
-
-
-
-<!-- Nepcha Analytics (nepcha.com) -->
-<!-- Nepcha is a easy-to-use web analytics. No cookies and fully compliant with GDPR, CCPA and PECR. -->
-<script defer data-site="YOUR_DOMAIN_HERE" src="https://api.nepcha.com/js/nepcha-analytics.js"></script>
-
-
-  </head>
-
-
-  <body class="g-sidenav-show  bg-gray-100">
-    
-
-    
-
- @component('components.sidenav')
- @endcomponent
-
-      <main class="main-content border-radius-lg ">
-        <!-- Navbar -->
-@component('components.navbar',["active"=>"portal"])
-@endcomponent
-<!-- End Navbar -->
-
-
-        
-
-
-            <div class="container-fluid py-4">
-                
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div class="row">
-  <div class="col-lg-7 position-relative z-index-2">
-    <div class="card card-plain mb-4">
-      <div class="card-body p-3">
-        <div class="row">
-          <div class="col-lg-6">
-            <div class="d-flex flex-column h-100">
-  <h2 class="font-weight-bolder mb-0">General Statistics</h2>
-</div>
-
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col-lg-5 col-sm-5">
-        <div class="card  mb-2">
-  <div class="card-header p-3 pt-2">
-    <div class="icon icon-lg icon-shape bg-gradient-dark shadow-dark shadow text-center border-radius-xl mt-n4 position-absolute">
-      <i class="material-icons opacity-10">weekend</i>
-    </div>
-    <div class="text-end pt-1">
-      <p class="text-sm mb-0 text-capitalize">Bookings</p>
-      <h4 class="mb-0">281</h4>
-    </div>
-  </div>
-
-  <hr class="dark horizontal my-0">
-  <div class="card-footer p-3">
-    <p class="mb-0"><span class="text-success text-sm font-weight-bolder">+55% </span>than last week</p>
-  </div>
-</div>
-
-        <div class="card  mb-2">
-  <div class="card-header p-3 pt-2">
-    <div class="icon icon-lg icon-shape bg-gradient-primary shadow-primary shadow text-center border-radius-xl mt-n4 position-absolute">
-      <i class="material-icons opacity-10">leaderboard</i>
-    </div>
-    <div class="text-end pt-1">
-      <p class="text-sm mb-0 text-capitalize">Today's Users</p>
-      <h4 class="mb-0">2,300</h4>
-    </div>
-  </div>
-
-  <hr class="dark horizontal my-0">
-  <div class="card-footer p-3">
-    <p class="mb-0"><span class="text-success text-sm font-weight-bolder">+3% </span>than last month</p>
-  </div>
-</div>
-
-      </div>
-      <div class="col-lg-5 col-sm-5 mt-sm-0 mt-4">
-        <div class="card  mb-2">
-  <div class="card-header p-3 pt-2 bg-transparent">
-    <div class="icon icon-lg icon-shape bg-gradient-success shadow-success text-center border-radius-xl mt-n4 position-absolute">
-      <i class="material-icons opacity-10">store</i>
-    </div>
-    <div class="text-end pt-1">
-      <p class="text-sm mb-0 text-capitalize ">Revenue</p>
-      <h4 class="mb-0 ">34k</h4>
-    </div>
-  </div>
-
-  <hr class="horizontal my-0 dark">
-  <div class="card-footer p-3">
-    <p class="mb-0 "><span class="text-success text-sm font-weight-bolder">+1% </span>than yesterday</p>
-  </div>
-</div>
-
-        <div class="card ">
-  <div class="card-header p-3 pt-2 bg-transparent">
-    <div class="icon icon-lg icon-shape bg-gradient-info shadow-info text-center border-radius-xl mt-n4 position-absolute">
-      <i class="material-icons opacity-10">person_add</i>
-    </div>
-    <div class="text-end pt-1">
-      <p class="text-sm mb-0 text-capitalize ">Followers</p>
-      <h4 class="mb-0 ">+91</h4>
-    </div>
-  </div>
-
-  <hr class="horizontal my-0 dark">
-  <div class="card-footer p-3">
-    <p class="mb-0 ">Just updated</p>
-  </div>
-</div>
-
-      </div>
-    </div>
-
-    <div class="row mt-4">
-      <div class="col-10">
-        <div class="card mb-4 ">
-  <div class="d-flex">
-    <div class="icon icon-shape icon-lg bg-gradient-success shadow text-center border-radius-xl mt-n3 ms-4">
-      <i class="material-icons opacity-10" aria-hidden="true">language</i>
-    </div>
-    <h6 class="mt-3 mb-2 ms-3 ">Sales by Country</h6>
-  </div>
-  <div class="card-body p-3">
-    <div class="row">
-      <div class="col-lg-6 col-md-7">
-        <div class="table-responsive">
-          <table class="table align-items-center ">
-            <tbody>
-              <tr>
-                <td class="w-30">
-                  <div class="d-flex px-2 py-1 align-items-center">
-                    <div>
-                      <img src="{{url('')}}/storage/assets/img/icons/flags/US.png" alt="Country flag">
-                    </div>
-                    <div class="ms-4">
-                      <p class="text-xs font-weight-bold mb-0 ">Country:</p>
-                      <h6 class="text-sm font-weight-normal mb-0 ">United States</h6>
-                    </div>
-                  </div>
-                </td>
-                <td>
-                  <div class="text-center">
-                    <p class="text-xs font-weight-bold mb-0 ">Sales:</p>
-                    <h6 class="text-sm font-weight-normal mb-0 ">2500</h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="text-center">
-                    <p class="text-xs font-weight-bold mb-0 ">Value:</p>
-                    <h6 class="text-sm font-weight-normal mb-0 ">$230,900</h6>
-                  </div>
-                </td>
-                <td class="align-middle text-sm">
-                  <div class="col text-center">
-                    <p class="text-xs font-weight-bold mb-0 ">Bounce:</p>
-                    <h6 class="text-sm font-weight-normal mb-0 ">29.9%</h6>
-                  </div>
-                </td>
-              </tr>
-
-              <tr>
-                <td class="w-30">
-                  <div class="d-flex px-2 py-1 align-items-center">
-                    <div>
-                      <img src="{{url('')}}/storage/assets/img/icons/flags/DE.png" alt="Country flag">
-                    </div>
-                    <div class="ms-4">
-                      <p class="text-xs font-weight-bold mb-0 ">Country:</p>
-                      <h6 class="text-sm font-weight-normal mb-0 ">Germany</h6>
-                    </div>
-                  </div>
-                </td>
-                <td>
-                  <div class="text-center">
-                    <p class="text-xs font-weight-bold mb-0 ">Sales:</p>
-                    <h6 class="text-sm font-weight-normal mb-0 ">3.900</h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="text-center">
-                    <p class="text-xs font-weight-bold mb-0 ">Value:</p>
-                    <h6 class="text-sm font-weight-normal mb-0 ">$440,000</h6>
-                  </div>
-                </td>
-                <td class="align-middle text-sm">
-                  <div class="col text-center">
-                    <p class="text-xs font-weight-bold mb-0 ">Bounce:</p>
-                    <h6 class="text-sm font-weight-normal mb-0 ">40.22%</h6>
-                  </div>
-                </td>
-              </tr>
-
-              <tr>
-                <td class="w-30">
-                  <div class="d-flex px-2 py-1 align-items-center">
-                    <div>
-                      <img src="{{url('')}}/storage/assets/img/icons/flags/GB.png" alt="Country flag">
-                    </div>
-                    <div class="ms-4">
-                      <p class="text-xs font-weight-bold mb-0 ">Country:</p>
-                      <h6 class="text-sm font-weight-normal mb-0 ">Great Britain</h6>
-                    </div>
-                  </div>
-                </td>
-                <td>
-                  <div class="text-center">
-                    <p class="text-xs font-weight-bold mb-0 ">Sales:</p>
-                    <h6 class="text-sm font-weight-normal mb-0 ">1.400</h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="text-center">
-                    <p class="text-xs font-weight-bold mb-0 ">Value:</p>
-                    <h6 class="text-sm font-weight-normal mb-0 ">$190,700</h6>
-                  </div>
-                </td>
-                <td class="align-middle text-sm">
-                  <div class="col text-center">
-                    <p class="text-xs font-weight-bold mb-0 ">Bounce:</p>
-                    <h6 class="text-sm font-weight-normal mb-0 ">23.44%</h6>
-                  </div>
-                </td>
-              </tr>
-
-              <tr>
-                <td class="w-30">
-                  <div class="d-flex px-2 py-1 align-items-center">
-                    <div>
-                      <img src="{{url('')}}/storage/assets/img/icons/flags/BR.png" alt="Country flag">
-                    </div>
-                    <div class="ms-4">
-                      <p class="text-xs font-weight-bold mb-0 ">Country:</p>
-                      <h6 class="text-sm font-weight-normal mb-0 ">Brasil</h6>
-                    </div>
-                  </div>
-                </td>
-                <td>
-                  <div class="text-center">
-                    <p class="text-xs font-weight-bold mb-0 ">Sales:</p>
-                    <h6 class="text-sm font-weight-normal mb-0 ">562</h6>
-                  </div>
-                </td>
-                <td>
-                  <div class="text-center">
-                    <p class="text-xs font-weight-bold mb-0 ">Value:</p>
-                    <h6 class="text-sm font-weight-normal mb-0 ">$143,960</h6>
-                  </div>
-                </td>
-                <td class="align-middle text-sm">
-                  <div class="col text-center">
-                    <p class="text-xs font-weight-bold mb-0 ">Bounce:</p>
-                    <h6 class="text-sm font-weight-normal mb-0 ">32.14%</h6>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="col-lg-6 col-md-5">
-        <div id="map" class="mt-0 mt-lg-n4"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="row mt-4">
-  <div class="col-lg-5 mb-lg-0 mb-4">
-    <div class="card z-index-2 mt-4">
-  <div class="card-body mt-n5 px-3">
-    <div class="bg-gradient-dark shadow-dark border-radius-lg py-3 pe-1 mb-3">
-      <div class="chart">
-        <canvas id="chart-bars" class="chart-canvas" height="170"></canvas>
-      </div>
-    </div>
-    <h6 class="ms-2 mt-4 mb-0"> Active Users </h6>
-    <p class="text-sm ms-2"> (<span class="font-weight-bolder">+11%</span>) than last week </p>
-    <div class="container border-radius-lg">
-      <div class="row">
-        <div class="col-3 py-3 ps-0">
-          <div class="d-flex mb-2">
-            <div class="icon icon-shape icon-xxs shadow border-radius-sm bg-gradient-primary text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="material-icons opacity-10">groups</i>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="apple-touch-icon" sizes="76x76" href="{{url('')}}/storage/assets/img/apple-icon.png">
+  <link rel="icon" type="image/png" href="{{url('')}}/storage/assets/img/favicon.png">
+  <title>
+    Material Dashboard 2 by Creative Tim
+  </title>
+  <!--     Fonts and icons     -->
+  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900|Roboto+Slab:400,700" />
+  <!-- Nucleo Icons -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.css" />
+  <script src="https://cdn.datatables.net/2.1.8/js/dataTables.js"></script>
+  <link href="{{url('')}}/storage/assets/css/nucleo-icons.css" rel="stylesheet" />
+  <link href="{{url('')}}/storage/assets/css/nucleo-svg.css" rel="stylesheet" />
+  <!-- Font Awesome Icons -->
+  <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <!-- CSS Files -->
+  <link id="pagestyle" href="{{url('')}}/storage/assets/css/material-dashboard.css?v=3.1.0" rel="stylesheet" />
+  <!-- Nepcha Analytics (nepcha.com) -->
+  <!-- Nepcha is a easy-to-use web analytics. No cookies and fully compliant with GDPR, CCPA and PECR. -->
+  <script defer data-site="YOUR_DOMAIN_HERE" src="https://api.nepcha.com/js/nepcha-analytics.js"></script>
+</head>
+
+<body class="g-sidenav-show  bg-gray-200">
+    <style>
+        .id-column {
+           max-width: 40px; /* or use max-width: 5ch; for character-based width */
+           white-space: nowrap;
+           overflow: hidden;
+           text-overflow: ellipsis;
+       }
+       table {
+           width: 100%;
+           border-collapse: collapse;
+           margin: 20px 0;
+           table-layout: fixed;
+       }
+       th, td {
+           padding: 10px;
+           border: 1px solid #ddd;
+       }
+       td {
+           max-height: 50px; /* Maximum height of the cell */
+           overflow: hidden; /* Hide overflow content */
+           text-overflow: ellipsis; /* Show ellipsis if content overflows */
+           white-space: nowrap; /* Prevent the text from wrapping to a new line */
+           height: 50px; /* Force all <td> to be 50px in height */
+           line-height: 50px; /* Align text vertically in the middle (optional) */
+       }
+       td:hover {
+           max-height: none; /* Allow the height to expand */
+           white-space: normal; /* Allow text to wrap */
+           overflow: visible; /* Show overflowing content */
+           line-height: normal; /* Reset the line height */
+       }
+
+       th {
+           background-color: #f4f4f4;
+       }
+   </style>
+  @component('components.sidenav',["active"=>"dashboard"])
+  @endcomponent
+  <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+    @component('components.navbar',["active"=>"dashboard"])
+  @endcomponent
+  <div class="card py-4">
+    <div class="container py-4">
+        <div class="d-flex flex-wrap justify-content-center">
+            <!-- Profit Calculator Frame -->
+
+
+
+
+            <!-- Trading Chart Frame -->
+            <div class="text-center m-3" style="width: 100%;">
+                <iframe
+                    frameborder="0"
+                    referrerpolicy="no-referrer"
+                    scrolling="no"
+                    height="480"
+                    width="1000"
+                    allowtransparency="true"
+                    marginwidth="0"
+                    marginheight="0"
+                    src="https://ssltvc.investing.com/?pair_ID=8849&height=480&width=1000&interval=300&plotStyle=area&domain_ID=68&lang_ID=68&timezone_ID=6">
+                </iframe>
             </div>
-            <p class="text-xs my-auto font-weight-bold">Users</p>
-          </div>
-          <h4 class="font-weight-bolder">42K</h4>
-          <div class="progress w-75">
-            <div class="progress-bar bg-dark w-60" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
-          </div>
-        </div>
-        <div class="col-3 py-3 ps-0">
-          <div class="d-flex mb-2">
-            <div class="icon icon-shape icon-xxs shadow border-radius-sm bg-gradient-info text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="material-icons opacity-10">ads_click</i>
+            <div class="text-center m-3" style="width: 400px;">
+                <iframe
+                    frameborder="0"
+                    referrerpolicy="no-referrer"
+                    scrolling="no"
+                    height="480"
+                    width="100%"
+                    allowtransparency="true"
+                    marginwidth="0"
+                    marginheight="0"
+                    src="https://ssltools.investing.com/profit-calculator/index.php?force_lang=68&acc=12&pair=1">
+            </iframe>
             </div>
-            <p class="text-xs mt-1 mb-0 font-weight-bold">Clicks</p>
-          </div>
-          <h4 class="font-weight-bolder">1.7m</h4>
-          <div class="progress w-75">
-            <div class="progress-bar bg-dark w-90" role="progressbar" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100"></div>
-          </div>
-        </div>
-        <div class="col-3 py-3 ps-0">
-          <div class="d-flex mb-2">
-            <div class="icon icon-shape icon-xxs shadow border-radius-sm bg-gradient-warning text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="material-icons opacity-10">receipt</i>
+            <div class="text-center m-3" style="width: 400px;">
+            <iframe frameborder="0"  referrerpolicy="no-referrer" scrolling="no" height="274" width="425" allowtransparency="true" marginwidth="0" marginheight="0" src="https://ssltools.investing.com/technical_summary.php?pairs=&curr-name-color=%230059B0&fields=5m,1h,1d&force_lang=68"></iframe><br /><div style="width:425px;"><span style="float:left"><span style="font-size: 11px;color: #333333;text-decoration: none;">This Technical Analysis is powered by <a href="https://ca.investing.com/" rel="nofollow" target="_blank" style="font-size: 11px;color: #06529D; font-weight: bold;" class="underline_link">Investing.com Canada</a></span></span></div>
             </div>
-            <p class="text-xs mt-1 mb-0 font-weight-bold">Sales</p>
-          </div>
-          <h4 class="font-weight-bolder">399$</h4>
-          <div class="progress w-75">
-            <div class="progress-bar bg-dark w-30" role="progressbar" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100"></div>
-          </div>
         </div>
-        <div class="col-3 py-3 ps-0">
-          <div class="d-flex mb-2">
-            <div class="icon icon-shape icon-xxs shadow border-radius-sm bg-gradient-danger text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="material-icons opacity-10">category</i>
-            </div>
-            <p class="text-xs mt-1 mb-0 font-weight-bold">Items</p>
-          </div>
-          <h4 class="font-weight-bolder">74</h4>
-          <div class="progress w-75">
-            <div class="progress-bar bg-dark w-50" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
-          </div>
-        </div>
-      </div>
+
     </div>
-  </div>
-</div>
-
-  </div>
-  <div class="col-lg-7">
-    <div class="card z-index-2">
-  <div class="card-header pb-0">
-    <h6>Sales overview</h6>
-    <p class="text-sm">
-      <i class="fa fa-arrow-up text-success"></i>
-      <span class="font-weight-bold">4% more</span> in 2021
-    </p>
-  </div>
-  <div class="card-body p-3">
-    <div class="chart">
-      <canvas id="chart-line" class="chart-canvas" height="300"></canvas>
-    </div>
-  </div>
-</div>
-
-  </div>
-</div>
-
-<div class="row">
-  <div class="col-12">
-    <div id="globe" class="position-absolute end-0 top-10 mt-sm-3 mt-7 me-lg-7">
-      <canvas width="700" height="600" class="w-lg-100 h-lg-100 w-75 h-75 me-lg-0 me-n10 mt-lg-5"></canvas>
-    </div>
-  </div>
-</div>
-
-
-                <footer class="footer py-4  ">
-  <div class="container-fluid">
-    <div class="row align-items-center justify-content-lg-between">
-      <div class="col-lg-6 mb-lg-0 mb-4">
-        <div class="copyright text-center text-sm text-muted text-lg-start">
-          © <script>
-            document.write(new Date().getFullYear())
-          </script>,
-          made with <i class="fa fa-heart"></i> by
-          <a href="https://www.creative-tim.com" class="font-weight-bold" target="_blank">Creative Tim</a>
-          for a better web.
-        </div>
+    <center><h5>Your Stocks Data</h5></center>
+    <div class="table-responsive p-0">
+        <table id='stocks-table'></table>
       </div>
-      <div class="col-lg-6">
-        <ul class="nav nav-footer justify-content-center justify-content-lg-end">
-          <li class="nav-item">
-            <a href="https://www.creative-tim.com" class="nav-link text-muted" target="_blank">Creative Tim</a>
-          </li>
-          <li class="nav-item">
-            <a href="https://www.creative-tim.com/presentation" class="nav-link text-muted" target="_blank">About Us</a>
-          </li>
-          <li class="nav-item">
-            <a href="https://www.creative-tim.com/blog" class="nav-link text-muted" target="_blank">Blog</a>
-          </li>
-          <li class="nav-item">
-            <a href="https://www.creative-tim.com/license" class="nav-link pe-0 text-muted" target="_blank">License</a>
-          </li>
-        </ul>
+    <center><h5>Your Accounts Data</h5></center>
+      <div class="table-responsive p-0">
+        <table id='accounts-table'></table>
       </div>
-    </div>
-  </div>
-</footer>
-
-            </div>
-
-         
-       </main>
-    
-
-      
-          <div class="fixed-plugin">
-    <a class="fixed-plugin-button text-dark position-fixed px-3 py-2">
-      <i class="material-icons py-2">settings</i>
-    </a>
-    <div class="card shadow-lg">
-      <div class="card-header pb-0 pt-3">
-        <div class="float-start">
-          <h5 class="mt-3 mb-0">Material UI Configurator</h5>
-          <p>See our dashboard options.</p>
-        </div>
-        <div class="float-end mt-4">
-          <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
-            <i class="material-icons">clear</i>
-          </button>
-        </div>
-        <!-- End Toggle Button -->
-      </div>
-      <hr class="horizontal dark my-1">
-      <div class="card-body pt-sm-3 pt-0">
-        <!-- Sidebar Backgrounds -->
-        <div>
-          <h6 class="mb-0">Sidebar Colors</h6>
-        </div>
-        <a href="javascript:void(0)" class="switch-trigger background-color">
-          <div class="badge-colors my-2 text-start">
-            <span class="badge filter bg-gradient-primary active" data-color="primary" onclick="sidebarColor(this)"></span>
-            <span class="badge filter bg-gradient-dark" data-color="dark" onclick="sidebarColor(this)"></span>
-            <span class="badge filter bg-gradient-info" data-color="info" onclick="sidebarColor(this)"></span>
-            <span class="badge filter bg-gradient-success" data-color="success" onclick="sidebarColor(this)"></span>
-            <span class="badge filter bg-gradient-warning" data-color="warning" onclick="sidebarColor(this)"></span>
-            <span class="badge filter bg-gradient-danger" data-color="danger" onclick="sidebarColor(this)"></span>
-          </div>
-        </a>
-
-        <!-- Sidenav Type -->
-        
-        <div class="mt-3">
-          <h6 class="mb-0">Sidenav Type</h6>
-          <p class="text-sm">Choose between 2 different sidenav types.</p>
-        </div>
-
-        <div class="d-flex">
-          <button class="btn bg-gradient-dark px-3 mb-2 active" data-class="bg-gradient-dark" onclick="sidebarType(this)">Dark</button>
-          <button class="btn bg-gradient-dark px-3 mb-2 ms-2" data-class="bg-transparent" onclick="sidebarType(this)">Transparent</button>
-          <button class="btn bg-gradient-dark px-3 mb-2 ms-2" data-class="bg-white" onclick="sidebarType(this)">White</button>
-        </div>
-
-        <p class="text-sm d-xl-none d-block mt-2">You can change the sidenav type just on desktop view.</p>
-        
-
-        <!-- Navbar Fixed -->
-        
-        <div class="mt-3 d-flex">
-          <h6 class="mb-0">Navbar Fixed</h6>
-          <div class="form-check form-switch ps-0 ms-auto my-auto">
-            <input class="form-check-input mt-1 ms-auto" type="checkbox" id="navbarFixed" onclick="navbarFixed(this)">
-          </div>
-        </div>
-        
-
-        
-        <hr class="horizontal dark my-3">
-        <div class="mt-2 d-flex">
-          <h6 class="mb-0">Light / Dark</h6>
-          <div class="form-check form-switch ps-0 ms-auto my-auto">
-            <input class="form-check-input mt-1 ms-auto" type="checkbox" id="dark-version" onclick="darkMode(this)">
-          </div>
-        </div>
-        <hr class="horizontal dark my-sm-4">
-        
-        
-        <a class="btn bg-gradient-info w-100" href="https://www.creative-tim.com/product/material-dashboard-pro">Free Download</a>
-        
-        
-        <a class="btn btn-outline-dark w-100" href="https://www.creative-tim.com/learning-lab/bootstrap/overview/material-dashboard">View documentation</a>
-        
-        <div class="w-100 text-center">
-          <a class="github-button" href="https://github.com/creativetimofficial/material-dashboard" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star creativetimofficial/material-dashboard on GitHub">Star</a>
-          <h6 class="mt-3">Thank you for sharing!</h6>
-          
-          <a href="https://twitter.com/intent/tweet?text=Check%20Material%20UI%20Dashboard%20made%20by%20%40CreativeTim%20%23webdesign%20%23dashboard%20%23bootstrap5&amp;url=https%3A%2F%2Fwww.creative-tim.com%2Fproduct%2Fsoft-ui-dashboard" class="btn btn-dark mb-0 me-2" target="_blank">
-            <i class="fab fa-twitter me-1" aria-hidden="true"></i> Tweet
-          </a>
-          
-
-          
-          <a href="https://www.facebook.com/sharer/sharer.php?u=https://www.creative-tim.com/product/material-dashboard" class="btn btn-dark mb-0 me-2" target="_blank">
-            <i class="fab fa-facebook-square me-1" aria-hidden="true"></i> Share
-          </a>
-          
-        </div>
-      </div>
-    </div>
 </div>
-
-
-
 <script>
-  var win = navigator.platform.indexOf('Win') > -1;
-  if (win && document.querySelector('#sidenav-scrollbar')) {
-    var options = {
-      damping: '0.5'
+async function fetchAndDisplayUserData() {
+    try {
+        // Fetch the data from the Laravel route
+        const response = await fetch(`/user-data/`);
+        const data = await response.json();
+
+        // Store data in global variables for future use
+        accounts = data.accounts;
+        stocks = data.stocks;
+
+        // Initialize DataTable for Accounts if it hasn't been created yet
+        if (!$.fn.DataTable.isDataTable('#accounts-table')) {
+            $('#accounts-table').DataTable({
+                data: accounts,
+                columns: [
+                    { title: "ID", data: "id"},
+                    { title: "Account Name", data: "account_name" },
+                    { title: "Broker Name", data: "broker_name" },
+                    { title: "AcKrawk Island Postcards 10 Packcount Number", data: "account_number" },
+                    {
+                        title: "Meta",
+                        data: "meta",
+                        render: function(data) {
+                            return data ? JSON.stringify(data) : 'N/A';
+                        }
+                    }
+                ],
+                "columnDefs": [
+                    {
+                        "width": "60px",
+                        "targets": 0
+                    }
+                ]
+            });
+        } else {
+            // Update data if DataTable already exists
+            $('#accounts-table').DataTable().clear().rows.add(accounts).draw();
+        }
+
+        // Initialize DataTable for Stocks if it hasn't been created yet
+        if (!$.fn.DataTable.isDataTable('#stocks-table')) {
+            $('#stocks-table').DataTable({
+                data: stocks,
+                columns: [
+                    { title: "ID", data: "id" },
+                    { title: "Stock Name", data: "stock_name" },
+                    { title: "Broker Name", data: "broker_name" },
+                    { title: "Shares", data: "shares" },
+                    { title: "Price", data: "price" },
+                    {
+                        title: "Meta",
+                        data: "meta",
+                        render: function(data) {
+                            return data ? JSON.stringify(data) : 'N/A';
+                        }
+                    }
+                ],
+                "columnDefs": [
+                    {
+                        "width": "60px",
+                        "targets": 0
+                    }
+                ]
+
+            });
+        } else {
+            // Update data if DataTable already exists
+            $('#stocks-table').DataTable().clear().rows.add(stocks).draw();
+        }
+    } catch (error) {
+        console.error('Error fetching user data:'+ error);
     }
-    Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
-  }
+}
+fetchAndDisplayUserData()
 </script>
+  <!--   Core JS Files   -->
+  <script src="{{url('')}}/storage/assets/js/core/popper.min.js"></script>
+  <script src="{{url('')}}/storage/assets/js/core/bootstrap.min.js"></script>
+  <script src="{{url('')}}/storage/assets/js/plugins/perfect-scrollbar.min.js"></script>
+  <script src="{{url('')}}/storage/assets/js/plugins/smooth-scrollbar.min.js"></script>
+  <script src="{{url('')}}/storage/assets/js/plugins/chartjs.min.js"></script>
+  <script>
+   // JavaScript AJAX call to fetch data from the `sendData` endpoint
+async function fetchDataAndRenderCharts() {
+  try {
+    const response = await fetch('/your-endpoint', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        broker: 'example-broker',
+        type: 'account'
+      })
+    });
 
-<!-- Github buttons -->
-<script async defer src="https://buttons.github.io/buttons.js"></script>
+    const result = await response.json();
 
+    if (result.message) {
+      console.log(result.message);
 
-<!-- Control Center for Material Dashboard: parallax effects, scripts for the example pages etc --><script src="{{url('')}}/storage/assets/js/material-dashboard.min.js?v=3.1.0"></script>
-  </body>
+      // Assuming result.data contains an array of data points for the chart
+      updateChart(result.data);
+    } else {
+      console.error(result.error);
+    }
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  }
+}
+
+// Function to update the chart with new data
+function updateChart(data) {
+  const ctx = document.getElementById("chart-bars").getContext("2d");
+
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: data.labels,  // Labels from your fetched data
+      datasets: [{
+        label: "Sales",
+        data: data.values,  // Data points from your fetched data
+        backgroundColor: "rgba(255, 255, 255, .8)",
+      }]
+    },
+    options: { /* chart options */ }
+  });
+}
+
+fetchDataAndRenderCharts();
+
+  </script>
+  <script>
+    var win = navigator.platform.indexOf('Win') > -1;
+    if (win && document.querySelector('#sidenav-scrollbar')) {
+      var options = {
+        damping: '0.5'
+      }
+      Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
+    }
+  </script>
+  <!-- Github buttons -->
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+  <!-- Control Center for Material Dashboard: parallax effects, scripts for the example pages etc -->
+  <script src="{{url('')}}/storage/assets/js/material-dashboard.min.js?v=3.1.0"></script>
+</body>
 
 </html>
