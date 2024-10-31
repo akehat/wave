@@ -78,6 +78,24 @@
        th {
            background-color: #f4f4f4;
        }
+       .iframe-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.iframe-container iframe {
+    max-width: 100%;
+    width: 1000px;
+    height: 480px;
+    border: none;
+    /* Add box-shadow if you'd like some visual appeal */
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+}
+
    </style>
   @component('components.sidenav',["active"=>"dashboard"])
   @endcomponent
@@ -94,17 +112,20 @@
 
             <!-- Trading Chart Frame -->
             <div class="text-center m-3" style="width: 100%;">
-                <iframe
-                    frameborder="0"
-                    referrerpolicy="no-referrer"
-                    scrolling="no"
-                    height="480"
-                    width="1000"
-                    allowtransparency="true"
-                    marginwidth="0"
-                    marginheight="0"
-                    src="https://ssltvc.investing.com/?pair_ID=8849&height=480&width=1000&interval=300&plotStyle=area&domain_ID=68&lang_ID=68&timezone_ID=6">
-                </iframe>
+                <div class="iframe-container">
+                    <iframe
+                        id="responsive-iframe"
+                        frameborder="0"
+                        referrerpolicy="no-referrer"
+                        scrolling="no"
+                        height="480"
+                        width="1000"
+                        allowtransparency="true"
+                        marginwidth="0"
+                        marginheight="0"
+                        src="https://ssltvc.investing.com/?pair_ID=8849&height=480&width=1000&interval=300&plotStyle=area&domain_ID=68&lang_ID=68&timezone_ID=6">
+                    </iframe>
+                </div>
             </div>
             <div class="text-center m-3" style="width: 400px;">
                 <iframe
@@ -134,6 +155,34 @@
         <table id='accounts-table'></table>
       </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const iframe = document.getElementById("responsive-iframe");
+        const maxIframeWidth = 1000; // Original width of the iframe
+        let windowWidth = window.innerWidth;
+
+        function adjustIframeWidth() {
+            windowWidth = window.innerWidth;
+
+            // Calculate the new width for the iframe
+            const newWidth = Math.min(windowWidth, maxIframeWidth);
+
+            // Set the iframe width attribute
+            iframe.width = newWidth;
+
+            // Update the src to reflect the new width
+            const src = iframe.src;
+            iframe.src = src.replace(/width=\d+/, `width=${newWidth}`);
+        }
+
+        // Initial call on page load
+        adjustIframeWidth();
+
+        // Add event listener for window resize to adjust iframe width dynamically
+        window.addEventListener("resize", adjustIframeWidth);
+    });
+    </script>
 <script>
 async function fetchAndDisplayUserData() {
     try {
