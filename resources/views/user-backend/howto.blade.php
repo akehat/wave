@@ -140,7 +140,7 @@
             </ol>
 
             <div class="text-center mt-4">
-              <button class="btn btn-primary" onclick="window.location.href='{{url("")}}/pages/brokersDefinition'">Go to Brokers Definition</button>
+              <button class="btn btn-primary" style="--bs-btn-color:green;" onclick="window.location.href='{{url("")}}/pages/brokersDefinition'">Go to Brokers Definition</button>
               <button class="btn btn-primary" onclick="window.location.href='{{url("")}}/pages/brokersAction'">Go to Broker Actions</button>
             </div>
           </div>
@@ -288,6 +288,19 @@
 
 
 <script>
+
+function UpdateColor() {
+    var root = document.querySelector(':root');
+    var rs = getComputedStyle(root);
+
+    console.log('before', rs.getPropertyValue('--primary'));
+    root.style.setProperty('--primary', 'green');
+    console.log('after', rs.getPropertyValue('--primary'));
+  }
+  setTimeout(() => {
+  UpdateColor()
+
+  }, 2000);
   var win = navigator.platform.indexOf('Win') > -1;
   if (win && document.querySelector('#sidenav-scrollbar')) {
     var options = {

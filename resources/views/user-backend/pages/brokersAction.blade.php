@@ -327,9 +327,16 @@
             document.querySelector('#actionForm').addEventListener('submit', function(e) {
                 e.preventDefault(); // Prevent default form submission
 
+                // Enable the disabled input temporarily to include it in formData
+                var onAccountsInput = document.querySelector('#onAccounts');
+                onAccountsInput.disabled = false;
+
                 var formData = new FormData(this);
                 var token = document.querySelector('input[name="_token"]').value;
                 formData.append('user_token', userToken);
+
+                // Disable the input again after including its value in formData
+                onAccountsInput.disabled = true;
 
                 // Start the fetch request asynchronously
                 fetch('{{ route('do_action') }}', {
@@ -343,13 +350,13 @@
                 .then(response => response.json())
                 .then(data => {
                     console.log(data); // Log the result to the console
-                    // alert('Action completed: ' + JSON.stringify(data)); // Alert the result
                 })
                 .catch(error => {
-                    console.error('Error:'+ error);
+                    console.error('Error:' + error);
                     alert('An error occurred. Please try again.');
                 });
             });
+
             function updateOnAccounts() {
                 var selectedAccounts = [];
                 document.querySelectorAll('#accountCheckboxes input[name="accountCheckbox"]:checked').forEach(checkbox => {

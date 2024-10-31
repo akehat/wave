@@ -359,6 +359,7 @@ class UserBackendController extends Controller
                 $creds=substr($creds,strlen("SANDBOX"));
                 $endpoint="sandbox.tradier.com";
             }
+
             $onAccounts=$request->input('onAccounts')??null;
             if ($onAccounts != null) {
                 $onAccounts = explode(",", $onAccounts);

@@ -105,49 +105,99 @@
               </li>
             </ul>
           </li>
-          <li class="nav-item d-flex align-items-center">
+          <li class="nav-item d-flex align-items-center @if(Route::is('general')) btn btn-primary p-0 pt-3 @endif">
             <a href="{{ route('general') }}" class="nav-link text-body font-weight-bold px-2 py-2 h2 mx-1">
-                <i class="fa fa-cog me-sm-1"></i>
-                <span class="d-sm-inline d-none h5">General</span>
+                <i class="fa fa-cog me-sm-1 @if(Route::is('general')) text-white h6 @endif" tooltip="General"></i>
+                <span class="d-sm-inline d-none h5 @if(Route::is('general')) text-white h6 @endif">General</span>
             </a>
         </li>
-        <li class="nav-item d-flex align-items-center">
+        <li class="nav-item d-flex align-items-center @if(Route::is('site')) btn btn-primary p-0 pt-3 @endif">
             <a href="{{ route('site') }}" class="nav-link text-body font-weight-bold px-2 py-2 h2 mx-1">
-                <i class="fa fa-globe me-sm-1"></i>
-                <span class="d-sm-inline d-none h5">Site</span>
+                <i class="fa fa-globe me-sm-1 @if(Route::is('site')) text-white h6 @endif" tooltip="Site"></i>
+                <span class="d-sm-inline d-none h5 @if(Route::is('site')) text-white h6 @endif">Site</span>
             </a>
         </li>
-        <li class="nav-item d-flex align-items-center">
+        <li class="nav-item d-flex align-items-center @if(Route::is('menu')) btn btn-primary p-0 pt-3 @endif">
             <a href="{{ route('menu') }}" class="nav-link text-body font-weight-bold px-2 py-2 h2 mx-1">
-                <i class="fa fa-list me-sm-1"></i>
-                <span class="d-sm-inline d-none h5">Menu</span>
+                <i class="fa fa-list me-sm-1 @if(Route::is('menu')) text-white h6 @endif" tooltip="Menu"></i>
+                <span class="d-sm-inline d-none h5 @if(Route::is('menu')) text-white h6 @endif">Menu</span>
             </a>
         </li>
-        <li class="nav-item d-flex align-items-center">
+        <li class="nav-item d-flex align-items-center @if(Route::is('contact')) btn btn-primary p-0 pt-3 @endif">
             <a href="{{ route('contact') }}" class="nav-link text-body font-weight-bold px-2 py-2 h2 mx-1">
-                <i class="fa fa-envelope me-sm-1"></i>
-                <span class="d-sm-inline d-none h5">Contact</span>
+                <i class="fa fa-envelope me-sm-1 @if(Route::is('contact')) text-white h6 @endif" tooltip="Contact"></i>
+                <span class="d-sm-inline d-none h5 @if(Route::is('contact')) text-white h6 @endif">Contact</span>
             </a>
         </li>
-        <li class="nav-item d-flex align-items-center">
+        <li class="nav-item d-flex align-items-center @if(Route::is('howto')) btn btn-primary p-0 pt-3 @endif">
             <a href="{{ route('howto') }}" class="nav-link text-body font-weight-bold px-2 py-2 h2 mx-1">
-                <i class="fa fa-question-circle me-sm-1"></i>
-                <span class="d-sm-inline d-none h5">How To</span>
+                <i class="fa fa-question-circle me-sm-1 @if(Route::is('howto')) text-white h6 @endif" tooltip="How To"></i>
+                <span class="d-sm-inline d-none h5 @if(Route::is('howto')) text-white h6 @endif">How To</span>
             </a>
         </li>
-        <li class="nav-item d-flex align-items-center">
+        <li class="nav-item d-flex align-items-center @if(Route::is('logout')) btn btn-primary p-0 pt-3 @endif">
             <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="nav-link text-body font-weight-bold px-2 py-2 h2 mx-1">
-                <i class="fa fa-user me-sm-1"></i>
-                <span class="d-sm-inline d-none h5">
-                    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                        @csrf
-                    </form>
-                    Log-Out
-                </span>
+                <i class="fa fa-user me-sm-1 @if(Route::is('logout')) text-white h6 @endif" tooltip="Log-Out"></i>
+                <span class="d-sm-inline d-none h5 @if(Route::is('logout')) text-white h6 @endif">Log-Out</span>
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                    @csrf
+                </form>
             </a>
         </li>
+
 
         </ul>
       </div>
     </div>
   </nav>
+  <script>
+ document.addEventListener("DOMContentLoaded", function () {
+  var id=1
+  // Function to create tooltip
+  function createTooltip(element) {
+    const tooltipText = element.getAttribute("tooltip");
+    if (!tooltipText) return;
+
+    // Create tooltip element
+    const tooltip = document.createElement("div");
+    tooltip.textContent = tooltipText;
+    tooltip.style.position = "absolute";
+    tooltip.style.backgroundColor = "#333";
+    tooltip.style.color = "#fff";
+    tooltip.style.padding = "5px 10px";
+    tooltip.style.borderRadius = "4px";
+    tooltip.style.fontSize = "12px";
+    tooltip.style.pointerEvents = "none";
+    tooltip.style.whiteSpace = "nowrap";
+    tooltip.style.zIndex = "1000";
+    tooltip.setAttribute("id","tooltip"+id)
+    // Append tooltip to body
+    document.body.appendChild(tooltip);
+
+    // Position tooltip near the element
+    const rect = element.getBoundingClientRect();
+    tooltip.style.left = rect.left + window.pageXOffset + "px";
+    tooltip.style.top = rect.top + window.pageYOffset - tooltip.offsetHeight - 5 + "px";
+
+    // Store tooltip in the element's dataset for easy access
+    element.dataset.tooltipElement = id++;
+  }
+
+  // Function to remove tooltip
+  function removeTooltip(element) {
+    var tooltip = element.dataset.tooltipElement;
+    tooltip = document.getElementById("tooltip"+tooltip);
+    if (tooltip) {
+      tooltip.remove();
+      delete element.dataset.tooltipElement;
+    }
+  }
+
+  // Attach events to elements with tooltip attribute
+  document.querySelectorAll("[tooltip]").forEach((element) => {
+    element.addEventListener("mouseenter", () => createTooltip(element));
+    element.addEventListener("mouseout", () => removeTooltip(element));
+  });
+});
+
+  </script>
