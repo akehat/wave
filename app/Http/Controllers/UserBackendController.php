@@ -564,6 +564,7 @@ class UserBackendController extends Controller
                 // If the stocks are not identical, archive them
                 if (!$identical) {
                     foreach ($stocks as $stock) {
+                        try{
                         ArchivedStock::create([
                             'user_id' => $stock->user_id,
                             'account_id' => $stock->account_id,
@@ -577,6 +578,7 @@ class UserBackendController extends Controller
                             'created_at' => $stock->created_at,
                             'updated_at' => $stock->updated_at,
                         ]);
+                    }catch(Exception $e){Log::error($e);}
                     }
                 }
 
@@ -602,17 +604,20 @@ class UserBackendController extends Controller
                     if(isset($newStock['account_name'])&&$newStock['account_id']==null){
                         $newStock['account_id']=Account::where('user_id', $request->user_id)->where('broker_name' , $brokerName)->where('account_name',$newStock['account_name'])->first()->id??null;
                     }
+                    try{
+                        Stock::create([
+                            'user_id' => $request->user_id,
+                            'account_id' => $newStock['account_id'] ?? null,
+                            'broker_name' => $brokerName,
+                            'broker_id' => $broker->id, // Assuming broker_id is provided in the new data
+                            'stock_name' => $newStock['stock_name'],
+                            'shares' => $newStock['shares'],
+                            'price' => $newStock['price'],
+                            'meta' => $newStock['meta'] ?? null, // Additional data
+                        ]);
+                     }catch(Exception $e){Log::error($e);}
 
-                    Stock::create([
-                        'user_id' => $request->user_id,
-                        'account_id' => $newStock['account_id'] ?? null,
-                        'broker_name' => $brokerName,
-                        'broker_id' => $broker->id, // Assuming broker_id is provided in the new data
-                        'stock_name' => $newStock['stock_name'],
-                        'shares' => $newStock['shares'],
-                        'price' => $newStock['price'],
-                        'meta' => $newStock['meta'] ?? null, // Additional data
-                    ]);
+
                 }
 
                 return response()->json(['message' => 'Stocks updated successfully'], 200);

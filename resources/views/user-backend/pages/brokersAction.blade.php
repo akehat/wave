@@ -141,6 +141,8 @@
 
                                 <!-- Submit Button -->
                                 <button type="submit" class="btn btn-primary">Submit</button>
+                                <button type="button" onclick="updateBrokerData()" class="btn btn-info">Update</button>
+
                             </form>
                         </div>
                     </div>
@@ -364,9 +366,86 @@
                 });
                 document.querySelector('input[name="onAccounts"]').value = selectedAccounts.join(',');
             }
+
+            async function updateBrokerData() {
+                // Get the selected broker from the dropdown
+                const brokerDropdown = document.getElementById('broker');
+                const selectedBroker = brokerDropdown.value;
+
+                if (!selectedBroker) {
+                    alert('Please select a broker');
+                    return;
+                }
+
+                // Define the route URL (replace with the correct URL if necessary)
+                const routeUrl = '{{ route("do_action") }}';
+
+                try {
+                    // First, call 'accounts' action for the selected broker
+                    const accountsFormData = new FormData();
+                    accountsFormData.append('_token', document.querySelector('input[name="_token"]').value);
+                    accountsFormData.append('broker', selectedBroker);
+                    accountsFormData.append('action', 'accounts');
+                    console.log('called accounts');
+                    const accountsResponse = await fetch(routeUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json'
+                        },
+                        body: accountsFormData
+                    });
+                    const accountsData = await accountsResponse.json();
+                    // Next, call 'holdings' action for the selected broker
+                    const holdingsFormData = new FormData();
+                    holdingsFormData.append('_token', document.querySelector('input[name="_token"]').value);
+                    holdingsFormData.append('broker', selectedBroker);
+                    holdingsFormData.append('action', 'holdings');
+                    if (selectedBroker.toLowerCase() === 'fidelity') {
+                        console.log('Waiting 50 seconds before calling holdings for Fidelity...');
+                        await new Promise(resolve => setTimeout(resolve, 50000)); // 20 seconds delay
+                    }
+                    console.log('called holdings');
+
+                    const holdingsResponse = await fetch(routeUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json'
+                        },
+                        body: holdingsFormData
+                    });
+                    const holdingsData = await holdingsResponse.json();
+                } catch (error) {
+                    console.error('Error updating broker data:', error);
+                    alert('An error occurred while updating broker data.');
+                }
+            }
+
             document.getElementById('broker').addEventListener('change', function() {
-                document.getElementById('action').dispatchEvent(new Event("change"))
-            })
+                // Dispatch the change event for action
+                document.getElementById('action').dispatchEvent(new Event("change"));
+                checkSubmitable()
+            });
+            function checkSubmitable(){
+                const selectedBroker = document.getElementById("broker").value;
+                const submitButton = document.querySelector('#actionForm button[type="submit"]');
+
+                // Check if the selected broker has any accounts or stocks
+                // Here we assume `accounts` and `stocks` are arrays with the accounts and stocks data
+                const hasAccounts = accounts && accounts.some(account => account.broker_name === selectedBroker);
+                const hasStocks = stocks && stocks.some(stock => stock.broker_name === selectedBroker);
+
+                if (!hasAccounts && !hasStocks) {
+                    // Disable the submit button and change text to "Please update"
+                    submitButton.disabled = true;
+                    submitButton.textContent = "Please update";
+                    submitButton.classList.add("disabled"); // Bootstrap disabled style
+                } else {
+                    // Enable the submit button and reset text to "Submit"
+                    submitButton.disabled = false;
+                    submitButton.textContent = "Submit";
+                    submitButton.classList.remove("disabled");
+                }
+            }
 
             // Handle input visibility for buy/sell
             document.getElementById('action').addEventListener('change', function() {
@@ -472,6 +551,7 @@
                         // Update data if DataTable already exists
                         $('#stocks-table').DataTable().clear().rows.add(stocks).draw();
                     }
+                    checkSubmitable()
                 } catch (error) {
                     console.error('Error fetching user data:'+ error);
                 }
