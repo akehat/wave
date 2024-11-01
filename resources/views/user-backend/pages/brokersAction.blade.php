@@ -422,7 +422,6 @@
 
             document.getElementById('broker').addEventListener('change', function() {
                 // Dispatch the change event for action
-                document.getElementById('action').dispatchEvent(new Event("change"));
                 checkSubmitable()
             });
             function checkSubmitable(){
@@ -445,6 +444,8 @@
                     submitButton.textContent = "Submit";
                     submitButton.classList.remove("disabled");
                 }
+                document.getElementById('action').dispatchEvent(new Event("change"));
+
             }
 
             // Handle input visibility for buy/sell
