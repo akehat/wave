@@ -85,186 +85,115 @@
                         <h6>Brokers Configuration</h6>
                     </div>
                     @php
+                    $hidden=[];
+                    // dd($brokers);
+                    function isBrokerDataEmpty($brokers, $name) {
+                        // Check if the specified broker exists
+                        if (!isset($brokers[$name])) {
+                            return true; // If the broker doesn't exist, consider it empty
+                        }
 
+                        // Loop through each value in the broker data and check if it's empty
+                        foreach ($brokers[$name]->toArray() as $key => $value) {
+                            // Skip certain keys that don't impact emptiness
+                            if (!in_array($key, ["broker_name", "user_id", "id", "created_at", "updated_at"])) {
+                                if (!empty($value)) {
+                                    return false; // If any value is not empty, return false
+                                }
+                            }
+                        }
+
+                        return true; // All values are empty
+                    }
+                        $brokerFields=["tradier"=>[["type"=>"text", "name"=>"tradier_token", "placeholder"=>"Enter Token", ]],
+                        "robinhood"=>[["type"=>"text", "name"=>"robinhood_username", "placeholder"=>"Enter Username"],
+                        ["type"=>"password", "name"=>"robinhood_password", "placeholder"=>"Enter Password"],
+                        ["type"=>"text", "name"=>"robinhood_totp", "placeholder"=>"Enter TOTP (if 2FA enabled)"]] ,
+                        "chase"=>[["type"=>"text", "name"=>"chase_username", "placeholder"=>"Enter Username", ],
+                        ["type"=>"password", "name"=>"chase_password", "placeholder"=>"Enter Password",],
+                        ["type"=>"text", "name"=>"chase_phone_last_four", "placeholder"=>"Enter Phone Last Four",],
+                        ["type"=>"text", "name"=>"chase_debug", "placeholder"=>"Debug (Optional)"]],
+                        "fennel"=>[["type"=>"text", "name"=>"fennel_email", "placeholder"=>"Enter Email"]],
+                        "fidelity"=>[["type"=>"text", "name"=>"fidelity_username", "placeholder"=>"Enter Username",],
+                        ["type"=>"password", "name"=>"fidelity_password", "placeholder"=>"Enter Password"]],
+                        "firstrade"=>[["type"=>"text", "name"=>"firstrade_username", "placeholder"=>"Enter Username"],
+                        ["type"=>"password", "name"=>"firstrade_password", "placeholder"=>"Enter Password"]],
+                        "public"=>[["type"=>"text", "name"=>"public_username", "placeholder"=>"Enter Username"],
+                        ["type"=>"text", "name"=>"public_password", "placeholder"=>"Enter password"]],
+                        "schwab"=>[["type"=>"text", "name"=>"schwab_username", "placeholder"=>"Enter Username"],
+                        ["type"=>"password", "name"=>"schwab_password", "placeholder"=>"Enter Password"],
+                        ["type"=>"text", "name"=>"schwab_totp", "placeholder"=>"Enter totp"]],
+                        "tastytrade"=>[["type"=>"text", "name"=>"tastytrade_username", "placeholder"=>"Enter Username"],
+                        ["type"=>"password", "name"=>"tastytrade_password", "placeholder"=>"Enter Password"]],
+                        "vanguard"=>[["type"=>"text", "name"=>"vanguard_username", "placeholder"=>"Enter Username"],
+                        ["type"=>"password", "name"=>"vanguard_password", "placeholder"=>"Enter Password"],
+                        ["type"=>"text", "name"=>"vanguard_phone_last_four", "placeholder"=>"Enter Phone Last Four"]],
+                        "webull"=>[["type"=>"text", "name"=>"webull_username", "placeholder"=>"Enter Username"],
+                        ["type"=>"password", "name"=>"webull_password", "placeholder"=>"Enter Password"],
+                        ["type"=>"text", "name"=>"webull_did", "placeholder"=>"Enter did"],
+                        ["type"=>"text", "name"=>"webull_trading_pin", "placeholder"=>"Enter Trading Pin"]],
+                        "tornado"=>[["type"=>"text", "name"=>"tornado_username", "placeholder"=>"Enter Username"],
+                        ["type"=>"password", "name"=>"tornado_password", "placeholder"=>"Enter Password"]],
+                        "DSPAC"=>[["type"=>"text", "name"=>"DSPAC_username", "placeholder"=>"Enter Username"],
+                        ["type"=>"password", "name"=>"DSPAC_password", "placeholder"=>"Enter Password"]]]
                     @endphp
+
+
                     <div class="card-body">
                         <form action="{{ route('save_brokers') }}" method="POST">
                             @csrf
                             <!-- Tradier -->
-                            <div class="d-flex mb-3">
-                                <label class="form-label">Tradier</label>
-                                <div class="form-check form-switch ms-3">
-                                    <input class="form-check-input" type="checkbox" id="tradier_enabled" name="tradier_enabled" {{ isset($brokers['Tradier']) && $brokers['Tradier']->enabled ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="tradier_enabled">Enable</label>
-                                </div>
-                                <input type="text" class="form-control ms-3" name="tradier_token" placeholder="Enter Token" value="{{ isset($brokers['Tradier']) ? $brokers['Tradier']->token : '' }}">
-                                <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge {{ isset($brokers['Tradier']) ? ($brokers['Tradier']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Tradier']) ? ($brokers['Tradier']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
+                            @foreach ($brokerFields as $brokerName => $fields)
+                            @php
+                                // Uppercase the first letter of the broker name
+                                $displayName = ucfirst($brokerName);
+                                $invisible = isBrokerDataEmpty($brokers,$displayName);
+                                if($invisible){$hidden[] = $displayName;}
+                            @endphp
+
+                            <div class="card broker-card mb-3 p-3" @if($invisible) hidden @endif id="card{{$displayName}}">
+                                <!-- Broker name and enable switch -->
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5 class="form-label mb-0 h4">{{ $displayName }}</h5>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="{{ $brokerName }}_enabled" name="{{ $brokerName }}_enabled"
+                                            {{ isset($brokers[$displayName]) && $brokers[$displayName]->enabled ? 'checked' : '' }}>
+                                        <label class="form-check-label ms-2" for="{{ $brokerName }}_enabled">Enable</label>
+                                    </div>
                                 </div>
 
-                            <!-- Robinhood -->
-                            <div class="d-flex mb-3">
-                                <label class="form-label">Robinhood</label>
-                                <div class="form-check form-switch ms-3">
-                                    <input class="form-check-input" type="checkbox" id="robinhood_enabled" name="robinhood_enabled" {{ isset($brokers['Robinhood']) && $brokers['Robinhood']->enabled ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="robinhood_enabled">Enable</label>
-                                </div>
-                                <input type="text" class="form-control ms-3" name="robinhood_username" placeholder="Enter Username" value="{{ isset($brokers['Robinhood']) ? $brokers['Robinhood']->username : '' }}">
-                                <input type="password" class="form-control ms-3" name="robinhood_password" placeholder="Enter Password" value="{{ isset($brokers['Robinhood']) ? $brokers['Robinhood']->password : '' }}">
-                                <input type="text" class="form-control ms-3" name="robinhood_totp" placeholder="Enter TOTP (if 2FA enabled)" value="{{ isset($brokers['Robinhood']) ? $brokers['Robinhood']->totp : '' }}">
-                                <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge {{ isset($brokers['Robinhood']) ? ($brokers['Robinhood']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Robinhood']) ? ($brokers['Robinhood']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                                </div>
+                                <!-- Input fields for the broker -->
+                                @foreach ($fields as $field)
+                                    @php
+                                        $dbName = str_replace($brokerName . "_", "", $field['name']);
+                                    @endphp
 
+                                    <div class="input-group mb-2">
+                                        <input type="{{ $field['type'] }}" class="form-control" name="{{ $field['name'] }}"
+                                            placeholder="{{ $field['placeholder'] }}"
+                                            value="{{ isset($brokers[$displayName]) && isset($brokers[$displayName]->$dbName) ? $brokers[$displayName]->$dbName : '' }}">
+                                    </div>
+                                @endforeach
 
-                            <!-- Chase -->
-                            <div class="d-flex mb-3">
-                                <label class="form-label">Chase</label>
-                                <div class="form-check form-switch ms-3">
-                                    <input class="form-check-input" type="checkbox" id="chase_enabled" name="chase_enabled" {{ isset($brokers['Chase']) && $brokers['Chase']->enabled ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="chase_enabled">Enable</label>
+                                <!-- Save button and confirmation badge -->
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <button type="submit" class="btn btn-primary text-nowrap px-3" style="max-width: 100px;">Save</button>
+                                    <span class="badge {{ isset($brokers[$displayName]) ? ($brokers[$displayName]->confirmed ? 'bg-primary' : 'bg-secondary') : 'bg-secondary' }}">
+                                        {{ isset($brokers[$displayName]) ? ($brokers[$displayName]->confirmed ? 'Confirmed' : 'Unconfirmed') : 'Unconfirmed' }}
+                                    </span>
                                 </div>
-                                <input type="text" class="form-control ms-3" name="chase_username" placeholder="Enter Username" value="{{ isset($brokers['Chase']) ? $brokers['Chase']->username : '' }}">
-                                <input type="password" class="form-control ms-3" name="chase_password" placeholder="Enter Password" value="{{ isset($brokers['Chase']) ? $brokers['Chase']->password : '' }}">
-                                <input type="text" class="form-control ms-3" name="chase_phone_last_four" placeholder="Enter Phone Last Four" value="{{ isset($brokers['Chase']) ? $brokers['Chase']->phone_last_four : '' }}">
-                                <input type="text" class="form-control ms-3" name="chase_debug" placeholder="Debug (Optional)" value="{{ isset($brokers['Chase']) ? $brokers['Chase']->debug : '' }}">
-                                <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge {{ isset($brokers['Chase']) ? ($brokers['Chase']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Chase']) ? ($brokers['Chase']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                                </div>
-
-                            <!-- Fennel -->
-                            <div class="d-flex mb-3">
-                                <label class="form-label">Fennel</label>
-                                <div class="form-check form-switch ms-3">
-                                    <input class="form-check-input" type="checkbox" id="fennel_enabled" name="fennel_enabled" {{ isset($brokers['Fennel']) && $brokers['Fennel']->enabled ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="fennel_enabled">Enable</label>
-                                </div>
-                                <input type="text" class="form-control ms-3" name="fennel_email" placeholder="Enter Email" value="{{ isset($brokers['Fennel']) ? $brokers['Fennel']->email : '' }}">
-                                <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge {{ isset($brokers['Fennel']) ? ($brokers['Fennel']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Fennel']) ? ($brokers['Fennel']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                                </div>
-
-                            <!-- Fidelity -->
-                            <div class="d-flex mb-3">
-                                <label class="form-label">Fidelity</label>
-                                <div class="form-check form-switch ms-3">
-                                    <input class="form-check-input" type="checkbox" id="fidelity_enabled" name="fidelity_enabled" {{ isset($brokers['Fidelity']) && $brokers['Fidelity']->enabled ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="fidelity_enabled">Enable</label>
-                                </div>
-                                <input type="text" class="form-control ms-3" name="fidelity_username" placeholder="Enter Username" value="{{ isset($brokers['Fidelity']) ? $brokers['Fidelity']->username : '' }}">
-                                <input type="password" class="form-control ms-3" name="fidelity_password" placeholder="Enter Password" value="{{ isset($brokers['Fidelity']) ? $brokers['Fidelity']->password : '' }}">
-                                <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge {{ isset($brokers['Fidelity']) ? ($brokers['Fidelity']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Fidelity']) ? ($brokers['Fidelity']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                                </div>
-
-                            <!-- Firstrade -->
-                            <div class="d-flex mb-3">
-                                <label class="form-label">Firstrade</label>
-                                <div class="form-check form-switch ms-3">
-                                    <input class="form-check-input" type="checkbox" id="firstrade_enabled" name="firstrade_enabled" {{ isset($brokers['Firstrade']) && $brokers['Firstrade']->enabled ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="firstrade_enabled">Enable</label>
-                                </div>
-                                <input type="text" class="form-control ms-3" name="firstrade_username" placeholder="Enter Username" value="{{ isset($brokers['Firstrade']) ? $brokers['Firstrade']->username : '' }}">
-                                <input type="password" class="form-control ms-3" name="firstrade_password" placeholder="Enter Password" value="{{ isset($brokers['Firstrade']) ? $brokers['Firstrade']->password : '' }}">
-                                <input type="text" class="form-control ms-3" name="firstrade_pin" placeholder="Enter PIN" value="{{ isset($brokers['Firstrade']) ? $brokers['Firstrade']->pin : '' }}">
-                                <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge {{ isset($brokers['Firstrade']) ? ($brokers['Firstrade']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Firstrade']) ? ($brokers['Firstrade']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                                </div>
-
-                            <!-- Public -->
-                            <div class="d-flex mb-3">
-                                <label class="form-label">Public</label>
-                                <div class="form-check form-switch ms-3">
-                                    <input class="form-check-input" type="checkbox" id="public_enabled" name="public_enabled" {{ isset($brokers['Public']) && $brokers['Public']->enabled ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="public_enabled">Enable</label>
-                                </div>
-                                <input type="text" class="form-control ms-3" name="public_username" placeholder="Enter Username" value="{{ isset($brokers['Public']) ? $brokers['Public']->username : '' }}">
-                                <input type="text" class="form-control ms-3" name="public_password" placeholder="Enter password" value="{{ isset($brokers['Public']) ? $brokers['Public']->password : '' }}">
-                                <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge {{ isset($brokers['Public']) ? ($brokers['Public']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Public']) ? ($brokers['Public']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                                </div>
-
-                            <!-- Schwab -->
-                            <div class="d-flex mb-3">
-                                <label class="form-label">Schwab</label>
-                                <div class="form-check form-switch ms-3">
-                                    <input class="form-check-input" type="checkbox" id="schwab_enabled" name="schwab_enabled" {{ isset($brokers['Schwab']) && $brokers['Schwab']->enabled ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="schwab_enabled">Enable</label>
-                                </div>
-                                <input type="text" class="form-control ms-3" name="schwab_username" placeholder="Enter Username" value="{{ isset($brokers['Schwab']) ? $brokers['Schwab']->username : '' }}">
-                                <input type="password" class="form-control ms-3" name="schwab_password" placeholder="Enter Password" value="{{ isset($brokers['Schwab']) ? $brokers['Schwab']->password : '' }}">
-                                <input type="text" class="form-control ms-3" name="schwab_totp" placeholder="Enter totp" value="{{ isset($brokers['Schwab']) ? $brokers['Schwab']->totp : '' }}">
-                                <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge {{ isset($brokers['Schwab']) ? ($brokers['Schwab']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Schwab']) ? ($brokers['Schwab']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                                </div>
-
-                            <!-- Tradier -->
-                            <div class="d-flex mb-3">
-                                <label class="form-label">Tastytrade</label>
-                                <div class="form-check form-switch ms-3">
-                                    <input class="form-check-input" type="checkbox" id="tastytrade_enabled" name="tastytrade_enabled" {{ isset($brokers['Tastytrade']) && $brokers['Tastytrade']->enabled ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="tastytrade_enabled">Enable</label>
-                                </div>
-                                <input type="text" class="form-control ms-3" name="tastytrade_username" placeholder="Enter Username" value="{{ isset($brokers['Tastytrade']) ? $brokers['Tastytrade']->username : '' }}">
-                                <input type="password" class="form-control ms-3" name="tastytrade_password" placeholder="Enter Password" value="{{ isset($brokers['Tastytrade']) ? $brokers['Tastytrade']->password : '' }}">
-                                <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge {{ isset($brokers['Tastytrade']) ? ($brokers['Tastytrade']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Tastytrade']) ? ($brokers['Tastytrade']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                                </div>
-
-                            <!-- Vanguard -->
-                            <div class="d-flex mb-3">
-                                <label class="form-label">Vanguard</label>
-                                <div class="form-check form-switch ms-3">
-                                    <input class="form-check-input" type="checkbox" id="vanguard_enabled" name="vanguard_enabled" {{ isset($brokers['Vanguard']) && $brokers['Vanguard']->enabled ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="vanguard_enabled">Enable</label>
-                                </div>
-                                <input type="text" class="form-control ms-3" name="vanguard_username" placeholder="Enter Username" value="{{ isset($brokers['Vanguard']) ? $brokers['Vanguard']->username : '' }}">
-                                <input type="password" class="form-control ms-3" name="vanguard_password" placeholder="Enter Password" value="{{ isset($brokers['Vanguard']) ? $brokers['Vanguard']->password : '' }}">
-                                <input type="text" class="form-control ms-3" name="vanguard_phone_last_four" placeholder="Enter Phone Last Four" value="{{ isset($brokers['Vanguard']) ? $brokers['Vanguard']->phone_last_four : '' }}">
-                                <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge {{ isset($brokers['Vanguard']) ? ($brokers['Vanguard']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Vanguard']) ? ($brokers['Vanguard']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                                </div>
-
-                            <!-- Webull -->
-                            <div class="d-flex mb-3">
-                                <label class="form-label">Webull</label>
-                                <div class="form-check form-switch ms-3">
-                                    <input class="form-check-input" type="checkbox" id="webull_enabled" name="webull_enabled" {{ isset($brokers['Webull']) && $brokers['Webull']->enabled ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="webull_enabled">Enable</label>
-                                </div>
-                                <input type="text" class="form-control ms-3" name="webull_username" placeholder="Enter Username" value="{{ isset($brokers['Webull']) ? $brokers['Webull']->username : '' }}">
-                                <input type="password" class="form-control ms-3" name="webull_password" placeholder="Enter Password" value="{{ isset($brokers['Webull']) ? $brokers['Webull']->password : '' }}">
-                                <input type="text" class="form-control ms-3" name="webull_did" placeholder="Enter did" value="{{ isset($brokers['Webull']) ? $brokers['Webull']->did : '' }}">
-                                <input type="text" class="form-control ms-3" name="webull_trading_pin" placeholder="Enter Trading Pin" value="{{ isset($brokers['Webull']) ? $brokers['Webull']->pin : '' }}">
-                                <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge {{ isset($brokers['Webull']) ? ($brokers['Webull']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Webull']) ? ($brokers['Webull']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                                </div>
-
-                            <div class="d-flex mb-3">
-                                <label class="form-label">Tornado</label>
-                                <div class="form-check form-switch ms-3">
-                                    <input class="form-check-input" type="checkbox" id="tornado_enabled" name="tornado_enabled" {{ isset($brokers['Tornado']) && $brokers['Tornado']->enabled ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="tornado_enabled">Enable</label>
-                                </div>
-                                <input type="text" class="form-control ms-3" name="tornado_username" placeholder="Enter Username" value="{{ isset($brokers['Tornado']) ? $brokers['Tornado']->username : '' }}">
-                                <input type="password" class="form-control ms-3" name="tornado_password" placeholder="Enter Password" value="{{ isset($brokers['Tornado']) ? $brokers['Tornado']->password : '' }}">
-                                <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge {{ isset($brokers['Tornado']) ? ($brokers['Tornado']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['Tornado']) ? ($brokers['Tornado']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                                </div>
-                            <div class="d-flex mb-3">
-                                <label class="form-label">DSPAC</label>
-                                <div class="form-check form-switch ms-3">
-                                    <input class="form-check-input" type="checkbox" id="DSPAC_enabled" name="DSPAC_enabled" {{ isset($brokers['DSPAC']) && $brokers['DSPAC']->enabled ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="DSPAC_enabled">Enable</label>
-                                </div>
-                                <input type="text" class="form-control ms-3" name="DSPAC_username" placeholder="Enter Username" value="{{ isset($brokers['DSPAC']) ? $brokers['DSPAC']->username : '' }}">
-                                <input type="password" class="form-control ms-3" name="DSPAC_password" placeholder="Enter Password" value="{{ isset($brokers['DSPAC']) ? $brokers['DSPAC']->password : '' }}">
-                                <button type="submit" class="btn btn-primary ms-3 text-nowrap p-2 w-50" style="max-width:100px;">Save</button>
-                                <span class="badge {{ isset($brokers['DSPAC']) ? ($brokers['DSPAC']->confirmed?"bg-primary":"bg-secondary"):"bg-secondary"}} ms-3">{{ isset($brokers['DSPAC']) ? ($brokers['DSPAC']->confirmed?"confirmed":"unconfirmed") : 'unconfirmed' }}</span>
-                                </div>
-
-
+                            </div>
+                        @endforeach
                         </form>
+                        <div>
+                        <select id="brokerDropdown" class="form-select">
+                            <option value="">Select a Broker</option>
+                            @foreach ($hidden as $brokerName)
+                                <option value="{{ $brokerName }}">{{ $brokerName }}</option>
+                            @endforeach
+                        </select>
+                        <button type="button" id="addBrokerBtn" class="btn btn-primary mt-2">Add</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -286,6 +215,37 @@
       }
       Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
     }
+  </script>
+  <script>
+    document.getElementById('addBrokerBtn').addEventListener('click', function() {
+        // Get the selected broker from the dropdown
+        var selectedBroker = document.getElementById('brokerDropdown').value;
+
+        // Check if a broker is selected
+        if (selectedBroker) {
+            // Find the corresponding card element (e.g., cardChase, cardFirstrade, etc.)
+            var card = document.getElementById('card' + selectedBroker);
+
+            // If the card exists, remove the "hidden" attribute to make it visible
+            if (card) {
+                card.removeAttribute('hidden');
+            }
+
+            // Remove the selected option from the dropdown
+            var dropdown = document.getElementById('brokerDropdown');
+            var option = dropdown.querySelector('option[value="' + selectedBroker + '"]');
+            if (option) {
+                option.remove();
+            }
+            card.scrollIntoView({
+                behavior: 'smooth'
+            });
+            // Clear the dropdown selection
+            dropdown.value = '';
+        } else {
+            alert('Please select a broker first.');
+        }
+    });
   </script>
   <!-- Github buttons -->
   <script async defer src="https://buttons.github.io/buttons.js"></script>
