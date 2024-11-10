@@ -202,7 +202,7 @@ async function fetchAndDisplayUserData() {
                     { title: "ID", data: "id"},
                     { title: "Account Name", data: "account_name" },
                     { title: "Broker Name", data: "broker_name" },
-                    { title: "AcKrawk Island Postcards 10 Packcount Number", data: "account_number" },
+                    { title: "Account Number", data: "account_number" },
                     {
                         title: "Meta",
                         data: "meta",
