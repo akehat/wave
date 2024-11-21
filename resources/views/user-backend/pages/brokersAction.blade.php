@@ -400,9 +400,9 @@
                     holdingsFormData.append('_token', document.querySelector('input[name="_token"]').value);
                     holdingsFormData.append('broker', selectedBroker);
                     holdingsFormData.append('action', 'holdings');
-                    if (selectedBroker.toLowerCase() === 'fidelity') {
-                        console.log('Waiting 50 seconds before calling holdings for Fidelity...');
-                        await new Promise(resolve => setTimeout(resolve, 50000)); // 20 seconds delay
+                    if (['fidelity','dspac'].includes(selectedBroker.toLowerCase())) {
+                        console.log(`Waiting 80 seconds before calling holdings for ${selectedBroker.toLowerCase()}...`);
+                        await new Promise(resolve => setTimeout(resolve, 80000)); // 20 seconds delay
                     }
                     console.log('called holdings');
 
