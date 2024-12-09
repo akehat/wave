@@ -197,7 +197,15 @@
             var userToken = `{!! $token !!}`;
 
             function connectSocket() {
-                ws = new WebSocket('ws://localhost:8080');
+                const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+                const baseUrl = window.location.hostname;
+                if(["localhost",'127.0.0.1'].includes(baseUrl)){
+                    var port = ":8080";
+                }else{
+                    var port = "/ws/";
+                }
+                 // Adjust the port as needed
+                const wsUrl = `${protocol}${baseUrl}${port}`;
 
                 ws.onopen = function () {
                     console.log('Connected to WebSocket server');

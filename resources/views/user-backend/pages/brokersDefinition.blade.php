@@ -141,17 +141,19 @@
 
 
                     <div class="card-body">
-                        <form action="{{ route('save_brokers') }}" method="POST">
-                            @csrf
+
                             <!-- Tradier -->
                             @foreach ($brokerFields as $brokerName => $fields)
+
                             @php
                                 // Uppercase the first letter of the broker name
                                 $displayName = ucfirst($brokerName);
                                 $invisible = isBrokerDataEmpty($brokers,$displayName);
                                 if($invisible){$hidden[] = $displayName;}
                             @endphp
-
+                            <form action="{{ route('save_brokers') }}"  method="POST">
+                                @csrf
+                            <input value="{{ $displayName }}" name="broker" type="hidden">
                             <div class="card broker-card mb-3 p-3" @if($invisible) hidden @endif id="card{{$displayName}}">
                                 <!-- Broker name and enable switch -->
                                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -184,8 +186,9 @@
                                     </span>
                                 </div>
                             </div>
-                        @endforeach
                         </form>
+
+                        @endforeach
                         <div>
                         <select id="brokerDropdown" class="form-select">
                             <option value="">Select a Broker</option>
@@ -248,6 +251,68 @@
         }
     });
   </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Inject broker name into form before submission
+        const forms = document.querySelectorAll('form');
+
+    forms.forEach(form => {
+        form.addEventListener('submit', function (e) {
+        e.preventDefault(); // Prevent the default form submission
+        const formData = new FormData(form);
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log(`${brokerName} saved successfully.`);
+                    // Optionally, update the UI to reflect changes
+                } else {
+                    console.error(data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+
+        });
+    });
+
+        // Handle AJAX for enable switch
+        const switches = document.querySelectorAll('.form-check-input');
+        switches.forEach(switchInput => {
+            switchInput.addEventListener('change', function () {
+                const brokerCard = this.closest('.broker-card');
+                if (brokerCard) {
+                    const brokerName = brokerCard.querySelector('h5').innerText;
+
+                    // Prepare AJAX request
+                    const formData = new FormData();
+                    formData.append('broker', brokerName);
+                    formData.append('enabled', this.checked ? 1 : 0);
+                    formData.append('_token', '{{ csrf_token() }}');
+
+                    fetch('{{ route('toggle_broker_status') }}', {
+                        method: 'POST',
+                        body: formData,
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            console.log(`${brokerName} updated successfully.`);
+                        } else {
+                            console.error(data.message);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                }
+            });
+        });
+    });
+</script>
   <!-- Github buttons -->
   <script async defer src="https://buttons.github.io/buttons.js"></script>
   <!-- Control Center for Material Dashboard: parallax effects, scripts for the example pages etc -->

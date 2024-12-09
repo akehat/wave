@@ -95,135 +95,128 @@ class UserBackendController extends Controller
                 'webull_password' => 'nullable|string',
                 'webull_did' => 'nullable|string',
                 'webull_trading_pin' => 'nullable|string',
+                'broker' => 'nullable|string',
             ]);
 
             // Get the authenticated user
+             // Get the authenticated user
             $user = auth()->user();
 
-            // Store broker data for Tradier
-            Broker::updateOrCreate(
-                ['user_id' => $user->id, 'broker_name' => 'Tradier'],
-                [
-                    'enabled' => $request->tradier_enabled!="on"?0:1,
+            // List of brokers and corresponding update logic
+            $brokers = [
+                'Tradier' => [
+                    'enabled' => $request->tradier_enabled != "on" ? 0 : 1,
                     'username' => $request->tradier_username,
                     'password' => $request->tradier_password,
                     'token' => $request->tradier_token,
-                ]
-            );
-
-            // Store broker data for Robinhood
-            Broker::updateOrCreate(
-                ['user_id' => $user->id, 'broker_name' => 'Robinhood'],
-                [
-                    'enabled' => $request->robinhood_enabled!="on"?0:1,
+                ],
+                'Robinhood' => [
+                    'enabled' => $request->robinhood_enabled != "on" ? 0 : 1,
                     'username' => $request->robinhood_username,
                     'password' => $request->robinhood_password,
-                ]
-            );
-
-            // Store broker data for Schwab
-            Broker::updateOrCreate(
-                ['user_id' => $user->id, 'broker_name' => 'Schwab'],
-                [
-                    'enabled' => $request->schwab_enabled!="on"?0:1,
+                ],
+                'Schwab' => [
+                    'enabled' => $request->schwab_enabled != "on" ? 0 : 1,
                     'username' => $request->schwab_username,
                     'password' => $request->schwab_password,
                     'totp' => $request->schwab_totp,
-                ]
-            );
-
-            // Store broker data for Fidelity
-            Broker::updateOrCreate(
-                ['user_id' => $user->id, 'broker_name' => 'Fidelity'],
-                [
-                    'enabled' => $request->fidelity_enabled!="on"?0:1,
+                ],
+                'Fidelity' => [
+                    'enabled' => $request->fidelity_enabled != "on" ? 0 : 1,
                     'username' => $request->fidelity_username,
                     'password' => $request->fidelity_password,
-                ]
-            );
-
-            // Store broker data for Fennel
-            Broker::updateOrCreate(
-                ['user_id' => $user->id, 'broker_name' => 'Fennel'],
-                [
-                    'enabled' => $request->fennel_enabled!="on"?0:1,
+                ],
+                'Fennel' => [
+                    'enabled' => $request->fennel_enabled != "on" ? 0 : 1,
                     'email' => $request->fennel_email,
-                ]
-            );
-
-            // Store broker data for Firstrade
-            Broker::updateOrCreate(
-                ['user_id' => $user->id, 'broker_name' => 'Firstrade'],
-                [
-                    'enabled' => $request->firstrade_enabled!="on"?0:1,
+                ],
+                'Firstrade' => [
+                    'enabled' => $request->firstrade_enabled != "on" ? 0 : 1,
                     'username' => $request->firstrade_username,
                     'password' => $request->firstrade_password,
                     'pin' => $request->firstrade_pin,
-                ]
-            );
-
-            // Store broker data for Public
-            Broker::updateOrCreate(
-                ['user_id' => $user->id, 'broker_name' => 'Public'],
-                [
-                    'enabled' => $request->public_enabled!="on"?0:1,
+                ],
+                'Public' => [
+                    'enabled' => $request->public_enabled != "on" ? 0 : 1,
                     'username' => $request->public_username,
                     'password' => $request->public_password,
-                ]
-            );
-
-            // Store broker data for Tastytrade
-            Broker::updateOrCreate(
-                ['user_id' => $user->id, 'broker_name' => 'Tastytrade'],
-                [
-                    'enabled' => $request->tastytrade_enabled!="on"?0:1,
+                ],
+                'Tastytrade' => [
+                    'enabled' => $request->tastytrade_enabled != "on" ? 0 : 1,
                     'username' => $request->tastytrade_username,
                     'password' => $request->tastytrade_password,
-                ]
-            );
-
-            // Store broker data for Vanguard
-            Broker::updateOrCreate(
-                ['user_id' => $user->id, 'broker_name' => 'Vanguard'],
-                [
-                    'enabled' => $request->vanguard_enabled!="on"?0:1,
+                ],
+                'Vanguard' => [
+                    'enabled' => $request->vanguard_enabled != "on" ? 0 : 1,
                     'username' => $request->vanguard_username,
                     'password' => $request->vanguard_password,
                     'phone_last_four' => $request->vanguard_phone_last_four,
-                ]
-            );
-
-            // Store broker data for Webull
-            Broker::updateOrCreate(
-                ['user_id' => $user->id, 'broker_name' => 'Webull'],
-                [
-                    'enabled' => $request->webull_enabled!="on"?0:1,
+                ],
+                'Webull' => [
+                    'enabled' => $request->webull_enabled != "on" ? 0 : 1,
                     'username' => $request->webull_username,
                     'password' => $request->webull_password,
                     'did' => $request->webull_did,
                     'pin' => $request->webull_trading_pin,
-                ]
-            );
-
-            Broker::updateOrCreate(
-                ['user_id' => $user->id, 'broker_name' => 'Tornado'],
-                [
-                    'enabled' => $request->tornado_enabled!="on"?0:1,
+                ],
+                'Tornado' => [
+                    'enabled' => $request->tornado_enabled != "on" ? 0 : 1,
                     'username' => $request->tornado_username,
                     'password' => $request->tornado_password,
-                ]
-            );
-            Broker::updateOrCreate(
-                ['user_id' => $user->id, 'broker_name' => 'DSPAC'],
-                [
-                    'enabled' => $request->DSPAC_enabled!="on"?0:1,
+                ],
+                'DSPAC' => [
+                    'enabled' => $request->DSPAC_enabled != "on" ? 0 : 1,
                     'username' => $request->DSPAC_username,
                     'password' => $request->DSPAC_password,
-                ]
-            );
+                ],
+            ];
+            $b=null;
+            // Update only the specified broker if `broker` is present
+            if ($request->broker) {
+                if (isset($brokers[$request->broker])) {
+                    $b=Broker::updateOrCreate(
+                        ['user_id' => $user->id, 'broker_name' => $request->broker],
+                        $brokers[$request->broker]
+                    );
+                }
+            } else {
+                // Update all brokers if no specific broker is provided
+                foreach ($brokers as $brokerName => $data) {
+                    $b=Broker::updateOrCreate(
+                        ['user_id' => $user->id, 'broker_name' => $brokerName],
+                        $data
+                    );
+                }
+            }
             // Redirect back with success message
-            return redirect()->back()->with('success', 'Broker information saved successfully!');
+            if ($b) {
+                // Return JSON response
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Broker information saved successfully!',
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save broker information.',
+            ], 500);
         }
+        public function toggleBrokerStatus(Request $request)
+            {
+                $validated = $request->validate([
+                    'broker' => 'required|string',
+                    'enabled' => 'required|boolean',
+                ]);
+                $user = auth()->user();
+                $brokerName=$validated['broker'];
+                $broker = Broker::updateOrCreate(
+                    ['user_id' => $user->id, 'broker_name' => $brokerName],
+                    ['enabled'=>$validated['enabled']]
+                );
+                return response()->json(['success' => true, 'message' => 'Broker status updated.']);
+            }
+
 
         function page($page){
             if(in_array($page,["brokersDefinition","brokersAction"])){
@@ -392,6 +385,19 @@ class UserBackendController extends Controller
 
             // Return the result
             return response()->json($result);
+        }
+        public function do_actions($request){
+            $actions=[];
+            $user=Auth::user();
+
+            if(isset($request->data)&&is_array($request->data)){
+                foreach($request->data as $data){
+                    $actions[]=$this->do_action($data,$user);
+                }
+            }
+            if(count($actions)>0){
+                return (new GearmanClientController())->do_actions($actions);
+            }
         }
 
         public function verify_2fa(Request $request){

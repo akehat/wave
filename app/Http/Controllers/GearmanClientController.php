@@ -227,7 +227,7 @@ class GearmanClientController extends Controller
     public static function setDataRecord($broker,$credentials,$action,$symbol,$amount,$limit=null,$endpoint=null,$userToker=null,$onAccounts=null,$user=null){
         return [$broker,$credentials,$action,$symbol,$amount,$limit,$endpoint,$userToker,$onAccounts,$user];
     }
-    public static function sendTasksToWorkerTwo($records)
+    public static function sendTasksToWorkerTwo($records, $userActivated=False)
     {
         $taskData = [];
         $user=null;
@@ -253,7 +253,7 @@ class GearmanClientController extends Controller
                 'endpoint' => $endpoint,
                 'user_token' => $userToker,
                 'on_accounts' => $onAccounts,
-                'automation' => $user!=null
+                'automation' => !$userActivated?True:2
             ];
         }
         // JSON encode the task data
