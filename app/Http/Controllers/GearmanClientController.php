@@ -171,8 +171,9 @@ class GearmanClientController extends Controller
 
         $user=Auth::user();
         $gearmanHost = $user->gearman_ip ?? 'localhost'; // fallback to localhost if null
+        $port = in_array($gearmanHost,["localhost",'127.0.0.1'])?"4730":"80"; // fallback to localhost if null
         $client = new \GearmanClient();
-        $client->addServer($gearmanHost); // Set the Gearman server based on user's gearman_ip
+        $client->addServer($gearmanHost,(int)$port); // Set the Gearman server based on user's gearman_ip
 
         // Send the task to the Gearman worker and wait for the result
         $result = $client->doNormal('execute_command', $taskDataJson);
@@ -209,8 +210,9 @@ class GearmanClientController extends Controller
         // Initialize Gearman client
         $user=$user??Auth::user();
         $gearmanHost = $user->gearman_ip ?? 'localhost'; // fallback to localhost if null
+        $port = in_array($gearmanHost,["localhost",'127.0.0.1'])?"4730":"80"; // fallback to localhost if null
         $client = new \GearmanClient();
-        $client->addServer($gearmanHost);  // Add the default server (localhost)
+        $client->addServer($gearmanHost,(int)$port); // Add the default server (localhost)
 
         // Send the task to the Gearman worker and wait for the result
         $result = $client->doNormal('execute_command_two', $taskDataJson);
@@ -227,6 +229,7 @@ class GearmanClientController extends Controller
     public static function setDataRecord($broker,$credentials,$action,$symbol,$amount,$limit=null,$endpoint=null,$userToker=null,$onAccounts=null,$user=null){
         return [$broker,$credentials,$action,$symbol,$amount,$limit,$endpoint,$userToker,$onAccounts,$user];
     }
+
     public static function sendTasksToWorkerTwo($records, $userActivated=False)
     {
         $taskData = [];
@@ -262,8 +265,9 @@ class GearmanClientController extends Controller
         // Initialize Gearman client
         $user=$user??Auth::user();
         $gearmanHost = $user->gearman_ip ?? 'localhost'; // fallback to localhost if null
+        $port = in_array($gearmanHost,["localhost",'127.0.0.1'])?"4730":"80"; // fallback to localhost if null
         $client = new \GearmanClient();
-        $client->addServer($gearmanHost);  // Add the default server (localhost)
+        $client->addServer($gearmanHost,(int)$port);  // Add the default server (localhost)
 
         // Send the task to the Gearman worker and wait for the result
         $result = $client->doNormal('execute_commands_two', $taskDataJson);
@@ -294,8 +298,9 @@ class GearmanClientController extends Controller
         // Initialize Gearman client
         $user=Auth::user();
         $gearmanHost = $user->gearman_ip ?? 'localhost'; // fallback to localhost if null
+        $port = in_array($gearmanHost,["localhost",'127.0.0.1'])?"4730":"80"; // fallback to localhost if null
         $client = new \GearmanClient();
-        $client->addServer($gearmanHost); // Add the default server (localhost)
+        $client->addServer($gearmanHost,(int)$port); // Add the default server (localhost)
 
         // Send the task to the Gearman worker and wait for the result
         $result = $client->doNormal('two_factor', $taskDataJson);

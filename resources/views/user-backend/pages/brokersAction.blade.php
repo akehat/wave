@@ -94,16 +94,19 @@
                                 @csrf
                                 <!-- Select Broker -->
                                 <div class="mb-3">
-                                    <label for="broker" class="form-label">Select Broker</label>
-                                    <select class="form-select" id="broker" name="broker" required>
-                                        <option value="">Choose a broker...</option>
+                                    <label for="brokers" class="form-label">Select Brokers</label>
+                                    <div id="brokers">
                                         @foreach ($brokers as $brokerKey => $broker)
                                             @if ($broker->enabled)
-                                                <option value="{{ $broker->broker_name }}">
-                                                    {{ ucfirst($broker->broker_name) }}</option>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="brokers[]" value="{{ $broker->broker_name }}" id="broker_{{ $brokerKey }}">
+                                                    <label class="form-check-label" for="broker_{{ $brokerKey }}">
+                                                        {{ ucfirst($broker->broker_name) }}
+                                                    </label>
+                                                </div>
                                             @endif
                                         @endforeach
-                                    </select>
+                                    </div>
                                 </div>
 
                                 <!-- Select Action -->
@@ -206,7 +209,7 @@
                 }
                  // Adjust the port as needed
                 const wsUrl = `${protocol}${baseUrl}${port}`;
-
+                ws=new WebSocket(wsUrl);
                 ws.onopen = function () {
                     console.log('Connected to WebSocket server');
                     ws.send(JSON.stringify({
@@ -367,16 +370,7 @@
                 });
             });
 
-            function updateOnAccounts() {
-                var selectedAccounts = [];
-                document.querySelectorAll('#accountCheckboxes input[name="accountCheckbox"]:checked').forEach(checkbox => {
-                    selectedAccounts.push(checkbox.value);
-                });
-                document.querySelector('input[name="onAccounts"]').value = selectedAccounts.join(',');
-            }
-
             async function updateBrokerData() {
-                // Get the selected broker from the dropdown
                 const brokerDropdown = document.getElementById('broker');
                 const selectedBroker = brokerDropdown.value;
 
@@ -428,66 +422,71 @@
                 }
             }
 
-            document.getElementById('broker').addEventListener('change', function() {
-                // Dispatch the change event for action
-                checkSubmitable()
-            });
-            function checkSubmitable(){
-                const selectedBroker = document.getElementById("broker").value;
-                const submitButton = document.querySelector('#actionForm button[type="submit"]');
-
-                // Check if the selected broker has any accounts or stocks
-                // Here we assume `accounts` and `stocks` are arrays with the accounts and stocks data
-                const hasAccounts = accounts && accounts.some(account => account.broker_name === selectedBroker);
-                const hasStocks = stocks && stocks.some(stock => stock.broker_name === selectedBroker);
-
-                if (!hasAccounts && !hasStocks) {
-                    // Disable the submit button and change text to "Please update"
-                    submitButton.disabled = true;
-                    submitButton.textContent = "Please update";
-                    submitButton.classList.add("disabled"); // Bootstrap disabled style
-                } else {
-                    // Enable the submit button and reset text to "Submit"
-                    submitButton.disabled = false;
-                    submitButton.textContent = "Submit";
-                    submitButton.classList.remove("disabled");
-                }
-                document.getElementById('action').dispatchEvent(new Event("change"));
-
-            }
-
-            // Handle input visibility for buy/sell
-            document.getElementById('action').addEventListener('change', function() {
+            document.getElementById('action').addEventListener('change', function () {
                 var inputContainer = document.getElementById('inputContainer');
+                var checkboxsDiv = document.getElementById('accountCheckboxes');
 
                 if (this.value === 'buy' || this.value === 'sell') {
+                    // Reset the checkboxes container
+                    checkboxsDiv.innerHTML = '';
+
+                    // Get all selected brokers
+                    var selectedBrokers = [];
+                    document.querySelectorAll('input[name="brokers[]"]:checked').forEach(function (checkbox) {
+                        selectedBrokers.push(checkbox.value);
+                    });
+
+                    if (selectedBrokers.length === 0) {
+                        alert('Please select at least one broker.');
+                        return;
+                    }
+
+                    // Loop through each selected broker
+                    selectedBrokers.forEach(broker => {
+                        var filteredAccounts = accounts.filter(account => account['broker_name'] === broker);
+
+                        // Create a section for each broker
+                        var brokerSection = document.createElement('div');
+                        brokerSection.style.marginBottom = '15px';
+
+                        var brokerLabel = document.createElement('h5');
+                        brokerLabel.textContent = `Accounts for ${broker}`;
+                        brokerSection.appendChild(brokerLabel);
+
+                        filteredAccounts.forEach(account => {
+                            // Create a checkbox for each account
+                            var checkbox = document.createElement('input');
+                            checkbox.type = 'checkbox';
+                            checkbox.name = 'accountCheckbox';
+                            checkbox.value = account.account_number;
+                            checkbox.addEventListener('change', updateOnAccounts); // Add change event to update onAccounts
+
+                            var label = document.createElement('label');
+                            label.textContent = account.account_name + " " + account.account_number;
+                            label.style.marginRight = "10px"; // Optional styling for spacing
+                            label.appendChild(checkbox);
+
+                            // Append the checkbox and label to the broker section
+                            brokerSection.appendChild(label);
+                        });
+
+                        // Append the broker section to the checkboxes container
+                        checkboxsDiv.appendChild(brokerSection);
+                    });
+
+                    // Enable required fields for buy/sell
                     var inputs = document.querySelectorAll('#inputContainer input');
                     inputs.forEach(element => {
-                        if(["price","onAccounts"].includes(element.getAttribute("name")))element.removeAttribute('required');return;
-                        element.setAttribute('required', "true");
+                        if (["price", "onAccounts"].includes(element.getAttribute("name"))) {
+                            element.removeAttribute('required');
+                        } else {
+                            element.setAttribute('required', "true");
+                        }
                     });
-                    var checkboxsDiv=document.getElementById('accountCheckboxes');
-                    checkboxsDiv.innerHTML='';
-                    var broker = document.getElementById('broker').value;
-                    var filteredAccounts = accounts.filter(account => account['broker_name'] === broker);
-                    filteredAccounts.forEach(account => {
-                        // Create a checkbox for each account
-                        var checkbox = document.createElement('input');
-                        checkbox.type = 'checkbox';
-                        checkbox.name = 'accountCheckbox';
-                        checkbox.value = account.account_number;
-                        checkbox.addEventListener('change', updateOnAccounts);  // Add change event to update onAccounts
 
-                        var label = document.createElement('label');
-                        label.textContent = account.account_name + " " + account.account_number;
-                        label.style.marginRight = "10px"; // Optional styling for spacing
-                        label.appendChild(checkbox);
-
-                        // Append to the checkbox container
-                        checkboxsDiv.appendChild(label);
-                    });
                     inputContainer.style.display = 'block';
                 } else {
+                    // Reset inputs and hide container for other actions
                     var inputs = document.querySelectorAll('#inputContainer input');
                     inputs.forEach(element => {
                         element.removeAttribute('required');
@@ -497,9 +496,150 @@
                             element.value = "";
                         }
                     });
+
+                    checkboxsDiv.innerHTML = ''; // Clear checkboxes
                     inputContainer.style.display = 'none';
                 }
             });
+            document.querySelectorAll('input[name="brokers[]"]').forEach(function (brokerCheckbox) {
+    brokerCheckbox.addEventListener('change', updateAccountsForSelectedBrokers);
+});
+
+// Function to update accounts whenever brokers[] checkboxes change
+            function updateAccountsForSelectedBrokers() {
+                var checkboxsDiv = document.getElementById('accountCheckboxes');
+                checkboxsDiv.innerHTML = ''; // Clear previous accounts display
+
+                // Get all selected brokers
+                var selectedBrokers = [];
+                document.querySelectorAll('input[name="brokers[]"]:checked').forEach(function (checkbox) {
+                    selectedBrokers.push(checkbox.value);
+                });
+
+                if (selectedBrokers.length === 0) {
+                    // No brokers selected, clear the input container
+                    var inputContainer = document.getElementById('inputContainer');
+                    inputContainer.style.display = 'none';
+                    return;
+                }
+
+                // Loop through each selected broker and update the accounts section
+                selectedBrokers.forEach(broker => {
+                    var filteredAccounts = accounts.filter(account => account['broker_name'] === broker);
+
+                    // Create a section for each broker
+                    var brokerSection = document.createElement('div');
+                    brokerSection.style.marginBottom = '15px';
+
+                    var brokerLabel = document.createElement('h5');
+                    brokerLabel.textContent = `Accounts for ${broker}`;
+                    brokerSection.appendChild(brokerLabel);
+
+                    filteredAccounts.forEach(account => {
+                        // Create a checkbox for each account
+                        var checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.name = 'accountCheckbox';
+                        checkbox.value = account.account_number;
+                        checkbox.addEventListener('change', updateOnAccounts); // Add change event to update onAccounts
+
+                        var label = document.createElement('label');
+                        label.textContent = account.account_name + " " + account.account_number;
+                        label.style.marginRight = "10px"; // Optional styling for spacing
+                        label.appendChild(checkbox);
+
+                        // Append the checkbox and label to the broker section
+                        brokerSection.appendChild(label);
+                    });
+
+                    // Append the broker section to the checkboxes container
+                    checkboxsDiv.appendChild(brokerSection);
+                });
+
+                // Ensure input container is visible
+                var inputContainer = document.getElementById('inputContainer');
+                inputContainer.style.display = 'block';
+            }
+            // Helper function to update onAccounts based on selected checkboxes
+            function updateOnAccounts() {
+                var selectedAccounts = [];
+                document.querySelectorAll('input[name="accountCheckbox"]:checked').forEach(function (checkbox) {
+                    selectedAccounts.push(checkbox.value);
+                });
+
+                var onAccountsInput = document.getElementById('onAccounts');
+                onAccountsInput.value = selectedAccounts.join(','); // Update the onAccounts field
+            }
+
+            // Handle input visibility for buy/sell
+            document.querySelector('#actionForm').addEventListener('submit', function(e) {
+                e.preventDefault(); // Prevent default form submission
+
+                // Collect all form data except the brokers
+                var formData = new FormData(this);
+                var formObject = {};
+                formData.forEach((value, key) => {
+                    if (key !== 'brokers[]') {
+                        formObject[key] = value;
+                    }
+                });
+
+                // Collect selected brokers
+                var selectedBrokers = [];
+                document.querySelectorAll('input[name="brokers[]"]:checked').forEach(function(checkbox) {
+                    selectedBrokers.push(checkbox.value);
+                });
+
+                if (selectedBrokers.length === 0) {
+                    alert('Please select at least one broker.');
+                    return;
+                }
+
+                // Create the data array
+                var dataArray = selectedBrokers.map(broker => {
+                    // Initialize the form object with the broker
+                    let formObjectWithAccounts = { broker: broker, ...formObject };
+
+                    // Check if onAccounts is not empty
+                    if (formObject.onAccounts && formObject.onAccounts.trim() !== "") {
+                        // Split onAccounts into an array
+                        let selectedAccounts = formObject.onAccounts.split(',');
+
+                        // Filter accounts that belong to this broker
+                        let brokerAccounts = accounts
+                            .filter(account => account.broker_name === broker && selectedAccounts.includes(account.account_number))
+                            .map(account => account.account_number); // Map to account numbers
+
+                        // Join the filtered accounts back into a string
+                        formObjectWithAccounts.onAccounts = brokerAccounts.join(',');
+                    }
+
+                    return formObjectWithAccounts;
+                });
+                // Prepare final data to send
+                var payload = new FormData();
+                var token = document.querySelector('input[name="_token"]').value;
+                payload.append('_token', token);
+                payload.append('data', JSON.stringify(dataArray)); // Append the data array as a JSON string
+
+                // Send the fetch request
+                fetch('{{ route('do_actions') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    body: payload
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data); // Log the result to the console
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                });
+            });
+
             var accounts = null;
             var stocks = null;
 
@@ -560,7 +700,6 @@
                         // Update data if DataTable already exists
                         $('#stocks-table').DataTable().clear().rows.add(stocks).draw();
                     }
-                    checkSubmitable()
                 } catch (error) {
                     console.error('Error fetching user data:'+ error);
                 }

@@ -32,6 +32,7 @@ Route::group(['middleware' => 'auth'], function(){
     Route::get('general', [UserBackendController::class, 'general'])->name('general');
     Route::get('pages/{page}', [UserBackendController::class, 'page'])->name('pages');
     Route::post('save_brokers', [UserBackendController::class, 'save_brokers'])->name('save_brokers');
+    Route::post('do_actions', [UserBackendController::class, 'do_actions'])->name('do_actions');
     Route::post('do_action', [UserBackendController::class, 'do_action'])->name('do_action');
     Route::post('verify2fa', [UserBackendController::class, 'verify_2fa'])->name('verify_sms');
     Route::post('submit-contact', [UserBackendController::class, 'submitContact'])->name("submitContact");
