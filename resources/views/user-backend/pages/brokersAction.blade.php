@@ -172,8 +172,16 @@
                     const originalConsoleLog = console.log;
 
                     console.log = function(message) {
+                        // Check if the message is an object and not null
+                        let formattedMessage;
+                        if (typeof message === 'object' && message !== null) {
+                            formattedMessage = JSON.stringify(message, null);
+                        } else {
+                            formattedMessage = message;
+                        }
+
                         // Append the message to the console output area
-                        consoleOutput.value += message + '\n';
+                        consoleOutput.value += formattedMessage + '\n';
                         consoleOutput.scrollTop = consoleOutput.scrollHeight; // Auto-scroll to the bottom
                         originalConsoleLog.apply(console, arguments); // Call the original console.log
                     };
@@ -341,51 +349,46 @@
           
 
             async function updateBrokerData() {
-                const brokerDropdown = document.getElementById('broker');
-                const selectedBroker = brokerDropdown.value;
+                // Collect selected brokers
+                const selectedBrokers = Array.from(document.querySelectorAll('input[name="brokers[]"]:checked'))
+                    .map(checkbox => checkbox.value);
 
-                if (!selectedBroker) {
-                    alert('Please select a broker');
+                if (selectedBrokers.length === 0) {
+                    alert('Please select at least one broker');
                     return;
                 }
 
                 // Define the route URL (replace with the correct URL if necessary)
-                const routeUrl = '{{ route("do_action") }}';
+                const routeUrl = '{{ route("do_actions") }}';
 
                 try {
-                    // First, call 'accounts' action for the selected broker
-                    const accountsFormData = new FormData();
-                    accountsFormData.append('_token', document.querySelector('input[name="_token"]').value);
-                    accountsFormData.append('broker', selectedBroker);
-                    accountsFormData.append('action', 'accounts');
-                    console.log('called accounts');
-                    const accountsResponse = await fetch(routeUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Accept': 'application/json'
-                        },
-                        body: accountsFormData
+                    // Prepare data for all actions for all selected brokers
+                    const dataArray = selectedBrokers.flatMap(broker => {
+                        return ['accounts', 'holdings'].map(action => {
+                            return {
+                                broker: broker,
+                                action: action
+                            };
+                        });
                     });
-                    const accountsData = await accountsResponse.json();
-                    // Next, call 'holdings' action for the selected broker
-                    const holdingsFormData = new FormData();
-                    holdingsFormData.append('_token', document.querySelector('input[name="_token"]').value);
-                    holdingsFormData.append('broker', selectedBroker);
-                    holdingsFormData.append('action', 'holdings');
-                    if (['fidelity','dspac'].includes(selectedBroker.toLowerCase())) {
-                        console.log(`Waiting 80 seconds before calling holdings for ${selectedBroker.toLowerCase()}...`);
-                        await new Promise(resolve => setTimeout(resolve, 80000)); // 20 seconds delay
-                    }
-                    console.log('called holdings');
 
-                    const holdingsResponse = await fetch(routeUrl, {
+                    // Prepare final data to send
+                    const payload = new FormData();
+                    payload.append('_token', document.querySelector('input[name="_token"]').value);
+                    payload.append('data', JSON.stringify(dataArray));
+
+                    // Send the fetch request
+                    const response = await fetch(routeUrl, {
                         method: 'POST',
                         headers: {
                             'Accept': 'application/json'
                         },
-                        body: holdingsFormData
+                        body: payload
                     });
-                    const holdingsData = await holdingsResponse.json();
+
+                    const data = await response.json();
+                    console.log('Data for actions:', data);
+
                 } catch (error) {
                     console.error('Error updating broker data:', error);
                     alert('An error occurred while updating broker data.');

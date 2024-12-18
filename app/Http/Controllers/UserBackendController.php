@@ -414,7 +414,7 @@ class UserBackendController extends Controller
             }
             // If there are actions to process, pass them to the Gearman controller
             if (count($actions) > 0) {
-                return (new GearmanClientController())->sendTasksToWorkerTwo($actions,TRUE);
+                return json_encode(['message' => (new GearmanClientController())->sendTasksToWorkerTwo($actions,TRUE)]);
             }
         
             // If no actions were processed, return an appropriate response
