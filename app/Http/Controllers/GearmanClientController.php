@@ -171,7 +171,7 @@ class GearmanClientController extends Controller
 
         $user=Auth::user();
         $gearmanHost = $user->gearman_ip ?? 'localhost'; // fallback to localhost if null
-        $port = in_array($gearmanHost,["localhost",'127.0.0.1'])?"4730":"80"; // fallback to localhost if null
+        $port = in_array($gearmanHost,["localhost",'127.0.0.1'])?"4730":"4730"; // fallback to localhost if null
         $client = new \GearmanClient();
         $client->addServer($gearmanHost,(int)$port); // Set the Gearman server based on user's gearman_ip
 
@@ -210,7 +210,7 @@ class GearmanClientController extends Controller
         // Initialize Gearman client
         $user=$user??Auth::user();
         $gearmanHost = $user->gearman_ip ?? 'localhost'; // fallback to localhost if null
-        $port = in_array($gearmanHost,["localhost",'127.0.0.1'])?"4730":"80"; // fallback to localhost if null
+        $port = in_array($gearmanHost,["localhost",'127.0.0.1'])?"4730":"4730"; // fallback to localhost if null
         $client = new \GearmanClient();
         $client->addServer($gearmanHost,(int)$port); // Add the default server (localhost)
 
@@ -265,7 +265,7 @@ class GearmanClientController extends Controller
         // Initialize Gearman client
         $user=$user??Auth::user();
         $gearmanHost = $user->gearman_ip ?? 'localhost'; // fallback to localhost if null
-        $port = in_array($gearmanHost,["localhost",'127.0.0.1'])?"4730":"80"; // fallback to localhost if null
+        $port = in_array($gearmanHost,["localhost",'127.0.0.1'])?"4730":"4730"; // fallback to localhost if null
         $client = new \GearmanClient();
         $client->addServer($gearmanHost,(int)$port);  // Add the default server (localhost)
 
@@ -298,7 +298,7 @@ class GearmanClientController extends Controller
         // Initialize Gearman client
         $user=Auth::user();
         $gearmanHost = $user->gearman_ip ?? 'localhost'; // fallback to localhost if null
-        $port = in_array($gearmanHost,["localhost",'127.0.0.1'])?"4730":"80"; // fallback to localhost if null
+        $port = in_array($gearmanHost,["localhost",'127.0.0.1'])?"4730":"4730"; // fallback to localhost if null
         $client = new \GearmanClient();
         $client->addServer($gearmanHost,(int)$port); // Add the default server (localhost)
 

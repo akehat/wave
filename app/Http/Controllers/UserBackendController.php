@@ -300,7 +300,6 @@ class UserBackendController extends Controller
             } else {
                 // Find the selected broker and its credentials
                 $selectedBroker = $brokers->firstWhere('broker_name', $request->input('broker'));
-
                 // Prepare environment variables for the selected broker
                 $brokerData = (new GearmanClientController())->prepareEnvContent(
                     null, // Discord token
@@ -386,19 +385,42 @@ class UserBackendController extends Controller
             // Return the result
             return response()->json($result);
         }
-        public function do_actions($request){
-            $actions=[];
-            $user=Auth::user();
-
-            if(isset($request->data)&&is_array($request->data)){
-                foreach($request->data as $data){
-                    $actions[]=$this->do_action($data,$user);
-                }
+        public function do_actions(Request $request)
+        {
+            // Parse the incoming request data
+            $actions = [];
+            $user = Auth::user(); // Retrieve the authenticated user
+        
+            // Ensure the 'data' field is provided in the request
+            if (!$request->has('data')) {
+                return response()->json(['error' => 'No data provided'], 400);
             }
-            if(count($actions)>0){
-                return (new GearmanClientController())->do_actions($actions);
+        
+            // Decode the JSON data from the request
+            $datas = json_decode($request->input('data'));
+        
+            // Check if the data is valid
+            if (!is_array($datas)) {
+                return response()->json(['error' => 'Invalid data format. Expecting an array of actions.'], 400);
             }
+        
+            // Loop through each action in the request data
+            foreach ($datas as $data) {
+                // Convert the action data to a Request instance for compatibility
+                $actionRequest = new Request((array) $data);
+        
+                // Call do_action for each item, passing the user
+                $actions[] = $this->do_action($actionRequest, $user);
+            }
+            // If there are actions to process, pass them to the Gearman controller
+            if (count($actions) > 0) {
+                return (new GearmanClientController())->sendTasksToWorkerTwo($actions,TRUE);
+            }
+        
+            // If no actions were processed, return an appropriate response
+            return response()->json(['message' => 'No actions to process'], 200);
         }
+        
 
         public function verify_2fa(Request $request){
             $user_id=Auth::id();
