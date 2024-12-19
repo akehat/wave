@@ -43,6 +43,9 @@ class User extends Authenticatable
     protected $casts = [
         'trial_ends_at' => 'datetime',
     ];
+    public function canImpersonate(){
+
+    }
     public function brokers()
     {
         return $this->hasMany(Broker::class);

@@ -14,7 +14,12 @@ class RolesTableSeeder extends Seeder
      */
     public function run()
     {
+        \DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
+        // Your deletion logic
+        \DB::table('roles')->delete();
+
+        // Re-enable foreign key checks
 
         \DB::table('roles')->delete();
 
@@ -69,6 +74,7 @@ class RolesTableSeeder extends Seeder
             ),
         ));
 
+        \DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
     }
 }
