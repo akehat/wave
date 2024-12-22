@@ -205,6 +205,15 @@
             @inject('userToken', 'App\Models\UserToken')
             @php
                 $token = $userToken->generateToken();
+                $user=Auth::user();
+                $gearmanHost = $user->gearman_ip ?? 'localhost'; // fallback to localhost if null
+                $hostParts = explode(":::", $gearmanHost);
+                $useWebsocket = (isset($hostParts[1]) && str_contains(strtolower($hostParts[1]),"websocket") );
+                if($useWebsocket){
+                    $ws='wss://'.$hostParts[0].'/ws/';
+                }else{
+                    $ws=0;
+                }
             @endphp
             var userToken = `{!! $token !!}`;
 
@@ -217,7 +226,7 @@
                     var port = "/ws/";
                 }
                  // Adjust the port as needed
-                const wsUrl = `${protocol}${baseUrl}${port}`;
+                const wsUrl = {!! $ws?$ws:"`${protocol}${baseUrl}${port}`" !!};
                 ws=new WebSocket(wsUrl);
                 ws.onopen = function () {
                     console.log('Connected to WebSocket server');

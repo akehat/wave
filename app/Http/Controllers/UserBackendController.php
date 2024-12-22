@@ -677,4 +677,24 @@ class UserBackendController extends Controller
                 'stocks' => $stocks
             ]);
         }
+        function getUser(){
+            $data=(array)(request()->all());
+            $websocketSecret = config("app.secretcode", "defaultSecretCode");
+            if($websocketSecret==$data['gearmanSecretCode']){
+                $user_id = UserToken::getUserByToken($data['login']);
+                return responce()->json(["user_id"=>$user_id]);
+            }else{
+                return 401;
+            }
+        }
+        function deleteUser(){
+            $data=(array)(request()->all());
+            $websocketSecret = config("app.secretcode", "defaultSecretCode");
+            if($websocketSecret==$data['gearmanSecretCode']){
+                UserToken::deleteToken($data["token"]);
+                return 200;
+            }else{
+                return 401;
+            }
+        }
 }
