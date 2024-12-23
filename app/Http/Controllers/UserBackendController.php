@@ -16,7 +16,6 @@ use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
-
 use function Laravel\Prompts\confirm;
 
 class UserBackendController extends Controller
@@ -676,5 +675,26 @@ class UserBackendController extends Controller
                 'accounts' => $accounts,
                 'stocks' => $stocks
             ]);
+        }
+        function getUser(){
+            $data=(array)(request()->all());
+            Log::info($data);
+            $websocketSecret = config("app.secretcode", "defaultSecretCode");
+            if($websocketSecret==$data['gearmanSecretCode']){
+                $user_id = UserToken::getUserByToken($data['login']);
+                return response()->json(["user_id"=>$user_id],200);
+            }else{
+                return 401;
+            }
+        }
+        function deleteUser(){
+            $data=(array)(request()->all());
+            $websocketSecret = config("app.secretcode", "defaultSecretCode");
+            if($websocketSecret==$data['gearmanSecretCode']){
+                UserToken::deleteToken($data["token"]);
+                return 200;
+            }else{
+                return 401;
+            }
         }
 }

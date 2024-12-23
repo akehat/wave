@@ -156,6 +156,29 @@ class GearmanClientController extends Controller
      *
      * @return json The result
      */
+    public static function useFlask($host,$port,$task_name,$task_data){
+        $port="4731";
+        $url = in_array($host, ["localhost", '127.0.0.1']) ? "http://{$host}:{$port}" : "http://{$host}";
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, "{$url}/gearman_task");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+            "task_name" => $task_name,
+            "task_data" => $task_data // Assuming $taskDataJson is already JSON
+        ]));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json'
+        ]);
+    
+        $result = curl_exec($ch);
+        if (curl_errno($ch)) {
+            // Handle errors
+            $result = json_encode(["error" => "CURL Error: " . curl_error($ch)]);
+        }
+        curl_close($ch);
+        return $result;
+    }
     public static function sendTaskToWorker($command,$broker_data,$limit=null)
     {
 
@@ -171,12 +194,21 @@ class GearmanClientController extends Controller
 
         $user=Auth::user();
         $gearmanHost = $user->gearman_ip ?? 'localhost'; // fallback to localhost if null
-        $port = in_array($gearmanHost,["localhost",'127.0.0.1'])?"4730":"4730"; // fallback to localhost if null
-        $client = new \GearmanClient();
-        $client->addServer($gearmanHost,(int)$port); // Set the Gearman server based on user's gearman_ip
-
-        // Send the task to the Gearman worker and wait for the result
-        $result = $client->doNormal('execute_command', $taskDataJson);
+        $port = in_array($gearmanHost, ["localhost", '127.0.0.1']) ? "4730" : "4730"; // fallback to localhost if null
+        
+        $hostParts = explode(":::", $gearmanHost);
+        $useFlask = (isset($hostParts[1]) && str_contains(strtolower($hostParts[1]),"flask") );
+        
+        if ($useFlask) {
+            $result = self::useFlask($hostParts[0],$port,'execute_command',$taskDataJson);
+        } else {
+            // Use Gearman
+            $client = new \GearmanClient();
+            $client->addServer($hostParts[0], (int)$port); // Set the Gearman server based on user's gearman_ip
+        
+            // Send the task to the Gearman worker and wait for the result
+            $result = $client->doNormal('execute_command', $taskDataJson);
+        }
 
         // Decode the JSON result
         $resultData = json_decode($result, true);
@@ -210,12 +242,21 @@ class GearmanClientController extends Controller
         // Initialize Gearman client
         $user=$user??Auth::user();
         $gearmanHost = $user->gearman_ip ?? 'localhost'; // fallback to localhost if null
-        $port = in_array($gearmanHost,["localhost",'127.0.0.1'])?"4730":"4730"; // fallback to localhost if null
-        $client = new \GearmanClient();
-        $client->addServer($gearmanHost,(int)$port); // Add the default server (localhost)
-
-        // Send the task to the Gearman worker and wait for the result
-        $result = $client->doNormal('execute_command_two', $taskDataJson);
+        $port = in_array($gearmanHost, ["localhost", '127.0.0.1']) ? "4730" : "4730"; // fallback to localhost if null
+        
+        $hostParts = explode(":::", $gearmanHost);
+        $useFlask = (isset($hostParts[1]) && str_contains(strtolower($hostParts[1]),"flask") );
+        
+        if ($useFlask) {
+            $result = self::useFlask($hostParts[0],$port,'execute_command_two',$taskDataJson);
+        } else {
+            // Use Gearman
+            $client = new \GearmanClient();
+            $client->addServer($hostParts[0], (int)$port); // Set the Gearman server based on user's gearman_ip
+        
+            // Send the task to the Gearman worker and wait for the result
+            $result = $client->doNormal('execute_command_two', $taskDataJson);
+        }
 
         // Decode the JSON result
         $resultData = json_decode($result, true);
@@ -265,12 +306,22 @@ class GearmanClientController extends Controller
         // Initialize Gearman client
         $user=$user??Auth::user();
         $gearmanHost = $user->gearman_ip ?? 'localhost'; // fallback to localhost if null
-        $port = in_array($gearmanHost,["localhost",'127.0.0.1'])?"4730":"4730"; // fallback to localhost if null
-        $client = new \GearmanClient();
-        $client->addServer($gearmanHost,(int)$port);  // Add the default server (localhost)
+        $port = in_array($gearmanHost, ["localhost", '127.0.0.1']) ? "4730" : "4730"; // fallback to localhost if null
+        
+        $hostParts = explode(":::", $gearmanHost);
+        $useFlask = (isset($hostParts[1]) && str_contains(strtolower($hostParts[1]),"flask") );
+        
+        if ($useFlask) {
+            $result = self::useFlask($hostParts[0],$port,'execute_commands_two',$taskDataJson);
+        } else {
+            // Use Gearman
+            $client = new \GearmanClient();
+            $client->addServer($hostParts[0], (int)$port); // Set the Gearman server based on user's gearman_ip
+        
+            // Send the task to the Gearman worker and wait for the result
+            $result = $client->doNormal('execute_commands_two', $taskDataJson);
+        }
 
-        // Send the task to the Gearman worker and wait for the result
-        $result = $client->doNormal('execute_commands_two', $taskDataJson);
 
         // Decode the JSON result
         $resultData = json_decode($result, true);
@@ -298,12 +349,21 @@ class GearmanClientController extends Controller
         // Initialize Gearman client
         $user=Auth::user();
         $gearmanHost = $user->gearman_ip ?? 'localhost'; // fallback to localhost if null
-        $port = in_array($gearmanHost,["localhost",'127.0.0.1'])?"4730":"4730"; // fallback to localhost if null
-        $client = new \GearmanClient();
-        $client->addServer($gearmanHost,(int)$port); // Add the default server (localhost)
-
-        // Send the task to the Gearman worker and wait for the result
-        $result = $client->doNormal('two_factor', $taskDataJson);
+        $port = in_array($gearmanHost, ["localhost", '127.0.0.1']) ? "4730" : "4730"; // fallback to localhost if null
+        
+        $hostParts = explode(":::", $gearmanHost);
+        $useFlask = (isset($hostParts[1]) && str_contains(strtolower($hostParts[1]),"flask") );
+        
+        if ($useFlask) {
+            $result = self::useFlask($hostParts[0],$port,'two_factor',$taskDataJson);
+        } else {
+            // Use Gearman
+            $client = new \GearmanClient();
+            $client->addServer($hostParts[0], (int)$port); // Set the Gearman server based on user's gearman_ip
+        
+            // Send the task to the Gearman worker and wait for the result
+            $result = $client->doNormal('two_factor', $taskDataJson);
+        } // Add the default server (localhost)
 
         // Decode the JSON result
         $resultData = json_decode($result, true);

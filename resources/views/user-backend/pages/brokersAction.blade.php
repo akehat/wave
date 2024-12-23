@@ -205,9 +205,23 @@
             @inject('userToken', 'App\Models\UserToken')
             @php
                 $token = $userToken->generateToken();
+                $user=Auth::user();
+                $gearmanHost = $user->gearman_ip ?? 'localhost'; // fallback to localhost if null
+                
+                $hostParts = explode(":::", $gearmanHost);
+                $useWebsocket = (isset($hostParts[1]) && str_contains(strtolower($hostParts[1]),"websocket") );
+                if($useWebsocket){
+                    if($hostParts[0]=="localhost" || $hostParts[0]=='127.0.0.1'){
+                        $ws='ws://localhost:8080';
+                    }else{
+                        $ws='wss://'.$hostParts[0].'/ws/';
+                    }
+                }else{
+                    $ws= null;
+                }
             @endphp
             var userToken = `{!! $token !!}`;
-
+            var csrf="{{ csrf_token()}}";
             function connectSocket() {
                 const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
                 const baseUrl = window.location.hostname;
@@ -217,12 +231,13 @@
                     var port = "/ws/";
                 }
                  // Adjust the port as needed
-                const wsUrl = `${protocol}${baseUrl}${port}`;
+                var wsUrl = `{{ $ws?? "${protocol}${baseUrl}${port}" }}`;
                 ws=new WebSocket(wsUrl);
                 ws.onopen = function () {
                     console.log('Connected to WebSocket server');
                     ws.send(JSON.stringify({
-                        login: userToken
+                        login: userToken,
+                        csrf:csrf
                     }));
                 };
                 ws.onmessage = function (event) {
