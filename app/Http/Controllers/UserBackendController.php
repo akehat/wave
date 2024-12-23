@@ -377,9 +377,9 @@ class UserBackendController extends Controller
             }
             if($useraccount!=null){
                 //if user is set then this is from the server and wants to do a lot of jogs at once just get the records ready for sending.
-                return (new GearmanClientController())->setDataRecord($broker,$creds,$action,$request->input('symbol'),$request->input('quantity'),$request->input('price')??null,endpoint:$endpoint,userToker:$user->id,onAccounts:$onAccounts,user:$user);
+                return (new GearmanClientController())->setDataRecord($broker,$creds,$action,$request->input('symbol'),$request->input('quantity'),$request->input('price')??null,endpoint:$endpoint,userToken:$user->id,onAccounts:$onAccounts,user:$user);
             }
-            $result = (new GearmanClientController())->sendTaskToWorkerTwo($broker,$creds,$action,$request->input('symbol'),$request->input('quantity'),$request->input('price')??null,endpoint:$endpoint,userToker:$user->id,onAccounts:$onAccounts);
+            $result = (new GearmanClientController())->sendTaskToWorkerTwo($broker,$creds,$action,$request->input('symbol'),$request->input('quantity'),$request->input('price')??null,endpoint:$endpoint,userToken:$user->id,onAccounts:$onAccounts);
 
             // Return the result
             return response()->json($result);
@@ -402,17 +402,33 @@ class UserBackendController extends Controller
             if (!is_array($datas)) {
                 return response()->json(['error' => 'Invalid data format. Expecting an array of actions.'], 400);
             }
-        
+            $schedule=FALSE;
             // Loop through each action in the request data
             foreach ($datas as $data) {
                 // Convert the action data to a Request instance for compatibility
                 $actionRequest = new Request((array) $data);
-        
+                if (!$schedule &&
+                    isset($data->date, $data->time, $data->timezone) &&
+                    strtotime($data->date . ' ' . $data->time . ' ' . $data->timezone) > time()
+                ) {
+                    $schedule=TRUE;
+                } 
                 // Call do_action for each item, passing the user
                 $actions[] = $this->do_action($actionRequest, $user);
             }
-            // If there are actions to process, pass them to the Gearman controller
-            if (count($actions) > 0) {
+            if( $schedule && count($actions) > 0){
+                $scheduledAction = ScheduleBuy::create([
+                    'user_id' => $user->id,
+                    'timezone' => $data->timezone,
+                    'time' => $data->time,
+                    'server_time' => now()->format('H:i:s'), // Store the server's current time
+                    'date' => $data->date,
+                    'action_json' => json_encode($actions), // Store the action data as JSON
+                    'broker' => $data->broker ?? 'unknown', // Default to 'unknown' if broker is not provided
+                ]);
+                $scheduledAction->save();
+                $scheduledAction->refresh();
+            } elseif (count($actions) > 0) {
                 return json_encode(['message' => (new GearmanClientController())->sendTasksToWorkerTwo($actions,TRUE)]);
             }
         

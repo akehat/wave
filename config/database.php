@@ -92,6 +92,13 @@ return [
             // 'encrypt' => env('DB_ENCRYPT', 'yes'),
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
+        'sqlite_schedule' => [
+            'driver' => 'sqlite',
+            'url' => env('DB_SCHEDULE_URL'),
+            'database' => env('DB_SCHEDULE_DATABASE', database_path('schedule.sqlite')),
+            'prefix' => '',
+            'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
+        ],
 
     ],
 

@@ -145,9 +145,38 @@
 
                                 <!-- Submit Button -->
                                 <button type="submit" class="btn btn-primary">Submit</button>
+                                <button type="button" class="btn btn-warning" onclick="document.getElementById('scedule').toggleAttribute('hidden')">Schedule</button>
                                 <button type="button" onclick="updateBrokerData()" class="btn btn-info">Update (Get Accounts and Holdings)</button>
 
                             </form>
+                            <div id="scedule" hidden>
+                                <div class="mb-3">
+                                <label for="date" class="form-label">Date</label>
+                                    <input type="date" class="form-control" id="date" name="date" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="time" class="form-label">Time</label>
+                                    <input type="time" class="form-control" id="time" name="time" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="timezone" class="form-label">Timezone</label>
+                                    <select class="form-select" id="timezone" name="timezone" required>
+                                        @foreach (DateTimeZone::listIdentifiers() as $timezone)
+                                            <option value="{{ $timezone }}">{{ $timezone }}</option>
+                                        @endforeach
+                                </select>
+                                <button type="submit" id="book" class="btn btn-warning mt-3">book</button>
+                            </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                                    const timezoneSelect = document.getElementById('timezone');
+                                    if (timezoneSelect) {
+                                        timezoneSelect.value = userTimezone;
+                                    }
+                                });
+                            </script>
+                        </div>
                         </div>
                     </div>
                 </div>
@@ -205,23 +234,9 @@
             @inject('userToken', 'App\Models\UserToken')
             @php
                 $token = $userToken->generateToken();
-                $user=Auth::user();
-                $gearmanHost = $user->gearman_ip ?? 'localhost'; // fallback to localhost if null
-                
-                $hostParts = explode(":::", $gearmanHost);
-                $useWebsocket = (isset($hostParts[1]) && str_contains(strtolower($hostParts[1]),"websocket") );
-                if($useWebsocket){
-                    if($hostParts[0]=="localhost" || $hostParts[0]=='127.0.0.1'){
-                        $ws='ws://localhost:8080';
-                    }else{
-                        $ws='wss://'.$hostParts[0].'/ws/';
-                    }
-                }else{
-                    $ws= null;
-                }
             @endphp
             var userToken = `{!! $token !!}`;
-            var csrf="{{ csrf_token()}}";
+
             function connectSocket() {
                 const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
                 const baseUrl = window.location.hostname;
@@ -231,13 +246,12 @@
                     var port = "/ws/";
                 }
                  // Adjust the port as needed
-                var wsUrl = `{{ $ws?? "${protocol}${baseUrl}${port}" }}`;
+                const wsUrl = `${protocol}${baseUrl}${port}`;
                 ws=new WebSocket(wsUrl);
                 ws.onopen = function () {
                     console.log('Connected to WebSocket server');
                     ws.send(JSON.stringify({
-                        login: userToken,
-                        csrf:csrf
+                        login: userToken
                     }));
                 };
                 ws.onmessage = function (event) {
@@ -659,7 +673,82 @@ function updateAccountsForSelectedBrokers() {
                     alert('An error occurred. Please try again.');
                 });
             });
+            document.querySelector('#book').addEventListener('click', function(e) {
+                e.preventDefault(); // Prevent default action of the button
 
+                // Collect all form data except the brokers
+                var formData = new FormData(document.querySelector('#actionForm'));
+                var formObject = {};
+                formData.forEach((value, key) => {
+                    if (key !== 'brokers[]') {
+                        formObject[key] = value;
+                    }
+                });
+
+                // Collect selected brokers
+                var selectedBrokers = [];
+                document.querySelectorAll('input[name="brokers[]"]:checked').forEach(function(checkbox) {
+                    selectedBrokers.push(checkbox.value);
+                });
+
+                if (selectedBrokers.length === 0) {
+                    alert('Please select at least one broker.');
+                    return;
+                }
+
+                // Add scheduling-specific fields
+                var scheduleData = {
+                    date: document.getElementById('date').value,
+                    time: document.getElementById('time').value,
+                    timezone: document.getElementById('timezone').value
+                };
+                if (!scheduleData.date || !scheduleData.time || !scheduleData.timezone) {
+                    alert('Please fill in all scheduling fields: date, time, and timezone.');
+                    return;
+                }
+
+                // Merge schedule data with form data
+                var dataWithSchedule = {...formObject, ...scheduleData};
+
+                // Create the data array for scheduling
+                var scheduleArray = selectedBrokers.map(broker => {
+                    let scheduleObjectWithAccounts = { broker: broker, ...dataWithSchedule };
+
+                    // Handle onAccounts if it exists (same logic as before)
+                    if (dataWithSchedule.onAccounts && dataWithSchedule.onAccounts.trim() !== "") {
+                        let selectedAccounts = dataWithSchedule.onAccounts.split(',');
+                        let brokerAccounts = accounts
+                            .filter(account => account.broker_name === broker && selectedAccounts.includes(account.account_number))
+                            .map(account => account.account_number);
+                        scheduleObjectWithAccounts.onAccounts = brokerAccounts.join(',');
+                    }
+
+                    return scheduleObjectWithAccounts;
+                });
+
+                // Prepare final data to send
+                var payload = new FormData();
+                var token = document.querySelector('input[name="_token"]').value;
+                payload.append('_token', token);
+                payload.append('data', JSON.stringify(scheduleArray)); // Append the scheduling data array as a JSON string
+
+                // Send the fetch request for scheduling
+                fetch('{{ route('do_actions') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    body: payload
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data); // Log the result to the console
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while scheduling. Please try again.');
+                });
+            });
             var accounts = null;
             var stocks = null;
 

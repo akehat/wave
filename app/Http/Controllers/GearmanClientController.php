@@ -220,7 +220,7 @@ class GearmanClientController extends Controller
         ]);
     }
 
-    public static function sendTaskToWorkerTwo($broker,$credentials,$action,$symbol,$amount,$limit=null,$endpoint=null,$userToker=null,$onAccounts=null,$user=null)
+    public static function sendTaskToWorkerTwo($broker,$credentials,$action,$symbol,$amount,$limit=null,$endpoint=null,$userToken=null,$onAccounts=null,$user=null)
     {
 
         // Prepare data to send to the worker
@@ -232,7 +232,7 @@ class GearmanClientController extends Controller
             'amount' => $amount,
             'limit' => $limit,
             'endpoint' => $endpoint,
-            'user_token' => $userToker,
+            'user_token' => $userToken,
             'on_accounts' => $onAccounts
         ];
 
@@ -267,8 +267,8 @@ class GearmanClientController extends Controller
             'data' => $resultData,
         ]);
     }
-    public static function setDataRecord($broker,$credentials,$action,$symbol,$amount,$limit=null,$endpoint=null,$userToker=null,$onAccounts=null,$user=null){
-        return [$broker,$credentials,$action,$symbol,$amount,$limit,$endpoint,$userToker,$onAccounts,$user];
+    public static function setDataRecord($broker,$credentials,$action,$symbol,$amount,$limit=null,$endpoint=null,$userToken=null,$onAccounts=null,$user=null){
+        return [$broker,$credentials,$action,$symbol,$amount,$limit,$endpoint,$userToken,$onAccounts,$user];
     }
 
     public static function sendTasksToWorkerTwo($records, $userActivated=False)
@@ -283,7 +283,7 @@ class GearmanClientController extends Controller
             $amount=$record[4];
             $limit=$record[5];
             $endpoint=$record[6];
-            $userToker=$record[7];
+            $userToken=$record[7];
             $onAccounts=$record[8];
             $user=$record[9];
             // Prepare data to send to the worker
@@ -295,7 +295,7 @@ class GearmanClientController extends Controller
                 'amount' => $amount,
                 'limit' => $limit,
                 'endpoint' => $endpoint,
-                'user_token' => $userToker,
+                'user_token' => $userToken,
                 'on_accounts' => $onAccounts,
                 'automation' => !$userActivated?True:2
             ];
