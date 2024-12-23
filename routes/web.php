@@ -42,7 +42,7 @@ Route::get('websocketTest', function(){return view('user-backend.websocket');})-
 Route::get('requestSMS', [UserBackendController::class, 'requestSMS'])->name('user-backend.requestSMS');
 Route::post('sendData', [UserBackendController::class, 'sendData'])->name('user-backend.sendData');
 Route::get('user-data', [UserBackendController::class, 'getUserData']);
-Route::post('get-user', [UserBackendController::class, 'getUser']);
-Route::post('delete-user', [UserBackendController::class, 'deleteUser']);
+Route::post('get-user', [UserBackendController::class, 'getUser'])->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
+Route::post('delete-user', [UserBackendController::class, 'deleteUser'])->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
 // Wave routes
 Wave::routes();

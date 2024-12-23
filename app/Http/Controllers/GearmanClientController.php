@@ -157,14 +157,15 @@ class GearmanClientController extends Controller
      * @return json The result
      */
     public static function useFlask($host,$port,$task_name,$task_data){
+        $port="4731";
         $url = in_array($host, ["localhost", '127.0.0.1']) ? "http://{$host}:{$port}" : "http://{$host}";
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, "{$url}/gearman_task");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-            "task_name" => 'execute_command',
-            "task_data" => json_decode($taskDataJson, true) // Assuming $taskDataJson is already JSON
+            "task_name" => $task_name,
+            "task_data" => $task_data // Assuming $taskDataJson is already JSON
         ]));
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json'
@@ -199,7 +200,7 @@ class GearmanClientController extends Controller
         $useFlask = (isset($hostParts[1]) && str_contains(strtolower($hostParts[1]),"flask") );
         
         if ($useFlask) {
-            $result = useFlask($hostParts[0],$port,'execute_command',$taskDataJson);
+            $result = self::useFlask($hostParts[0],$port,'execute_command',$taskDataJson);
         } else {
             // Use Gearman
             $client = new \GearmanClient();
@@ -247,7 +248,7 @@ class GearmanClientController extends Controller
         $useFlask = (isset($hostParts[1]) && str_contains(strtolower($hostParts[1]),"flask") );
         
         if ($useFlask) {
-            $result = useFlask($hostParts[0],$port,'execute_command_two',$taskDataJson);
+            $result = self::useFlask($hostParts[0],$port,'execute_command_two',$taskDataJson);
         } else {
             // Use Gearman
             $client = new \GearmanClient();
@@ -311,7 +312,7 @@ class GearmanClientController extends Controller
         $useFlask = (isset($hostParts[1]) && str_contains(strtolower($hostParts[1]),"flask") );
         
         if ($useFlask) {
-            $result = useFlask($hostParts[0],$port,'execute_commands_two',$taskDataJson);
+            $result = self::useFlask($hostParts[0],$port,'execute_commands_two',$taskDataJson);
         } else {
             // Use Gearman
             $client = new \GearmanClient();
@@ -354,7 +355,7 @@ class GearmanClientController extends Controller
         $useFlask = (isset($hostParts[1]) && str_contains(strtolower($hostParts[1]),"flask") );
         
         if ($useFlask) {
-            $result = useFlask($hostParts[0],$port,'two_factor',$taskDataJson);
+            $result = self::useFlask($hostParts[0],$port,'two_factor',$taskDataJson);
         } else {
             // Use Gearman
             $client = new \GearmanClient();
