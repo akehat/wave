@@ -231,7 +231,7 @@
                     var port = "/ws/";
                 }
                  // Adjust the port as needed
-                var wsUrl = `{{ $ws?? "${protocol}${baseUrl}${port}" }}`;
+                var wsUrl = `{{ $ws?? '${protocol}${baseUrl}${port}' }}`;
                 ws=new WebSocket(wsUrl);
                 ws.onopen = function () {
                     console.log('Connected to WebSocket server');
