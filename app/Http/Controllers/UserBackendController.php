@@ -93,7 +93,7 @@ class UserBackendController extends Controller
                 'webull_username' => 'nullable|string',
                 'webull_password' => 'nullable|string',
                 'webull_did' => 'nullable|string',
-                'webull_trading_pin' => 'nullable|string',
+                'webull_pin' => 'nullable|string',
                 'broker' => 'nullable|string',
             ]);
 

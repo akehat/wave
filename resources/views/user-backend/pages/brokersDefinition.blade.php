@@ -132,7 +132,7 @@
                         "webull"=>[["type"=>"text", "name"=>"webull_username", "placeholder"=>"Enter Username"],
                         ["type"=>"password", "name"=>"webull_password", "placeholder"=>"Enter Password"],
                         ["type"=>"text", "name"=>"webull_did", "placeholder"=>"Enter did"],
-                        ["type"=>"text", "name"=>"webull_trading_pin", "placeholder"=>"Enter Trading Pin"]],
+                        ["type"=>"text", "name"=>"webull_pin", "placeholder"=>"Enter Trading Pin"]],
                         "tornado"=>[["type"=>"text", "name"=>"tornado_username", "placeholder"=>"Enter Username"],
                         ["type"=>"password", "name"=>"tornado_password", "placeholder"=>"Enter Password"]],
                         "DSPAC"=>[["type"=>"text", "name"=>"DSPAC_username", "placeholder"=>"Enter Username"],
