@@ -149,7 +149,7 @@
                                 <button type="button" onclick="updateBrokerData()" class="btn btn-info">Update (Get Accounts and Holdings)</button>
 
                             </form>
-                            <div id="scedule" hidden>
+                            <div id="scedule" hidden style="max-width:290px;">
                                 <div class="mb-3">
                                 <label for="date" class="form-label">Date</label>
                                     <input type="date" class="form-control" id="date" name="date" required>
@@ -234,9 +234,23 @@
             @inject('userToken', 'App\Models\UserToken')
             @php
                 $token = $userToken->generateToken();
+                $user=Auth::user();
+                $gearmanHost = $user->gearman_ip ?? 'localhost'; // fallback to localhost if null
+                
+                $hostParts = explode(":::", $gearmanHost);
+                $useWebsocket = (isset($hostParts[1]) && str_contains(strtolower($hostParts[1]),"websocket") );
+                if($useWebsocket){
+                    if($hostParts[0]=="localhost" || $hostParts[0]=='127.0.0.1'){
+                        $ws='ws://localhost:8080';
+                    }else{
+                        $ws='wss://'.$hostParts[0].'/ws/';
+                    }
+                }else{
+                    $ws= null;
+                }
             @endphp
             var userToken = `{!! $token !!}`;
-
+            var csrf="{{ csrf_token()}}";
             function connectSocket() {
                 const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
                 const baseUrl = window.location.hostname;
@@ -246,11 +260,7 @@
                     var port = "/ws/";
                 }
                  // Adjust the port as needed
-<<<<<<< HEAD
-                const wsUrl = `${protocol}${baseUrl}${port}`;
-=======
                 var wsUrl = `{{ $ws?? '${protocol}${baseUrl}${port}' }}`;
->>>>>>> main
                 ws=new WebSocket(wsUrl);
                 ws.onopen = function () {
                     console.log('Connected to WebSocket server');

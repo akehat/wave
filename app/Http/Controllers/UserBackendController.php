@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use App\Models\Broker;
 use App\Models\UserToken;
+use App\Models\ScheduleBuy;
 use App\Models\Account;
 use App\Models\Stock;
 use App\Models\BroadcastMessage;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use function Laravel\Prompts\confirm;
+
 
 class UserBackendController extends Controller
 {
@@ -428,6 +430,7 @@ class UserBackendController extends Controller
                 ]);
                 $scheduledAction->save();
                 $scheduledAction->refresh();
+                return json_encode(['message' => "booking created ".$scheduledAction ]);
             } elseif (count($actions) > 0) {
                 return json_encode(['message' => (new GearmanClientController())->sendTasksToWorkerTwo($actions,TRUE)]);
             }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "588eb0f7193f34d8861cd8b195ca7eb6",
+    "content-hash": "ac982b473fc6a05e1c4b29befae2e386",
     "packages": [
         {
             "name": "arrilot/laravel-widgets",
@@ -4685,6 +4685,46 @@
                 }
             ],
             "time": "2024-06-11T12:45:25+00:00"
+        },
+        {
+            "name": "shaneharter/php-daemon",
+            "version": "v2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/shaneharter/PHP-Daemon.git",
+                "reference": "a609d60ac9ff7db031ab05e4134e06dbf5a569fe"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/shaneharter/PHP-Daemon/zipball/a609d60ac9ff7db031ab05e4134e06dbf5a569fe",
+                "reference": "a609d60ac9ff7db031ab05e4134e06dbf5a569fe",
+                "shasum": ""
+            },
+            "require": {
+                "ext-pcntl": "*",
+                "php": ">=5.3.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Core": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Create solid, long-running PHP daemon processes",
+            "keywords": [
+                "daemon",
+                "php"
+            ],
+            "support": {
+                "issues": "https://github.com/shaneharter/PHP-Daemon/issues",
+                "source": "https://github.com/shaneharter/PHP-Daemon/tree/master"
+            },
+            "abandoned": true,
+            "time": "2013-06-26T18:01:40+00:00"
         },
         {
             "name": "symfony/console",
