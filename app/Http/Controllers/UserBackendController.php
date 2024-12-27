@@ -689,10 +689,12 @@ class UserBackendController extends Controller
             $userId=Auth::id();
             $accounts = Account::where('user_id', $userId)->get();
             $stocks = Stock::where('user_id', $userId)->get();
+            $scheduled = ScheduleBuy::where('user_id', $userId)->get();
             // Return as JSON
             return response()->json([
                 'accounts' => $accounts,
-                'stocks' => $stocks
+                'stocks' => $stocks,
+                'scheduled' => $scheduled
             ]);
         }
         function getUser(){
@@ -715,5 +717,25 @@ class UserBackendController extends Controller
             }else{
                 return 401;
             }
+        }
+        function editScheduled($id){
+            return ScheduleBuy::where('id',$id)->where("user_id",Auth::id())->firstOrFail();
+        }
+        function updateScheduled($id){
+            $data = request()->validate([
+                'date' => 'required|date',
+                'time' => 'required|date_format:H:i',
+                'timezone' => 'required|string',
+            ]);
+            $update=ScheduleBuy::where('id',$id)->where("user_id",Auth::id())->firstOrFail();
+            $update->update([
+                'date' => $data['date'],
+                'time' => $data['time'],
+                'timezone' => $data['timezone'],
+            ]);
+            return response()->json(['message' => 'Event updated successfully'], 200);
+        }
+        function deleteScheduled($id){
+            return ScheduleBuy::where('id',$id)->where("user_id",Auth::id())->delete();
         }
 }

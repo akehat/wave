@@ -30,7 +30,7 @@ class ScheduleBuy extends Model
             ScheduleBuy::setServerTime($model);
         });
         
-        static::updated(function () {
+        static::updated(function ($model) {
             ScheduleBuy::setServerTime($model);
         });
     }
