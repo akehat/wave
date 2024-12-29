@@ -861,7 +861,11 @@ function updateAccountsForSelectedBrokers() {
                     // Assuming this is part of your existing document ready function or similar
 
 // Open modal when edit button is clicked
+var locked=false;
 $('#scheduled-table').on('click', '.edit-btn', function() {
+    if(locked)return;
+    locked=true;
+
     let id = $(this).data('id');
     fetch(`/edit-scheduled/${id}`, {
         method: 'GET'
@@ -1009,6 +1013,7 @@ $('#scheduled-table').on('click', '.edit-btn', function() {
             });
         });
     });
+    settimeout(()=>{locked=false;},200);
 });
 
                     $('#scheduled-table').on('click', '.delete-btn', function() {

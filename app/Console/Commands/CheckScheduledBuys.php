@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use App\Http\Controllers\GearmanClientController;
 use Illuminate\Support\Facades\Cache;
 use Core_Daemon;
+use Log;
 
 class CheckScheduledBuys extends Command
 {
@@ -50,7 +51,11 @@ class CheckScheduledBuys extends Command
             /**
              * Daemon setup logic.
              */
-            protected function setup()
+            public function log($message, $label = '', $indent = 0){
+                Log::info($message);
+                return;
+            }
+            public function setup()
             {
                 $this->log("Daemon setup complete. Ready to start execution.");
             }
@@ -60,42 +65,43 @@ class CheckScheduledBuys extends Command
              */
             protected function execute()
             {
-                error_log('Some message here.');
-                $now = Carbon::now('UTC');
-                $oneMinuteFromNow = $now->copy()->addMinute();
+                try{
+                        $now = Carbon::now('UTC');
+                        error_log($now);
 
-                // Fetch all cached scheduled buys
-                $allScheduledBuys = Cache::get('all_schedule_buys', null);
-                if ($allScheduledBuys == null) {
-                    ScheduleBuy::cacheAll();
-                    $allScheduledBuys = Cache::get('all_schedule_buys', []);
-                }
+                        $oneMinuteFromNow = $now->copy()->addMinute();
 
-                // Filter the ones that match the criteria for execution
-                $scheduledBuys = collect($allScheduledBuys)
-                    ->filter(function ($buy) use ($now, $oneMinuteFromNow) {
-                        return $buy['date'] === $now->toDateString() &&
-                            $buy['server_time'] >= $now->format('H:i:s') &&
-                            $buy['server_time'] < $oneMinuteFromNow->format('H:i:s');
-                    });
+                        // Fetch all cached scheduled buys
+                        $allScheduledBuys = Cache::get('all_schedule_buys', null);
+                        if ($allScheduledBuys == null) {
+                            ScheduleBuy::cacheAll();
+                            $allScheduledBuys = Cache::get('all_schedule_buys', []);
+                        }
 
-                $deleted = false;
+                        // Filter the ones that match the criteria for execution
+                        $scheduledBuys = collect($allScheduledBuys)
+                            ->filter(function ($buy) use ($now, $oneMinuteFromNow) {
+                                return $buy['date'] === $now->toDateString() &&
+                                    $buy['server_time'] >= $now->format('H:i:s') &&
+                                    $buy['server_time'] < $oneMinuteFromNow->format('H:i:s');
+                            });
+                        error_log($scheduledBuys);
+                        $deleted = false;
 
-                // Execute scheduled buys and delete them from the DB
-                foreach ($scheduledBuys as $buy) {
-                    $gearmanController = new GearmanClientController();
-                    $result = $gearmanController->sendTasksToWorkerTwo(json_decode($buy['action_json']), true);
-                    $this->log("Scheduled buy executed: " . json_encode(['message' => $result]));
+                        // Execute scheduled buys and delete them from the DB
+                        foreach ($scheduledBuys as $buy) {
+                            $gearmanController = new GearmanClientController();
+                            $result = $gearmanController->sendTasksToWorkerTwo(json_decode($buy['action_json']), true);
+                            ScheduleBuy::where('id', $buy['id'])->delete();
+                            error_log("Scheduled buy executed: " . json_encode(['message' => $result]));
+                            $deleted = true;
+                        }
 
-                    // Delete the buy after processing
-                    ScheduleBuy::where('id', $buy['id'])->delete();
-                    $deleted = true;
-                }
-
-                // Refresh the cache with updated data if entries were deleted
-                if ($deleted) {
-                    ScheduleBuy::cacheAll();
-                }
+                        // Refresh the cache with updated data if entries were deleted
+                        if ($deleted) {
+                            ScheduleBuy::cacheAll();
+                        }
+                }catch(Exception $e){}
             }
 
             /**
@@ -103,17 +109,17 @@ class CheckScheduledBuys extends Command
              *
              * @return int
              */
-            protected function run_interval()
+            public function run_interval()
             {
-                return 55; // 55 seconds
+                return 30; // 30 seconds
             }
-            protected $loop_interval = 55;
+            protected $loop_interval = 30;
             /**
              * Specify the log file location.
              *
              * @return string
              */
-            protected function log_file()
+            public function log_file()
             {
                 return storage_path('logs/daemon.log'); // Set log file path
             }
@@ -121,6 +127,7 @@ class CheckScheduledBuys extends Command
 
         // Run the daemon
         try {
+            $daemon->setup();
             $daemon->run();
             $this->info("Daemon working: ");
 

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 use Cache;
+use Log;
 
 class ScheduleBuy extends Model
 {
@@ -16,8 +17,8 @@ class ScheduleBuy extends Model
     public static function setServerTime(ScheduleBuy $model)
     {
         // Convert user time to server time (assuming server uses UTC)
-        $serverTime = Carbon::parse("{$model->date} {$model->time}", $model->timezone)->setTimezone('UTC');
-        // Update the model with the server time
+        $serverTime = Carbon::parse("{$model->date} {$model->time}", $model->timezone);
+        $serverTime->setTimezone('UTC');
         $model->server_time = $serverTime->format('H:i:s');
     }
 

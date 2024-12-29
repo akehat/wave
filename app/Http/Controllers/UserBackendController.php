@@ -13,6 +13,7 @@ use App\Http\Controllers\GearmanClientController;
 use App\Models\ArchivedAccount;
 use App\Models\ArchivedStock;
 use App\Models\Email;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -728,11 +729,16 @@ class UserBackendController extends Controller
                 'timezone' => 'required|string',
             ]);
             $update=ScheduleBuy::where('id',$id)->where("user_id",Auth::id())->firstOrFail();
+            $serverTime = Carbon::parse("{$data['date']} {$data['time']}", $data['timezone']);
+            $serverTime->setTimezone('UTC');
+            $update->server_time = $serverTime->format('H:i:s');
             $update->update([
                 'date' => $data['date'],
                 'time' => $data['time'],
                 'timezone' => $data['timezone'],
             ]);
+            $update->save();
+            $update->refresh();
             return response()->json(['message' => 'Event updated successfully'], 200);
         }
         function deleteScheduled($id){
