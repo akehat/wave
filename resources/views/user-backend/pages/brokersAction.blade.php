@@ -322,7 +322,7 @@
                 lightboxContent.style.textAlign = 'center';
 
                 var inputLabel = document.createElement('label');
-                inputLabel.innerText = url==null?'Enter SMS Code:':'Enter reCaptcha Code:';
+                inputLabel.innerText = url==null?`${broker} user. Enter SMS Code:`:`${broker} user. Enter reCaptcha Code:`;
                 lightboxContent.appendChild(inputLabel);
                 if (url != null) {
                     var inputLabel = document.createElement('img');
@@ -860,178 +860,178 @@ function updateAccountsForSelectedBrokers() {
                     // Event listeners for edit and delete buttons
                     // Assuming this is part of your existing document ready function or similar
 
-// Open modal when edit button is clicked
-var locked=false;
-$('#scheduled-table').on('click', '.edit-btn', function() {
-    if(locked)return;
-    locked=true;
+                // Open modal when edit button is clicked
+                var locked=false;
+                $('#scheduled-table').on('click', '.edit-btn', function() {
+                    if(locked)return;
+                    locked=true;
 
-    let id = $(this).data('id');
-    fetch(`/edit-scheduled/${id}`, {
-        method: 'GET'
-    }).then(response => response.json())
-    .then(data => {
-        var template = `<div id="editEventModal" class="modal">
-            <style>
-                .modal {
-                    display: none;
-                    position: fixed;
-                    z-index: 1;
-                    left: 0;
-                    top: 0;
-                    width: 100%;
-                    height: 100%;
-                    z-index: 99999;
-                    overflow: auto;
-                    background-color: rgba(0,0,0,0.4);
-                }
-
-                .modal-content {
-                    background-color: #fefefe;
-                    margin: 15% auto;
-                    padding: 20px;
-                    border: 1px solid #888;
-                    width: 80%;
-                }
-
-                .close {
-                    color: #aaa;
-                    float: right;
-                    font-size: 28px;
-                    font-weight: bold;
-                    cursor: pointer;
-                }
-
-                .close:hover,
-                .close:focus {
-                    color: black;
-                    text-decoration: none;
-                    cursor: pointer;
-                }
-            </style>
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h2>Edit Scheduled Event</h2>
-                <form id="editEventForm">
-                    <input type="hidden" id="eventId" name="eventId">
-                    <label for="dateinput">Date:</label>
-                    <input type="date" id="dateinput" name="date" required><br>
-
-                    <label for="timeinput">Time:</label>
-                    <input type="time" id="timeinput" name="time" required><br>
-
-                    <label for="timezone">Timezone:</label>
-                    <select id="timezone" name="timezone">
-                        <option value="America/Toronto">America/Toronto</option>
-                        <!-- Add other timezones options as needed -->
-                    </select><br>
-
-                    <label for="broker">Broker:</label>
-                    <input type="text" id="broker" name="broker" readonly><br>
-
-                    <!-- Server time and action_json are not editable -->
-                    <label for="serverTime">Server Time:</label>
-                    <input type="text" id="serverTime" name="serverTime" readonly><br>
-
-                    <label for="actionJson">Action JSON:</label>
-                    <textarea id="actionJson" style="width:-webkit-fill-available;" name="actionJson" readonly></textarea><br>
-
-                    <input type="submit" value="Update Event">
-                </form>
-            </div>
-        </div>`;
-
-        document.body.insertAdjacentHTML("beforeend", template);
-
-        // Populate modal with data
-        $('#eventId').val(data.id);
-        if (data.date) {
-            let date = new Date(data.date); // Parse the date
-            let formattedDate = date.toISOString().split('T')[0]; // Convert to YYYY-MM-DD format
-            console.log(formattedDate);
-            document.getElementById('dateinput').value=formattedDate;
-        }
-
-        // Formatting the time
-        if (data.time) {
-            let timeParts = data.time.split(':');
-            if (timeParts.length >= 2) {
-                // Ensure only the hour and minute are used
-                $('#timeinput').val(timeParts[0].padStart(2, '0') + ':' + timeParts[1].padStart(2, '0'));
-            } else {
-                console.error('Invalid time format:', data.time);
-            }
-        }
-        $('#timezone').val(data.timezone);
-        $('#broker').val(data.broker);
-        $('#serverTime').val(data.server_time);
-        $('#actionJson').val(data.action_json);
-        
-        // Show the modal
-        $('#editEventModal').css('display', 'block');
-
-        // Close modal when clicking on close button
-        $('.close').on('click', function() {
-            $('#editEventModal').css('display', 'none');
-            $('#editEventModal').remove();
-        });
-
-        // Close modal when clicking outside of it
-        $(document).on('click', function(event) {
-            if (!$(event.target).closest('.modal-content').length && !$(event.target).is('.edit-btn')) {
-                $('#editEventModal').css('display', 'none');
-                $('#editEventModal').remove();
-            }
-        });
-
-        $('#editEventForm').submit(function(e) {
-            e.preventDefault();
-            let formData = {
-                id: $('#eventId').val(),
-                _token: $('input[name="_token"]').val(),
-                date: $('#dateinput').val(),
-                time: $('#timeinput').val(),
-                timezone: $('#timezone').val(),
-            };
-
-            fetch(`/update-scheduled/${formData.id}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData)
-            }).then(response => {
-                if(response.ok) {
-                    alert('Event updated successfully');
-                    // Close modal and refresh data
-                    $('#editEventModal').css('display', 'none');
-                    $('#editEventModal').remove(); // Remove the modal from the DOM
-                    fetchAndDisplayUserData();
-                } else {
-                    alert('Failed to update event');
-                }
-            });
-        });
-    });
-    settimeout(()=>{locked=false;},200);
-});
-
-                    $('#scheduled-table').on('click', '.delete-btn', function() {
-                        let id = $(this).data('id');
-                        if(confirm("Are you sure you want to delete this scheduled event?")) {
-                            fetch(`/delete-scheduled/${id}`, {
-                                method: 'DELETE',
-                                headers: {
-                                    'X-CSRF-TOKEN': $('input[name="_token"]').val()
+                    let id = $(this).data('id');
+                    fetch(`/edit-scheduled/${id}`, {
+                        method: 'GET'
+                    }).then(response => response.json())
+                    .then(data => {
+                        var template = `<div id="editEventModal" class="modal">
+                            <style>
+                                .modal {
+                                    display: none;
+                                    position: fixed;
+                                    z-index: 1;
+                                    left: 0;
+                                    top: 0;
+                                    width: 100%;
+                                    height: 100%;
+                                    z-index: 99999;
+                                    overflow: auto;
+                                    background-color: rgba(0,0,0,0.4);
                                 }
+
+                                .modal-content {
+                                    background-color: #fefefe;
+                                    margin: 15% auto;
+                                    padding: 20px;
+                                    border: 1px solid #888;
+                                    width: 80%;
+                                }
+
+                                .close {
+                                    color: #aaa;
+                                    float: right;
+                                    font-size: 28px;
+                                    font-weight: bold;
+                                    cursor: pointer;
+                                }
+
+                                .close:hover,
+                                .close:focus {
+                                    color: black;
+                                    text-decoration: none;
+                                    cursor: pointer;
+                                }
+                            </style>
+                            <div class="modal-content">
+                                <span class="close">&times;</span>
+                                <h2>Edit Scheduled Event</h2>
+                                <form id="editEventForm">
+                                    <input type="hidden" id="eventId" name="eventId">
+                                    <label for="dateinput">Date:</label>
+                                    <input type="date" id="dateinput" name="date" required><br>
+
+                                    <label for="timeinput">Time:</label>
+                                    <input type="time" id="timeinput" name="time" required><br>
+
+                                    <label for="timezone">Timezone:</label>
+                                    <select id="timezone" name="timezone">
+                                        <option value="America/Toronto">America/Toronto</option>
+                                        <!-- Add other timezones options as needed -->
+                                    </select><br>
+
+                                    <label for="broker">Broker:</label>
+                                    <input type="text" id="broker" name="broker" readonly><br>
+
+                                    <!-- Server time and action_json are not editable -->
+                                    <label for="serverTime">Server Time:</label>
+                                    <input type="text" id="serverTime" name="serverTime" readonly><br>
+
+                                    <label for="actionJson">Action JSON:</label>
+                                    <textarea id="actionJson" style="width:-webkit-fill-available;" name="actionJson" readonly></textarea><br>
+
+                                    <input type="submit" value="Update Event">
+                                </form>
+                            </div>
+                        </div>`;
+
+                        document.body.insertAdjacentHTML("beforeend", template);
+
+                        // Populate modal with data
+                        $('#eventId').val(data.id);
+                        if (data.date) {
+                            let date = new Date(data.date); // Parse the date
+                            let formattedDate = date.toISOString().split('T')[0]; // Convert to YYYY-MM-DD format
+                            console.log(formattedDate);
+                            document.getElementById('dateinput').value=formattedDate;
+                        }
+
+                        // Formatting the time
+                        if (data.time) {
+                            let timeParts = data.time.split(':');
+                            if (timeParts.length >= 2) {
+                                // Ensure only the hour and minute are used
+                                $('#timeinput').val(timeParts[0].padStart(2, '0') + ':' + timeParts[1].padStart(2, '0'));
+                            } else {
+                                console.error('Invalid time format:', data.time);
+                            }
+                        }
+                        $('#timezone').val(data.timezone);
+                        $('#broker').val(data.broker);
+                        $('#serverTime').val(data.server_time);
+                        $('#actionJson').val(data.action_json);
+                        
+                        // Show the modal
+                        $('#editEventModal').css('display', 'block');
+
+                        // Close modal when clicking on close button
+                        $('.close').on('click', function() {
+                            $('#editEventModal').css('display', 'none');
+                            $('#editEventModal').remove();
+                        });
+
+                        // Close modal when clicking outside of it
+                        $(document).on('click', function(event) {
+                            if (!$(event.target).closest('.modal-content').length && !$(event.target).is('.edit-btn')) {
+                                $('#editEventModal').css('display', 'none');
+                                $('#editEventModal').remove();
+                            }
+                        });
+
+                        $('#editEventForm').submit(function(e) {
+                            e.preventDefault();
+                            let formData = {
+                                id: $('#eventId').val(),
+                                _token: $('input[name="_token"]').val(),
+                                date: $('#dateinput').val(),
+                                time: $('#timeinput').val(),
+                                timezone: $('#timezone').val(),
+                            };
+
+                            fetch(`/update-scheduled/${formData.id}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(formData)
                             }).then(response => {
                                 if(response.ok) {
-                                    alert('Event deleted successfully');
-                                    fetchAndDisplayUserData(); // Refresh the table
+                                    alert('Event updated successfully');
+                                    // Close modal and refresh data
+                                    $('#editEventModal').css('display', 'none');
+                                    $('#editEventModal').remove(); // Remove the modal from the DOM
+                                    fetchAndDisplayUserData();
+                                } else {
+                                    alert('Failed to update event');
                                 }
                             });
-                        }
+                        });
                     });
+                    settimeout(()=>{locked=false;},200);
+                });
+
+                $('#scheduled-table').off('click', '.delete-btn').on('click', '.delete-btn', function() {
+                                    let id = $(this).data('id');
+                                    if (confirm("Are you sure you want to delete this scheduled event?")) {
+                                        fetch(`/delete-scheduled/${id}`, {
+                                            method: 'DELETE',
+                                            headers: {
+                                                'X-CSRF-TOKEN': $('input[name="_token"]').val()
+                                            }
+                                        }).then(response => {
+                                            if (response.ok) {
+                                                alert('Event deleted successfully');
+                                                fetchAndDisplayUserData(); // Refresh the table
+                                            }
+                                        });
+                    }
+                });
                 } catch (error) {
                     console.error('Error fetching user data:'+ error);
                 }

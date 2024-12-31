@@ -103,86 +103,116 @@
     @component('components.navbar',["active"=>"dashboard"])
   @endcomponent
   <div class="card py-4">
-    <div class="container py-4">
-        <div class="d-flex flex-wrap justify-content-center">
-            <!-- Profit Calculator Frame -->
-
-
-
-
-            <!-- Trading Chart Frame -->
-            <div class="text-center m-3" style="width: 100%;">
-                <div class="iframe-container">
-                    <iframe
-                        id="responsive-iframe"
-                        frameborder="0"
-                        referrerpolicy="no-referrer"
-                        scrolling="no"
-                        height="480"
-                        width="1000"
-                        allowtransparency="true"
-                        marginwidth="0"
-                        marginheight="0"
-                        src="https://ssltvc.investing.com/?pair_ID=8849&height=480&width=1000&interval=300&plotStyle=area&domain_ID=68&lang_ID=68&timezone_ID=6">
-                    </iframe>
-                </div>
-            </div>
-            <div class="text-center m-3" style="width: 400px;">
-                <iframe
-                    frameborder="0"
-                    referrerpolicy="no-referrer"
-                    scrolling="no"
-                    height="480"
-                    width="100%"
-                    allowtransparency="true"
-                    marginwidth="0"
-                    marginheight="0"
-                    src="https://ssltools.investing.com/profit-calculator/index.php?force_lang=68&acc=12&pair=1">
-            </iframe>
-            </div>
-            <div class="text-center m-3" style="width: 400px;">
-            <iframe frameborder="0"  referrerpolicy="no-referrer" scrolling="no" height="274" width="425" allowtransparency="true" marginwidth="0" marginheight="0" src="https://ssltools.investing.com/technical_summary.php?pairs=&curr-name-color=%230059B0&fields=5m,1h,1d&force_lang=68"></iframe><br /><div style="width:425px;"><span style="float:left"><span style="font-size: 11px;color: #333333;text-decoration: none;">This Technical Analysis is powered by <a href="https://ca.investing.com/" rel="nofollow" target="_blank" style="font-size: 11px;color: #06529D; font-weight: bold;" class="underline_link">Investing.com Canada</a></span></span></div>
-            </div>
+  <div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-center">
+      <!-- TradingView Screener Widget -->
+      <div class="tradingview-widget-container m-3" style="width: 100%; max-width: 1000px;">
+        <div class="tradingview-widget-container__widget"></div>
+        <div class="tradingview-widget-copyright">
+          <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
+            <span class="blue-text">Track all markets on TradingView</span>
+          </a>
         </div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-screener.js" async>
+        {
+          "width": "100%",
+          "height": 550,
+          "defaultColumn": "overview",
+          "defaultScreen": "general",
+          "market": "forex",
+          "showToolbar": true,
+          "colorTheme": "light",
+          "locale": "en"
+        }
+        </script>
+      </div>
 
+      <!-- TradingView Advanced Chart Widget -->
+      <div class="tradingview-widget-container m-3" style="min-height: 50vh; width: 100%; max-width: 1000px;">
+        <div class="tradingview-widget-container__widget" style="height: calc(100vh - 32px); width: 100%;"></div>
+        <div class="tradingview-widget-copyright">
+          <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
+            <span class="blue-text">Track all markets on TradingView</span>
+          </a>
+        </div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+        {
+          "autosize": true,
+          "height": "100vh",
+          "symbol": "NASDAQ:AAPL",
+          "interval": "D",
+          "timezone": "Etc/UTC",
+          "theme": "light",
+          "style": "1",
+          "locale": "en",
+          "allow_symbol_change": true,
+          "calendar": false,
+          "support_host": "https://www.tradingview.com"
+        }
+        </script>
+      </div>
     </div>
-    <center><h5>Your Stocks Data</h5></center>
-    <div class="table-responsive p-0">
-        <table id='stocks-table'></table>
+
+    <!-- Moved Profit Calculator Frame and Technical Analysis Widget to the Bottom -->
+    <div class="d-flex flex-wrap justify-content-center mt-4">
+      <!-- Profit Calculator Frame -->
+      <div class="text-center m-3" style="width: 400px;">
+        <iframe
+          frameborder="0"
+          referrerpolicy="no-referrer"
+          scrolling="no"
+          height="480"
+          width="100%"
+          allowtransparency="true"
+          marginwidth="0"
+          marginheight="0"
+          src="https://ssltools.investing.com/profit-calculator/index.php?force_lang=68&acc=12&pair=1">
+        </iframe>
       </div>
-    <center><h5>Your Accounts Data</h5></center>
-      <div class="table-responsive p-0">
-        <table id='accounts-table'></table>
+
+      <!-- Technical Analysis Widget -->
+      <div class="text-center m-3" style="width: 400px;">
+        <iframe
+          frameborder="0"
+          referrerpolicy="no-referrer"
+          scrolling="no"
+          height="274"
+          width="425"
+          allowtransparency="true"
+          marginwidth="0"
+          marginheight="0"
+          src="https://ssltools.investing.com/technical_summary.php?pairs=&curr-name-color=%230059B0&fields=5m,1h,1d&force_lang=68">
+        </iframe>
+        <div style="width: 425px;">
+          <span style="float: left; font-size: 11px; color: #333333; text-decoration: none;">
+            This Technical Analysis is powered by 
+            <a href="https://ca.investing.com/" rel="nofollow" target="_blank" style="font-size: 11px; color: #06529D; font-weight: bold;" class="underline_link">
+              Investing.com Canada
+            </a>
+          </span>
+        </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Stocks Data Table -->
+  <center><h5>Your Stocks Data</h5></center>
+  <div class="table-responsive p-0">
+    <table id="stocks-table" class="table table-striped table-bordered">
+      <!-- Add your table rows and columns dynamically here -->
+    </table>
+  </div>
+
+  <!-- Accounts Data Table -->
+  <center><h5>Your Accounts Data</h5></center>
+  <div class="table-responsive p-0">
+    <table id="accounts-table" class="table table-striped table-bordered">
+      <!-- Add your table rows and columns dynamically here -->
+    </table>
+  </div>
 </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const iframe = document.getElementById("responsive-iframe");
-        const maxIframeWidth = 1000; // Original width of the iframe
-        let windowWidth = window.innerWidth;
 
-        function adjustIframeWidth() {
-            windowWidth = window.innerWidth;
-
-            // Calculate the new width for the iframe
-            const newWidth = Math.min(windowWidth, maxIframeWidth);
-
-            // Set the iframe width attribute
-            iframe.width = newWidth;
-
-            // Update the src to reflect the new width
-            const src = iframe.src;
-            iframe.src = src.replace(/width=\d+/, `width=${newWidth}`);
-        }
-
-        // Initial call on page load
-        adjustIframeWidth();
-
-        // Add event listener for window resize to adjust iframe width dynamically
-        window.addEventListener("resize", adjustIframeWidth);
-    });
-    </script>
 <script>
 async function fetchAndDisplayUserData() {
     try {
