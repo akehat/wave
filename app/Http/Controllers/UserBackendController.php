@@ -159,7 +159,7 @@ class UserBackendController extends Controller
                     'username' => $request->webull_username,
                     'password' => $request->webull_password,
                     'did' => $request->webull_did,
-                    'pin' => $request->webull_trading_pin,
+                    'pin' => $request->webull_pin,
                 ],
                 'Tornado' => [
                     'enabled' => $request->tornado_enabled != "on" ? 0 : 1,
@@ -170,6 +170,11 @@ class UserBackendController extends Controller
                     'enabled' => $request->DSPAC_enabled != "on" ? 0 : 1,
                     'username' => $request->DSPAC_username,
                     'password' => $request->DSPAC_password,
+                ],
+                'BBAE' => [
+                    'enabled' => $request->BBAE_enabled != "on" ? 0 : 1,
+                    'username' => $request->BBAE_username,
+                    'password' => $request->BBAE_password,
                 ],
             ];
             $b=null;
@@ -259,6 +264,7 @@ class UserBackendController extends Controller
                 $webull = $brokers->firstWhere('broker_name', "Webull");
                 $tornado = $brokers->firstWhere('broker_name', "Tornado");
                 $dspac = $brokers->firstWhere('broker_name', "DSPAC");
+                $bbae = $brokers->firstWhere('broker_name', "BBAE");
 
                 $brokerData = (new GearmanClientController())->prepareEnvContent(
                     null, // Discord token
@@ -295,8 +301,10 @@ class UserBackendController extends Controller
                     optional($webull)->pin, // Webull Trading PIN
                     optional($tornado)->username, // Tornado
                     optional($tornado)->password, // Tornado
-                    optional($dspac)->username, // Tornado
-                    optional($dspac)->password, // Tornado
+                    optional($dspac)->username, // dspac
+                    optional($dspac)->password, // dspac
+                    optional($bbae)->username, // bbae
+                    optional($bbae)->password, // bbae
                     turnArray:true
                 );
             } else {
@@ -340,6 +348,8 @@ class UserBackendController extends Controller
                     optional($selectedBroker)->password, // Tornado
                     optional($selectedBroker)->username, // DSPAC
                     optional($selectedBroker)->password, // DSPAC
+                    optional($selectedBroker)->username, // BBAE
+                    optional($selectedBroker)->password, // BBAE
                     turnArray:true
                 );
             }

@@ -46,6 +46,8 @@ class GearmanClientController extends Controller
         $tornado_password = null,
         $dspac_username = null,
         $dspac_password = null,
+        $bbae_username = null,
+        $bbae_password = null,
         $turnArray=false
     ) {
         if(!$turnArray){
@@ -86,6 +88,7 @@ class GearmanClientController extends Controller
                 'WEBULL' => $webull_username && $webull_password ? [$webull_username, $webull_password, $webull_did, $webull_trading_pin] : null,
                 'TORNADO' => $tornado_username && $tornado_password ? [$tornado_username, $tornado_password] : null,
                 'DSPAC' => $dspac_username && $dspac_password ? [$dspac_username, $dspac_password] : null,
+                'BBAE' => $bbae_username && $bbae_password ? [$bbae_username, $bbae_password] : null,
             ];
 
         }
