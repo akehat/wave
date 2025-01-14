@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Route;
 use TCG\Voyager\Facades\Voyager;
 use Wave\Facades\Wave;
 use App\Http\Controllers\UserBackendController;
+use App\Http\Controllers\ProfileController;
+
 // Authentication routes
 Auth::routes();
 
@@ -29,6 +31,13 @@ Route::group(['middleware' => 'auth'], function(){
     Route::get('howto', [UserBackendController::class, 'howto'])->name('howto');
     Route::get('menu', [UserBackendController::class, 'menu'])->name('menu');
     Route::get('site', [UserBackendController::class, 'site'])->name('site');
+    Route::get('pages/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/payment/store', [ProfileController::class, 'storePayment'])->name('profile.storePayment');
+    Route::get('/profile/chats', [ProfileController::class, 'viewChats'])->name('profile.viewChats');
+    Route::post('/profile/message/send', [ProfileController::class, 'sendMessage'])->name('profile.sendMessage');
+    Route::get('/profile/chat/{chatId}/messages', [ProfileController::class, 'getMessages'])->name('profile.getMessages');
     Route::get('general', [UserBackendController::class, 'general'])->name('general');
     Route::get('pages/{page}', [UserBackendController::class, 'page'])->name('pages');
     Route::post('save_brokers', [UserBackendController::class, 'save_brokers'])->name('save_brokers');
@@ -38,6 +47,7 @@ Route::group(['middleware' => 'auth'], function(){
     Route::post('submit-contact', [UserBackendController::class, 'submitContact'])->name("submitContact");
     Route::post('/toggle-broker-status', [UserBackendController::class, 'toggleBrokerStatus'])->name('toggle_broker_status');
 });
+
 Route::get('websocketTest', function(){return view('user-backend.websocket');})->name('user-backend.websocket');
 Route::get('requestSMS', [UserBackendController::class, 'requestSMS'])->name('user-backend.requestSMS');
 Route::post('sendData', [UserBackendController::class, 'sendData'])->name('user-backend.sendData');
