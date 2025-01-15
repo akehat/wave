@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 use TCG\Voyager\Facades\Voyager;
 use Wave\Facades\Wave;
 use App\Http\Controllers\UserBackendController;
+use App\Http\Controllers\PaymentsController;
 use App\Http\Controllers\ProfileController;
 
 // Authentication routes
@@ -35,7 +36,7 @@ Route::group(['middleware' => 'auth'], function(){
     Route::get('pages/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
-    Route::post('/profile/card/update', [ProfileController::class, 'cardUpdate'])->name('cards.update');
+    Route::post('/profile/card/update', [PaymentsController::class, 'cardUpdate'])->name('cards.update');
     Route::post('/profile/payment/store', [ProfileController::class, 'storePayment'])->name('profile.storePayment');
     Route::get('/profile/chats', [ProfileController::class, 'viewChats'])->name('profile.viewChats');
     Route::post('/profile/message/send', [ProfileController::class, 'sendMessage'])->name('profile.sendMessage');

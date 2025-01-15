@@ -10,17 +10,14 @@ class Chat extends Model
     use HasFactory;
     protected $table="chats";
     protected $guarded=["id"];
-    public function to_user()
+    public function sender()
     {
-        return $this->belongsTo(User::class, 'to_user_id', 'id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    /**
-     * Get the "from" user associated with this chat.
-     */
-    public function from_user()
+    public function recipient()
     {
-        return $this->belongsTo(User::class, 'user_id', 'id');
+        return $this->belongsTo(User::class, 'to_user_id');
     }
 
     public function messages()

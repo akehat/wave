@@ -29,10 +29,16 @@ class ProfileController extends Controller
         ]
     );
     $payments = Payment::where('user_id', $user->id)->get();
-    $chats = Chat::where('user_id', $user->id)->orWhere('to_user_id', $user->id)->get();
+    $chats = Chat::where('user_id', $user->id)
+             ->orWhere('to_user_id', $user->id)
+             ->get();
+    // Collect messages from the fetched chats
+    $messages = $chats->flatMap(function ($chat) {
+        return $chat->messages; // Assuming 'messages' is a relationship on the Chat model
+    });
     $cards = Card::where('user_id', $user->id)->get();
 
-    return view('user-backend.pages.profile', compact('profile', 'payments', 'chats',"cards","user"));
+    return view('user-backend.pages.profile', compact('profile', 'payments', 'chats',"cards","user",'messages'));
 }
 
 
@@ -43,94 +49,7 @@ class ProfileController extends Controller
         $profile = UserProfile::where('user_id', $user->id)->first();
         return view('user_backend.pages.profile_edit', compact('profile'));
     }
-    public function cardUpdate(Request $request)
-    {
-        $request->validate([
-            'payment_method' => 'required|string', // Stripe Payment Method ID from the frontend
-        ]);
-
-        $stripeSecretKey = env('STRIPE_SECRET'); // Your Stripe Secret Key
-        $paymentMethodId = $request->input('payment_method');
-        $user = auth()->user(); // Get the authenticated user
-
-        try {
-            // Step 1: Create a Stripe Customer if the user doesn't have one
-            if (!$user->stripe_id) {
-                $customerData = [
-                    'email' => $user->email,
-                    'name' => $user->name,
-                ];
-
-                $customerResponse = $this->makeCurlRequest(
-                    'https://api.stripe.com/v1/customers',
-                    $customerData,
-                    $stripeSecretKey
-                );
-
-                $customer = json_decode($customerResponse, true);
-                if (isset($customer['error'])) {
-                    throw new Exception($customer['error']['message']);
-                }
-
-                $user->stripe_id = $customer['id'];
-                $user->save();
-            }
-
-            // Step 2: Attach the payment method to the customer
-            $attachData = [
-                'customer' => $user->stripe_id,
-            ];
-
-            $attachResponse = $this->makeCurlRequest(
-                "https://api.stripe.com/v1/payment_methods/$paymentMethodId/attach",
-                $attachData,
-                $stripeSecretKey
-            );
-
-            $paymentMethod = json_decode($attachResponse, true);
-            if (isset($paymentMethod['error'])) {
-                throw new Exception($paymentMethod['error']['message']);
-            }
-
-            // Step 3: Set the payment method as the default for the customer
-            $defaultMethodData = [
-                'invoice_settings[default_payment_method]' => $paymentMethodId,
-            ];
-
-            $this->makeCurlRequest(
-                "https://api.stripe.com/v1/customers/{$user->stripe_id}",
-                $defaultMethodData,
-                $stripeSecretKey
-            );
-
-            // Step 4: Save card details in your database
-            Card::updateOrCreate(
-                ['user_id' => $user->id, 'last_four_digits' => $paymentMethod['card']['last4']],
-                [
-                    'stripe_id' => $user->stripe_id,
-                    'card_brand' => $paymentMethod['card']['brand'],
-                    'last_four_digits' => $paymentMethod['card']['last4'],
-                    'card_holder_name' => $request->input('cardholder_name'),
-                    'billing_address_line1' => $request->input('billing_address_line1'),
-                    'billing_address_line2' => $request->input('billing_address_line2'),
-                    'billing_city' => $request->input('billing_city'),
-                    'billing_state' => $request->input('billing_state'),
-                    'billing_zip' => $request->input('billing_zip'),
-                    'billing_country' => $request->input('billing_country'),
-                ]
-            );
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Card information updated successfully!',
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 500);
-        }
-    }
+    
 
     /**
      * Helper function to make cURL requests
@@ -161,6 +80,22 @@ class ProfileController extends Controller
         $query = $request->query('query');
         $users = User::where('name', 'like', '%' . $query . '%')->orWhere('id', 'like', '%' . $query . '%')->select('name')->limit(10)->get();
         return response()->json($users);
+    }
+    public function sendMessage(Request $request)
+    {
+        $user = Auth::user();
+        $to_user_id = User::where('name', $request->recipient)->firstOrFail()->id;
+        $chat = Chat::firstOrCreate([
+            'user_id' => $user->id,
+            'to_user_id' => $to_user_id,
+        ]);
+        $message = Message::create([
+            'chat_id' => $chat->id,
+            'user_id' => $user->id,
+            'to_user_id' => $to_user_id,
+            'text' => $request->message,
+        ]);
+        return response()->json(['success' => true, 'message' => 'Message sent successfully.', 'data' => $message]);
     }
 
     // Update user profile
@@ -264,21 +199,7 @@ class ProfileController extends Controller
 
 
     // Send a new message
-    public function sendMessage(Request $request)
-    {
-        $user = Auth::user();
-        $chat = Chat::firstOrCreate([
-            'user_id' => $user->id,
-            'to_user_id' => $request->to_user_id,
-        ]);
-        $message = Message::create([
-            'chat_id' => $chat->id,
-            'user_id' => $user->id,
-            'to_user_id' => $request->to_user_id,
-            'message' => $request->message,
-        ]);
-        return response()->json(['success' => true, 'message' => 'Message sent successfully.', 'data' => $message]);
-    }
+   
 
     // Retrieve chat messages
     public function getMessages($chatId)

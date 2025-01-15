@@ -405,8 +405,7 @@ footer {
           </div>
         </div>
 
-        <!-- Chat Information -->
-        <!-- Chat Information -->
+<!-- Chat Information -->
 <div class="col-12 col-xl-4 mb-4">
   <div class="card h-100">
     <div class="card-header pb-0 p-3">
@@ -414,22 +413,26 @@ footer {
       <button id="startChattingBtn" class="btn btn-sm btn-primary">Start Chatting</button>
     </div>
     <div class="card-body">
-      @if($chats->isEmpty())
-        <p>No chats found.</p>
-      @else
-        <ul>
+        <ul id="chatList">
           @foreach($chats as $chat)
             <li>
-              <strong>From:</strong> {{ $chat->user_id }} <br>
-              <strong>To:</strong> {{ $chat->to_user_id }} <br>
-              <strong>Message:</strong> {{ $chat->message }}
+              <strong>From:</strong> {{ $chat->sender->name ?? 'Unknown' }} <br>
+              <strong>To:</strong> {{ $chat->recipient->name ?? 'Unknown' }} <br>
+              <button class="btn btn-sm btn-link showMessagesBtn" data-chat-id="{{ $chat->id }}">Show Messages</button>
+              <button class="btn btn-sm btn-secondary openChatFormBtn" data-recipient="{{ $chat->recipient->name ?? '' }}">Chat</button>
+              <div class="chatMessages mt-2" id="chatMessages-{{ $chat->id }}" style="display: none;">
+                @foreach($messages->where('chat_id', $chat->id) as $message)
+                  <p><strong>{{ $chat->sender->name ?? 'Unknown' }}:</strong> {{ $message->text }}</p>
+                @endforeach
+              </div>
             </li>
           @endforeach
         </ul>
-      @endif
+    </div>
+
 
       <!-- Chat Form -->
-      <form id="chatForm" action="#" method="POST" style="display: none;">
+      <form id="chatForm" action="{{ route('profile.sendMessage') }}" method="POST" style="display: none;">
         @csrf
         <div class="form-group mb-3">
           <label for="recipient">Recipient:</label>
@@ -441,84 +444,85 @@ footer {
           <textarea id="message" name="message" class="form-control" rows="3" placeholder="Type your message here"></textarea>
         </div>
         <button type="button" id="cancelChatBtn" class="btn btn-secondary me-2">Cancel</button>
-        <button type="submit" class="btn btn-primary">Send</button>
+        <button type="button" id="sendChatBtn" class="btn btn-primary">Send</button>
       </form>
     </div>
   </div>
-</div>
+
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  const startChattingBtn = document.getElementById("startChattingBtn");
+  const chatList = document.getElementById("chatList");
   const chatForm = document.getElementById("chatForm");
-  const cancelChatBtn = document.getElementById("cancelChatBtn");
-  const userSuggestions = document.getElementById("userSuggestions");
   const recipientInput = document.getElementById("recipient");
+  const startChattingBtn = document.getElementById("startChattingBtn");
+  const cancelChatBtn = document.getElementById("cancelChatBtn");
+  const sendChatBtn = document.getElementById("sendChatBtn");
+  const csrfToken = document.querySelector('input[name="_token"]').value;
 
-  let isChatFormVisible = false;
-
-  // Toggle Chat Form visibility
+  // Toggle chat form visibility
   startChattingBtn.addEventListener("click", function () {
-    if (!isChatFormVisible) {
-      chatForm.style.display = "block";
-      startChattingBtn.textContent = "Hide Chatting Form";
-      isChatFormVisible = true;
-    } else {
-      chatForm.style.display = "none";
-      startChattingBtn.textContent = "Start Chatting";
-      isChatFormVisible = false;
+    chatForm.style.display = chatForm.style.display === "none" ? "block" : "none";
+  });
+
+  cancelChatBtn.addEventListener("click", function () {
+    chatForm.style.display = "none";
+  });
+
+  // Show messages for a specific chat
+  chatList.addEventListener("click", function (event) {
+    if (event.target.classList.contains("showMessagesBtn")) {
+      const chatId = event.target.dataset.chatId;
+      const chatMessagesDiv = document.getElementById(`chatMessages-${chatId}`);
+      chatMessagesDiv.style.display =
+        chatMessagesDiv.style.display === "none" ? "block" : "none";
     }
   });
 
-  // Cancel button functionality
-  cancelChatBtn.addEventListener("click", function () {
-    chatForm.style.display = "none";
-    startChattingBtn.textContent = "Start Chatting";
-    isChatFormVisible = false;
+  // Fill recipient and show chat form when clicking "Chat" button
+  chatList.addEventListener("click", function (event) {
+    if (event.target.classList.contains("openChatFormBtn")) {
+      const recipient = event.target.dataset.recipient;
+      recipientInput.value = recipient;
+      chatForm.style.display = "block";
+    }
   });
 
-  // AJAX user lookup on recipient input
-  recipientInput.addEventListener("input", function () {
-    const query = recipientInput.value;
+  sendChatBtn.addEventListener("click", function () {
+    const recipient = recipientInput.value.trim();
+    const message = document.getElementById("message").value.trim();
 
-    if (query.length < 2) {
-      userSuggestions.style.display = "none";
+    if (!recipient || !message) {
+      alert("Please fill out all fields.");
       return;
     }
 
-    fetch(`{{url("/user-lookup")}}?query=${encodeURIComponent(query)}`)
-      .then(response => response.json())
-      .then(data => {
-        userSuggestions.innerHTML = ""; // Clear existing suggestions
-
-        if (data.length > 0) {
-          data.forEach(user => {
-            const suggestion = document.createElement("li");
-            suggestion.className = "list-group-item list-group-item-action";
-            suggestion.textContent = `${user.name}`;
-            suggestion.addEventListener("click", function () {
-              recipientInput.value = user.name;
-              userSuggestions.style.display = "none";
-            });
-            userSuggestions.appendChild(suggestion);
-          });
-          userSuggestions.style.display = "block";
+    fetch(chatForm.action, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-TOKEN": csrfToken,
+      },
+      body: JSON.stringify({ recipient, message }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          alert("Message sent successfully!");
+          recipientInput.value = "";
+          document.getElementById("message").value = "";
+          chatForm.style.display = "none";
         } else {
-          userSuggestions.style.display = "none";
+          alert("Failed to send message.");
         }
       })
-      .catch(error => {
-        console.error("Error during user lookup:", error);
+      .catch((error) => {
+        console.error("Error:", error);
+        alert("An error occurred. Please try again.");
       });
   });
-
-  // Hide suggestions when clicking outside
-  document.addEventListener("click", function (event) {
-    if (!recipientInput.contains(event.target) && !userSuggestions.contains(event.target)) {
-      userSuggestions.style.display = "none";
-    }
-  });
 });
+
 </script>
 
       </div>
