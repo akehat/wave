@@ -25,6 +25,7 @@ Auth::routes();
 Route::group(['prefix' => 'admin'], function () {
     Voyager::routes();
 });
+
 Route::group(['middleware' => 'auth'], function(){
     Route::get('portal', [UserBackendController::class, 'portal'])->name('user-backend.index');
     Route::get('contact', [UserBackendController::class, 'contact'])->name('contact');
@@ -34,10 +35,12 @@ Route::group(['middleware' => 'auth'], function(){
     Route::get('pages/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/card/update', [ProfileController::class, 'cardUpdate'])->name('cards.update');
     Route::post('/profile/payment/store', [ProfileController::class, 'storePayment'])->name('profile.storePayment');
     Route::get('/profile/chats', [ProfileController::class, 'viewChats'])->name('profile.viewChats');
     Route::post('/profile/message/send', [ProfileController::class, 'sendMessage'])->name('profile.sendMessage');
     Route::get('/profile/chat/{chatId}/messages', [ProfileController::class, 'getMessages'])->name('profile.getMessages');
+    Route::get('user-lookup', [ProfileController::class, 'userLookup'])->name('user.lookup');
     Route::get('general', [UserBackendController::class, 'general'])->name('general');
     Route::get('pages/{page}', [UserBackendController::class, 'page'])->name('pages');
     Route::post('save_brokers', [UserBackendController::class, 'save_brokers'])->name('save_brokers');

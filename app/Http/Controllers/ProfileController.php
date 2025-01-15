@@ -7,6 +7,7 @@ use App\Models\UserProfile;
 use App\Models\Payment;
 use App\Models\Chat;
 use App\Models\Card;
+use App\Models\User;
 use App\Models\Message;
 use Illuminate\Support\Facades\Auth;
 
@@ -31,7 +32,7 @@ class ProfileController extends Controller
     $chats = Chat::where('user_id', $user->id)->orWhere('to_user_id', $user->id)->get();
     $cards = Card::where('user_id', $user->id)->get();
     
-    return view('user-backend.pages.profile', compact('profile', 'payments', 'chats',"cards"));
+    return view('user-backend.pages.profile', compact('profile', 'payments', 'chats',"cards","user"));
 }
 
 
@@ -41,6 +42,15 @@ class ProfileController extends Controller
         $user = Auth::user();
         $profile = UserProfile::where('user_id', $user->id)->first();
         return view('user_backend.pages.profile_edit', compact('profile'));
+    }
+    public function cardUpdate(Request $request)
+    {
+    }
+    public function userLookup(Request $request)
+    {
+        $query = $request->query('query');
+        $users = User::where('name', 'like', '%' . $query . '%')->orWhere('id', 'like', '%' . $query . '%')->select('name')->limit(10)->get();
+        return response()->json($users);
     }
 
     // Update user profile
