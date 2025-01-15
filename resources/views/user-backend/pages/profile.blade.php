@@ -32,7 +32,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <!-- Font Awesome Icons -->
   <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
-  
+
   <!-- Material Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   <!-- CSS Files -->
@@ -281,68 +281,106 @@ footer {
 
 <script>
     function previewImage(event) {
-      const preview = document.getElementById('imagePreview');
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          preview.src = e.target.result;
-          preview.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-      } else {
-        preview.style.display = 'none';
-      }
-    }
-  document.addEventListener("DOMContentLoaded", function () {
-  
-    const editProfileBtn = document.getElementById("editProfileBtn");
-    const cancelEditBtn = document.getElementById("cancelEditBtn");
-    const profileForm = document.getElementById("profileForm");
-    const profileDetails = document.getElementById("profileDetails");
-    
-    const autoBuyFeatureToggle = document.getElementById("auto_buy_feature");
-    const autoSellToggle = document.getElementById("auto_sell_toggle");
-
-    // Function to update toggle label based on checkbox state
-    function updateToggleLabel(toggle, label) {
-        if (toggle.checked) {
-            label.textContent = "Enabled"; // Update label to enabled
+        const preview = document.getElementById('imagePreview');
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
         } else {
-            label.textContent = "Disabled"; // Update label to disabled
+            preview.style.display = 'none';
         }
     }
 
-    // Event listener for toggles
-    autoBuyFeatureToggle.addEventListener("change", function () {
-        const label = autoBuyFeatureToggle.nextElementSibling; // Get the label next to the toggle
-        updateToggleLabel(autoBuyFeatureToggle, label);
-    });
+    document.addEventListener("DOMContentLoaded", function () {
+        const editProfileBtn = document.getElementById("editProfileBtn");
+        const cancelEditBtn = document.getElementById("cancelEditBtn");
+        const profileForm = document.getElementById("profileForm");
+        const profileDetails = document.getElementById("profileDetails");
 
-    autoSellToggle.addEventListener("change", function () {
-        const label = autoSellToggle.nextElementSibling; // Get the label next to the toggle
-        updateToggleLabel(autoSellToggle, label);
-    });
-    var enabled=false;
-    editProfileBtn.addEventListener("click", function () {
-        if(!enabled){
-          profileDetails.style.display = "none"; // Hide profile details
-          profileForm.style.display = "block"; // Show profile form
-          enabled=true;
-        }else{
-          profileDetails.style.display = "block"; // Hide profile details
-          profileForm.style.display = "none"; // Show profile form
-          enabled=false;
-        }        
-    });
+        const autoBuyFeatureToggle = document.getElementById("auto_buy_feature");
+        const autoSellToggle = document.getElementById("auto_sell_toggle");
 
-    cancelEditBtn.addEventListener("click", function () {
-        profileForm.style.display = "none"; // Hide profile form
-        profileDetails.style.display = "block"; // Show profile details
+        // Function to update toggle label based on checkbox state
+        function updateToggleLabel(toggle, label) {
+            if (toggle.checked) {
+                label.textContent = "Enabled"; // Update label to enabled
+            } else {
+                label.textContent = "Disabled"; // Update label to disabled
+            }
+        }
+
+        // Event listener for toggles
+        autoBuyFeatureToggle.addEventListener("change", function () {
+            const label = autoBuyFeatureToggle.nextElementSibling; // Get the label next to the toggle
+            updateToggleLabel(autoBuyFeatureToggle, label);
+        });
+
+        autoSellToggle.addEventListener("change", function () {
+            const label = autoSellToggle.nextElementSibling; // Get the label next to the toggle
+            updateToggleLabel(autoSellToggle, label);
+        });
+
+        let enabled = false;
+        editProfileBtn.addEventListener("click", function () {
+            if (!enabled) {
+                profileDetails.style.display = "none"; // Hide profile details
+                profileForm.style.display = "block"; // Show profile form
+                enabled = true;
+            } else {
+                profileDetails.style.display = "block"; // Show profile details
+                profileForm.style.display = "none"; // Hide profile form
+                enabled = false;
+            }
+        });
+
+        cancelEditBtn.addEventListener("click", function () {
+            profileForm.style.display = "none"; // Hide profile form
+            profileDetails.style.display = "block"; // Show profile details
+        });
+
+        // AJAX form submission
+        profileForm.addEventListener("submit", function (event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            const formData = new FormData(profileForm);
+
+            fetch(profileForm.action, {
+                method: profileForm.method,
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error('Failed to update profile.');
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    // Update the profile details with the new data
+                    profileDetails.querySelector("img").src = data.picture || profileDetails.querySelector("img").src;
+                    profileDetails.querySelector("strong:nth-of-type(1)").textContent = `Name: ${data.name}`;
+                    profileDetails.querySelector("strong:nth-of-type(2)").textContent = `Email: ${data.email}`;
+                    profileDetails.querySelector("strong:nth-of-type(3)").textContent = `Phone: ${data.phone || 'Not Provided'}`;
+                    profileDetails.querySelector("strong:nth-of-type(4)").textContent = `Auto Buy Feature: ${data.auto_buy_feature ? 'Enabled' : 'Disabled'}`;
+                    profileDetails.querySelector("strong:nth-of-type(5)").textContent = `Auto Sell Toggle: ${data.auto_sell_toggle ? 'Enabled' : 'Disabled'}`;
+
+                    // Hide the form and show the updated profile details
+                    profileForm.style.display = "none";
+                    profileDetails.style.display = "block";
+                })
+                .catch((error) => {
+                    console.error(error);
+                    alert('An error occurred while updating the profile.');
+                });
+        });
     });
-});
 </script>
-
 
         <!-- Payments Information -->
         <div class="col-12 col-xl-4 mb-4">
@@ -497,37 +535,64 @@ document.addEventListener("DOMContentLoaded", function () {
       </div>
       <div class="card-body">
         <!-- Credit Card Form -->
-        <form id="creditCardForm" action="{{ route('cards.update') }}" method="POST" enctype="multipart/form-data" style="display: none;">
-          @csrf
-          <div class="form-group mb-3">
-            <label for="cardholder_name">Cardholder Name:</label>
-            <input type="text" id="cardholder_name" name="cardholder_name" class="form-control" placeholder="Enter cardholder name">
-          </div>
-          <div class="form-group mb-3">
-            <label for="card_number">Card Number:</label>
-            <input type="text" id="card_number" name="card_number" class="form-control" placeholder="Enter card number">
-          </div>
-          <div class="form-group mb-3">
-            <label for="expiry_month">Expiry Month:</label>
-            <input type="number" id="expiry_month" name="expiry_month" class="form-control" placeholder="MM">
-          </div>
-          <div class="form-group mb-3">
-            <label for="expiry_year">Expiry Year:</label>
-            <input type="number" id="expiry_year" name="expiry_year" class="form-control" placeholder="YYYY">
-          </div>
-          <div class="form-group mb-3">
-            <label for="card_type">Card Type:</label>
-            <select id="card_type" name="card_type" class="form-control">
-              <option value="Visa">Visa</option>
-              <option value="MasterCard">MasterCard</option>
-              <option value="American Express">American Express</option>
-              <option value="Discover">Discover</option>
-            </select>
-          </div>
-          <button type="button" id="cancelCardEditBtn" class="btn btn-secondary me-2">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save</button>
-        </form>
-
+        <form id="creditCardForm" method="POST" enctype="multipart/form-data" style="display: none;">
+            @csrf
+            <div class="form-group mb-3">
+              <label for="cardholder_name">Cardholder Name:</label>
+              <input type="text" id="cardholder_name" name="cardholder_name" class="form-control" placeholder="Enter cardholder name" required>
+            </div>
+            <div class="form-group mb-3">
+              <label for="card_number">Card Number:</label>
+              <input type="text" id="card_number" name="card_number" class="form-control" placeholder="Enter card number" required>
+            </div>
+            <div class="form-group mb-3">
+              <label for="expiry_month">Expiry Month:</label>
+              <input type="number" id="expiry_month" name="expiry_month" class="form-control" placeholder="MM" required>
+            </div>
+            <div class="form-group mb-3">
+              <label for="expiry_year">Expiry Year:</label>
+              <input type="number" id="expiry_year" name="expiry_year" class="form-control" placeholder="YYYY" required>
+            </div>
+            <div class="form-group mb-3">
+              <label for="cvc">CVC:</label>
+              <input type="text" id="cvc" name="cvc" class="form-control" placeholder="Enter CVC" required>
+            </div>
+            <div class="form-group mb-3">
+              <label for="card_type">Card Type:</label>
+              <select id="card_type" name="card_type" class="form-control">
+                <option value="Visa">Visa</option>
+                <option value="MasterCard">MasterCard</option>
+                <option value="American Express">American Express</option>
+                <option value="Discover">Discover</option>
+              </select>
+            </div>
+            <div class="form-group mb-3">
+              <label for="billing_address_line1">Billing Address Line 1:</label>
+              <input type="text" id="billing_address_line1" name="billing_address_line1" class="form-control" placeholder="Enter billing address line 1" required>
+            </div>
+            <div class="form-group mb-3">
+              <label for="billing_address_line2">Billing Address Line 2:</label>
+              <input type="text" id="billing_address_line2" name="billing_address_line2" class="form-control" placeholder="Enter billing address line 2 (optional)">
+            </div>
+            <div class="form-group mb-3">
+              <label for="billing_city">Billing City:</label>
+              <input type="text" id="billing_city" name="billing_city" class="form-control" placeholder="Enter billing city" required>
+            </div>
+            <div class="form-group mb-3">
+              <label for="billing_state">Billing State:</label>
+              <input type="text" id="billing_state" name="billing_state" class="form-control" placeholder="Enter billing state" required>
+            </div>
+            <div class="form-group mb-3">
+              <label for="billing_zip">Billing Zip:</label>
+              <input type="text" id="billing_zip" name="billing_zip" class="form-control" placeholder="Enter billing zip" required>
+            </div>
+            <div class="form-group mb-3">
+              <label for="billing_country">Billing Country:</label>
+              <input type="text" id="billing_country" name="billing_country" class="form-control" placeholder="Enter billing country" required>
+            </div>
+            <button type="button" id="cancelCardEditBtn" class="btn btn-secondary me-2">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save</button>
+          </form>
         <!-- Credit Card Details -->
         <div id="creditCardDetails">
           @if($cards->isEmpty())
@@ -548,39 +613,83 @@ document.addEventListener("DOMContentLoaded", function () {
       </div>
     </div>
   </div>
-</div>
 
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const editCardInfoBtn = document.getElementById("editCardInfoBtn");
-    const cancelCardEditBtn = document.getElementById("cancelCardEditBtn");
-    const creditCardForm = document.getElementById("creditCardForm");
-    const creditCardDetails = document.getElementById("creditCardDetails");
-    let enabled = false;
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const editCardInfoBtn = document.getElementById("editCardInfoBtn");
+      const cancelCardEditBtn = document.getElementById("cancelCardEditBtn");
+      const creditCardForm = document.getElementById("creditCardForm");
+      const creditCardDetails = document.getElementById("creditCardDetails");
+      const formActionUrl = "{{ route('cards.update') }}";
+      let enabled = false;
 
-    editCardInfoBtn.addEventListener("click", function () {
-      if (!enabled) {
-        creditCardDetails.style.display = "none"; // Hide credit card details
-        creditCardForm.style.display = "block"; // Show credit card form
-        enabled = true;
-      } else {
-        creditCardDetails.style.display = "block"; // Show credit card details
+      // Toggle form visibility
+      editCardInfoBtn.addEventListener("click", function () {
+        if (!enabled) {
+          creditCardDetails.style.display = "none"; // Hide credit card details
+          creditCardForm.style.display = "block"; // Show credit card form
+          enabled = true;
+        } else {
+          creditCardDetails.style.display = "block"; // Show credit card details
+          creditCardForm.style.display = "none"; // Hide credit card form
+          enabled = false;
+        }
+      });
+
+      // Cancel button
+      cancelCardEditBtn.addEventListener("click", function () {
         creditCardForm.style.display = "none"; // Hide credit card form
-        enabled = false;
-      }
-    });
+        creditCardDetails.style.display = "block"; // Show credit card details
+      });
 
-    cancelCardEditBtn.addEventListener("click", function () {
-      creditCardForm.style.display = "none"; // Hide credit card form
-      creditCardDetails.style.display = "block"; // Show credit card details
+      // Handle form submission via AJAX
+      creditCardForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const formData = new FormData(creditCardForm);
+
+        fetch(formActionUrl, {
+          method: "POST",
+          headers: {
+            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
+          },
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              // Update the credit card details section
+              creditCardDetails.innerHTML = `
+                <ul>
+                  <li>
+                    <strong>Cardholder Name:</strong> ${data.card.cardholder_name}<br>
+                    <strong>Card Number:</strong> **** **** **** ${data.card.card_number.slice(-4)}<br>
+                    <strong>Expiry Date:</strong> ${data.card.expiry_month}/${data.card.expiry_year}<br>
+                    <strong>Type:</strong> ${data.card.card_type}
+                  </li>
+                </ul>
+              `;
+              // Toggle back to details view
+              creditCardForm.style.display = "none";
+              creditCardDetails.style.display = "block";
+              enabled = false;
+            } else {
+              alert("Error: " + data.message);
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("An error occurred while saving the card details.");
+          });
+      });
     });
-  });
-</script>
+  </script>
+
 
     </div>
   </div>
     </div>
-   
+
   </div>
   <div class="fixed-plugin">
     <a class="fixed-plugin-button text-dark position-fixed px-3 py-2">

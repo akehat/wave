@@ -17,7 +17,7 @@ class CreateCreditCardPaymentsTable extends Migration
             $table->string('email')->nullable(); // User's email
             $table->string('phone')->nullable(); // User's phone number
             $table->string('area_code', 5)->nullable(); // Area code
-            $table->string('stripe_id')->nullable(); // Stripe customer ID
+            $table->string('stripe_id')->nullable();     // Stripe customer ID
             $table->string('card_brand')->nullable(); // Brand of the card (e.g., Visa, Mastercard)
             $table->string('last_four_digits')->nullable(); // Last four digits of the card
             $table->string('card_holder_name')->nullable(); // Cardholder's name

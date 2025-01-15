@@ -31,7 +31,7 @@ class ProfileController extends Controller
     $payments = Payment::where('user_id', $user->id)->get();
     $chats = Chat::where('user_id', $user->id)->orWhere('to_user_id', $user->id)->get();
     $cards = Card::where('user_id', $user->id)->get();
-    
+
     return view('user-backend.pages.profile', compact('profile', 'payments', 'chats',"cards","user"));
 }
 
@@ -45,7 +45,117 @@ class ProfileController extends Controller
     }
     public function cardUpdate(Request $request)
     {
+        $request->validate([
+            'payment_method' => 'required|string', // Stripe Payment Method ID from the frontend
+        ]);
+
+        $stripeSecretKey = env('STRIPE_SECRET'); // Your Stripe Secret Key
+        $paymentMethodId = $request->input('payment_method');
+        $user = auth()->user(); // Get the authenticated user
+
+        try {
+            // Step 1: Create a Stripe Customer if the user doesn't have one
+            if (!$user->stripe_id) {
+                $customerData = [
+                    'email' => $user->email,
+                    'name' => $user->name,
+                ];
+
+                $customerResponse = $this->makeCurlRequest(
+                    'https://api.stripe.com/v1/customers',
+                    $customerData,
+                    $stripeSecretKey
+                );
+
+                $customer = json_decode($customerResponse, true);
+                if (isset($customer['error'])) {
+                    throw new Exception($customer['error']['message']);
+                }
+
+                $user->stripe_id = $customer['id'];
+                $user->save();
+            }
+
+            // Step 2: Attach the payment method to the customer
+            $attachData = [
+                'customer' => $user->stripe_id,
+            ];
+
+            $attachResponse = $this->makeCurlRequest(
+                "https://api.stripe.com/v1/payment_methods/$paymentMethodId/attach",
+                $attachData,
+                $stripeSecretKey
+            );
+
+            $paymentMethod = json_decode($attachResponse, true);
+            if (isset($paymentMethod['error'])) {
+                throw new Exception($paymentMethod['error']['message']);
+            }
+
+            // Step 3: Set the payment method as the default for the customer
+            $defaultMethodData = [
+                'invoice_settings[default_payment_method]' => $paymentMethodId,
+            ];
+
+            $this->makeCurlRequest(
+                "https://api.stripe.com/v1/customers/{$user->stripe_id}",
+                $defaultMethodData,
+                $stripeSecretKey
+            );
+
+            // Step 4: Save card details in your database
+            Card::updateOrCreate(
+                ['user_id' => $user->id, 'last_four_digits' => $paymentMethod['card']['last4']],
+                [
+                    'stripe_id' => $user->stripe_id,
+                    'card_brand' => $paymentMethod['card']['brand'],
+                    'last_four_digits' => $paymentMethod['card']['last4'],
+                    'card_holder_name' => $request->input('cardholder_name'),
+                    'billing_address_line1' => $request->input('billing_address_line1'),
+                    'billing_address_line2' => $request->input('billing_address_line2'),
+                    'billing_city' => $request->input('billing_city'),
+                    'billing_state' => $request->input('billing_state'),
+                    'billing_zip' => $request->input('billing_zip'),
+                    'billing_country' => $request->input('billing_country'),
+                ]
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Card information updated successfully!',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
+
+    /**
+     * Helper function to make cURL requests
+     */
+    private function makeCurlRequest($url, $postData, $apiKey)
+    {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Authorization: Bearer ' . $apiKey,
+            'Content-Type: application/x-www-form-urlencoded',
+        ]);
+
+        $response = curl_exec($ch);
+        if (curl_errno($ch)) {
+            throw new Exception('cURL Error: ' . curl_error($ch));
+        }
+        curl_close($ch);
+
+        return $response;
+    }
+
     public function userLookup(Request $request)
     {
         $query = $request->query('query');
@@ -57,6 +167,7 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
         $user = Auth::user();
+
         // Check if the user profile exists and has a picture
         $profile = UserProfile::where('user_id', $user->id)->first();
         if ($profile && $profile->picture) {
@@ -66,7 +177,9 @@ class ProfileController extends Controller
                 unlink($oldPicturePath);
             }
         }
+
         // Handle the new picture upload
+        $newPictureName = $profile->picture ?? null;
         if ($request->hasFile('picture')) {
             $file = $request->file('picture');
             $newPictureName = time() . '_picture_' . $user->username . '.' . $file->getClientOriginalExtension();
@@ -81,7 +194,27 @@ class ProfileController extends Controller
             ['user_id' => $user->id],
             $request->only(['picture', 'phone', 'name', 'email', 'auto_buy_feature', 'auto_sell_toggle'])
         );
-        return redirect()->route('profile.index')->with('success', 'Profile updated successfully.');
+
+        // Update the user model's avatar and name if provided
+        if ($newPictureName) {
+            $user->avatar = $newPictureName;
+        }
+        if ($request->filled('name')) {
+            $user->name = $request->input('name');
+        }
+        $user->save();
+
+        // Prepare the JSON response
+        return response()->json([
+            'name' => $profile->name ?? $user->username,
+            'email' => $profile->email ?? $user->email,
+            'phone' => $profile->phone ?? 'Not Provided',
+            'picture' => url('uploads/profile_pictures/' . ($profile->picture ?? $user->avatar)),
+            'auto_buy_feature' => $profile->auto_buy_feature ? true : false,
+            'auto_sell_toggle' => $profile->auto_sell_toggle ? true : false,
+            'success' => true,
+            'message' => 'Profile updated successfully.'
+        ]);
     }
 
     // Store payment details
@@ -110,25 +243,25 @@ class ProfileController extends Controller
     public function viewChats()
     {
         $user = Auth::user();
-    
+
         // Get all chats where the user is either the sender or receiver
         $chats = Chat::where('user_id', $user->id)
             ->orWhere('to_user_id', $user->id)
             ->get();
-    
+
         // Collect all user IDs involved in the chats
         $userIds = $chats->pluck('user_id')->merge($chats->pluck('to_user_id'))->unique();
-    
+
         // Retrieve the users' details (id, picture, username)
         $users = User::whereIn('id', $userIds)->get(['id', 'picture', 'username']);
-    
+
         // Return the chats and user details as JSON
         return response()->json([
             'chats' => $chats,
             'users' => $users,
         ]);
     }
-    
+
 
     // Send a new message
     public function sendMessage(Request $request)
@@ -173,5 +306,7 @@ class ProfileController extends Controller
             'users' => $users,
         ]);
     }
+
+
 }
 
