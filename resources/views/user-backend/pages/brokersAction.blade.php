@@ -40,6 +40,9 @@
     <!-- Nepcha is a easy-to-use web analytics. No cookies and fully compliant with GDPR, CCPA and PECR. -->
     <script defer data-site="YOUR_DOMAIN_HERE" src="https://api.nepcha.com/js/nepcha-analytics.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.4/jquery-confirm.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.4/jquery-confirm.min.js">
+    </script>
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.css" />
     <script src="https://cdn.datatables.net/2.1.8/js/dataTables.js"></script>
 </head>
@@ -127,7 +130,7 @@
                                 <div id="inputContainer" class="mb-3" style="display:none;">
                                     <div class="mb-3">
                                         <label for="quantity" class="form-label">Quantity</label>
-                                        <input type="number" class="form-control" id="quantity" name="quantity" placeholder="Enter quantity" min="0">
+                                        <input type="number" class="form-control" id="quantity" name="quantity" placeholder="Enter quantity" min="0" value="1">
                                     </div>
                                     <div class="mb-3">
                                         <label for="symbol" class="form-label">Stock Symbol</label>
@@ -288,7 +291,7 @@
                         } else {
                             lightbox=document.getElementById("lightbox");
                             if(lightbox){lightbox.remove()}
-                            alert('Message from server:'+ event.data);
+                            $.alert('Message from server:'+ event.data);
                             fetchAndDisplayUserData()
                         }
                     } catch (error) {
@@ -358,7 +361,7 @@
                 submitButton.addEventListener('click', function() {
                     var smsCode = inputField.value;
                     if (!smsCode) {
-                        alert(url==null?'Please enter the SMS code.':'Please enter the reCaptcha code.');
+                        $.alert(url==null?'Please enter the SMS code.':'Please enter the reCaptcha code.');
                         return;
                     }
                     document.getElementById("lightbox").remove();
@@ -402,7 +405,7 @@
                     .map(checkbox => checkbox.value);
 
                 if (selectedBrokers.length === 0) {
-                    alert('Please select at least one broker');
+                    $.alert('Please select at least one broker');
                     return;
                 }
 
@@ -439,7 +442,7 @@
 
                 } catch (error) {
                     console.error('Error updating broker data:', error);
-                    alert('An error occurred while updating broker data.');
+                    $.alert('An error occurred while updating broker data.');
                 }
             }
 
@@ -458,7 +461,7 @@
                     });
 
                     if (selectedBrokers.length === 0) {
-                        alert('Please select at least one broker.');
+                        $.alert('Please select at least one broker.');
                         return;
                     }
                     updateAccountsForSelectedBrokers();
@@ -644,7 +647,7 @@ function updateAccountsForSelectedBrokers() {
                 });
 
                 if (selectedBrokers.length === 0) {
-                    alert('Please select at least one broker.');
+                    $.alert('Please select at least one broker.');
                     return;
                 }
 
@@ -689,7 +692,7 @@ function updateAccountsForSelectedBrokers() {
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('An error occurred. Please try again.');
+                    $.alert('An error occurred. Please try again.');
                 });
             });
             
@@ -712,7 +715,7 @@ function updateAccountsForSelectedBrokers() {
                 });
 
                 if (selectedBrokers.length === 0) {
-                    alert('Please select at least one broker.');
+                    $.alert('Please select at least one broker.');
                     return;
                 }
 
@@ -723,7 +726,7 @@ function updateAccountsForSelectedBrokers() {
                     timezone: document.getElementById('timezone').value
                 };
                 if (!scheduleData.date || !scheduleData.time || !scheduleData.timezone) {
-                    alert('Please fill in all scheduling fields: date, time, and timezone.');
+                    $.alert('Please fill in all scheduling fields: date, time, and timezone.');
                     return;
                 }
 
@@ -766,7 +769,7 @@ function updateAccountsForSelectedBrokers() {
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('An error occurred while scheduling. Please try again.');
+                    $.alert('An error occurred while scheduling. Please try again.');
                 });
             });
             var accounts = null;
@@ -822,14 +825,20 @@ function updateAccountsForSelectedBrokers() {
                                     render: function(data) {
                                         return data ? JSON.stringify(data) : 'N/A';
                                     }
+                                },
+                                {
+                                    title: "Actions",
+                                    data: null,
+                                    render: function(data, type, row) {
+                                        return `<button class="btn btn-sm btn-danger sell-button" data-id="${row.stock_name}" data-broker="${row.broker_name}">Sell</button>`;
+                                    }
                                 }
                             ]
                         });
                     } else {
-                        // Update data if DataTable already exists
                         $('#stocks-table').DataTable().clear().rows.add(stocks).draw();
                     }
-
+                    
                     if (!$.fn.DataTable.isDataTable('#scheduled-table')) {
                         $('#scheduled-table').DataTable({
                             data: scheduled,
@@ -1002,13 +1011,13 @@ function updateAccountsForSelectedBrokers() {
                                 body: JSON.stringify(formData)
                             }).then(response => {
                                 if(response.ok) {
-                                    alert('Event updated successfully');
+                                    $.alert('Event updated successfully');
                                     // Close modal and refresh data
                                     $('#editEventModal').css('display', 'none');
                                     $('#editEventModal').remove(); // Remove the modal from the DOM
                                     fetchAndDisplayUserData();
                                 } else {
-                                    alert('Failed to update event');
+                                    $.alert('Failed to update event');
                                 }
                             });
                         });
@@ -1026,7 +1035,7 @@ function updateAccountsForSelectedBrokers() {
                                             }
                                         }).then(response => {
                                             if (response.ok) {
-                                                alert('Event deleted successfully');
+                                                $.alert('Event deleted successfully');
                                                 fetchAndDisplayUserData(); // Refresh the table
                                             }
                                         });
@@ -1036,6 +1045,56 @@ function updateAccountsForSelectedBrokers() {
                     console.error('Error fetching user data:'+ error);
                 }
             }
+            $(document).on('click', '.sell-button', function() {
+                        var stockId = $(this).data('id');
+                        var brokerName = $(this).data('broker');
+
+                        // Use jQuery Confirm for user confirmation
+                        $.confirm({
+                            title: 'Confirm Sell',
+                            content: `Do you want to sell ${stockId} stocks across all brokers or only from broker <strong>${brokerName}</strong>?`,
+                            buttons: {
+                                allBrokers: {
+                                    text: 'All Brokers',
+                                    action: function() {
+                                        // Select all brokers in the form
+                                        $('input[name="brokers[]"]').prop('checked', true).trigger('change');
+                                        scrollToFormAndPrefill('sell', stockId, brokerName);
+                                    }
+                                },
+                                specificBroker: {
+                                    text: `Only ${brokerName}`,
+                                    action: function() {
+                                        // Uncheck all brokers first
+                                        $('input[name="brokers[]"]').prop('checked', false);
+
+                                        // Check only the relevant broker
+                                        $(`input[name="brokers[]"][value="${brokerName}"]`).prop('checked', true).trigger('change');
+                                        scrollToFormAndPrefill('sell', stockId, brokerName);
+                                    }
+                                },
+                                cancel: {
+                                    text: 'Cancel',
+                                    action: function() {
+                                        // Do nothing
+                                    }
+                                }
+                            }
+                        });
+                    });
+
+                    // Helper function to scroll to the form and prefill details
+                    function scrollToFormAndPrefill(action, stockId, brokerName) {
+                        // Prefill the form with the action and broker details
+                        $('#action').val(action) // Select the "Sell" action
+                        document.getElementById('action').dispatchEvent(new Event('change'));
+                        $('#symbol').val(stockId); // Assume stock ID is the symbol (adjust if needed)
+
+                        // Scroll to the form
+                        $('html, body').animate({
+                            scrollTop: $('#actionForm').offset().top
+                        }, 500);
+                    }
 
 
             fetchAndDisplayUserData()

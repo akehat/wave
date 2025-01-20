@@ -10,7 +10,9 @@ use App\Models\Card;
 use App\Models\User;
 use App\Models\Message;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Exception;
+use Log;
 class ProfileController extends Controller
 {
     // Show the user profile page
@@ -78,27 +80,75 @@ class ProfileController extends Controller
     public function userLookup(Request $request)
     {
         $query = $request->query('query');
-        $users = User::where('name', 'like', '%' . $query . '%')->orWhere('id', 'like', '%' . $query . '%')->select('name')->limit(10)->get();
+        $users = User::where('email', 'like', '%' . $query . '%')->orWhere('id', 'like', '%' . $query . '%')->select('name')->limit(10)->get();
         return response()->json($users);
     }
     public function sendMessage(Request $request)
     {
         $user = Auth::user();
-        $to_user_id = User::where('name', $request->recipient)->firstOrFail()->id;
+        try {
+            $to_user = User::where('email', $request->recipient)->firstOrFail();
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['success' => false, 'message' => 'User not found.']);
+        } catch (Exception $e) {
+            return response()->json(['success' => false, 'message' => 'An error occurred.']);
+        }
         $chat = Chat::firstOrCreate([
             'user_id' => $user->id,
-            'to_user_id' => $to_user_id,
+            'to_user_id' => $to_user->id,
         ]);
         $message = Message::create([
             'chat_id' => $chat->id,
             'user_id' => $user->id,
-            'to_user_id' => $to_user_id,
+            'to_user_id' => $to_user->id,
             'text' => $request->message,
         ]);
+        $data = [
+            'type' => 'new_message',
+            'chat_id' => $chat->id,
+            'from_user' => $user->email,
+            'message' => $message->text,
+            'timestamp' => now()->toDateTimeString(),
+        ];
+        try{
+            // Send the message to the WebSocket server
+            $this->notifyWebSocketServer($data, $to_user);
+        }catch(Exception $e){
+            Log::info($e);
+        }
         return response()->json(['success' => true, 'message' => 'Message sent successfully.', 'data' => $message]);
     }
-
-    // Update user profile
+        protected function notifyWebSocketServer(array $data, User $to_user)
+        {
+            $gearmanHost = $to_user->gearman_ip ?? 'localhost'; // fallback to localhost if null
+            $hostParts = explode(":::", $gearmanHost);
+            $useWebsocket = (isset($hostParts[1]) && str_contains(strtolower($hostParts[1]),"websocket") );
+            if($useWebsocket){
+                if($hostParts[0]=="localhost" || $hostParts[0]=='127.0.0.1'){
+                    $wsUrl='ws://localhost:8080';
+                }else{
+                    $wsUrl='wss://'.$hostParts[0].'/ws/';
+                }
+            }else{
+                $wsUrl= 'ws://127.0.0.1:8080';
+            }
+            // Use a WebSocket client to send the message
+            $client = new \WebSocket\Client($wsUrl);
+        
+            $payload = [
+                'action' => 'broadcast',
+                'gearmanCode' => config('app.secretcode', 'defaultSecretCode'),
+                'msg' => json_encode($data),
+                'user' => $to_user->id,
+            ];
+        
+            try {
+                $client->send(json_encode($payload));
+                $client->close();
+            } catch (\Exception $e) {
+                \Log::error('Failed to send WebSocket notification: ' . $e->getMessage());
+            }
+        }    // Update user profile
     public function update(Request $request)
     {
         $user = Auth::user();

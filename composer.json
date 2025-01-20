@@ -23,6 +23,7 @@
         "react/event-loop": "^1.5",
         "shaneharter/php-daemon": "^2.0",
         "tcg/voyager": "1.7",
+        "textalk/websocket": "^1.6",
         "tymon/jwt-auth": "@dev"
     },
     "require-dev": {

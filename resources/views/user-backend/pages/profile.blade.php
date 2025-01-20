@@ -419,7 +419,7 @@ footer {
               <strong>From:</strong> {{ $chat->sender->name ?? 'Unknown' }} <br>
               <strong>To:</strong> {{ $chat->recipient->name ?? 'Unknown' }} <br>
               <button class="btn btn-sm btn-link showMessagesBtn" data-chat-id="{{ $chat->id }}">Show Messages</button>
-              <button class="btn btn-sm btn-secondary openChatFormBtn" data-recipient="{{ $chat->recipient->name ?? '' }}">Chat</button>
+              <button class="btn btn-sm btn-secondary openChatFormBtn" data-recipient="{{ $chat->recipient->email ?? '' }}">Chat</button>
               <div class="chatMessages mt-2" id="chatMessages-{{ $chat->id }}" style="display: none;">
                 @foreach($messages->where('chat_id', $chat->id) as $message)
                   <p><strong>{{ $chat->sender->name ?? 'Unknown' }}:</strong> {{ $message->text }}</p>
@@ -435,7 +435,7 @@ footer {
       <form id="chatForm" action="{{ route('profile.sendMessage') }}" method="POST" style="display: none;">
         @csrf
         <div class="form-group mb-3">
-          <label for="recipient">Recipient:</label>
+          <label for="recipient">Recipient Email:</label>
           <input type="text" id="recipient" name="recipient" class="form-control" placeholder="Enter recipient username or ID">
           <ul id="userSuggestions" class="list-group mt-1" style="display: none;"></ul>
         </div>
@@ -496,14 +496,18 @@ document.addEventListener("DOMContentLoaded", function () {
       alert("Please fill out all fields.");
       return;
     }
+    var _token=csrfToken;
+    let formData = new FormData();
+    formData.append('recipient', recipient);
+    formData.append('message', message);
+    formData.append('_token', _token);
 
     fetch(chatForm.action, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "X-CSRF-TOKEN": csrfToken,
+        "X-CSRF-TOKEN": _token,  // Assuming server expects CSRF token in the header
       },
-      body: JSON.stringify({ recipient, message }),
+      body: formData,
     })
       .then((response) => response.json())
       .then((data) => {
@@ -523,6 +527,77 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+</script>
+<script>
+var ws;
+@inject('userToken', 'App\Models\UserToken')
+@php
+    $token = $userToken->generateToken();
+    $user=Auth::user();
+    $gearmanHost = $user->gearman_ip ?? 'localhost'; // fallback to localhost if null
+
+    $hostParts = explode(":::", $gearmanHost);
+    $useWebsocket = (isset($hostParts[1]) && str_contains(strtolower($hostParts[1]),"websocket"));
+    if($useWebsocket){
+        if($hostParts[0]=="localhost" || $hostParts[0]=='127.0.0.1'){
+            $ws='ws://localhost:8080';
+        }else{
+            $ws='wss://'.$hostParts[0].'/ws/';
+        }
+    }else{
+        $ws= null;
+    }
+@endphp
+var userToken = '{!! $token !!}';
+var csrf="{{ csrf_token() }}";
+
+function connectSocket() {
+    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const baseUrl = window.location.hostname;
+    if(["localhost",'127.0.0.1'].includes(baseUrl)){
+        var port = ":8080";
+    }else{
+        var port = "/ws/";
+    }
+    // Adjust the port as needed
+    var wsUrl = '{{ $ws ?? '${protocol}${baseUrl}${port}' }}';
+    ws = new WebSocket(wsUrl);
+
+    ws.onopen = function () {
+        console.log('Connected to WebSocket server');
+        ws.send(JSON.stringify({
+            login: userToken
+        }));
+    };
+
+    ws.onmessage = function (event) {
+        console.log('Message from server:', event.data);
+        
+        // Parse the incoming message
+        const incomingMessage = JSON.parse(event.data);
+        
+        if (incomingMessage.chat_id) {
+            // If a chat_id is provided in the message, find the chat container
+            const chatId = incomingMessage.chat_id;
+            const chatMessagesDiv = document.getElementById(`chatMessages-${chatId}`);
+            
+            if (chatMessagesDiv) {
+                // Append the message to the correct chat
+                const newMessage = document.createElement('p');
+                newMessage.innerHTML = `<strong>${incomingMessage.from_user}:</strong> ${incomingMessage.message}`;
+                chatMessagesDiv.appendChild(newMessage);
+                
+                // Optionally, scroll the chat to the bottom
+                chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+            }
+        }
+    };
+
+    ws.onclose = function () {
+        console.log('WebSocket connection closed');
+    };
+}
+connectSocket()
 </script>
 
       </div>
