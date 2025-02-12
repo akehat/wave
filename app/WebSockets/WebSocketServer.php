@@ -41,7 +41,6 @@ class WebSocketServer implements MessageComponentInterface
                 $this->users[$user_id] = $conn;
 
                 echo "User $user_id connected.\n";
-                $conn->send(json_encode(["message"=>"hello"]));
             } else {
                 $conn->send('Invalid token');
             }

@@ -175,9 +175,17 @@ class ProfileController extends Controller
         }
 
         // Update or create the user profile
+        // Update or create the user profile
         $profile = UserProfile::updateOrCreate(
             ['user_id' => $user->id],
-            $request->only(['picture', 'phone', 'name', 'email', 'auto_buy_feature', 'auto_sell_toggle'])
+            [
+                'picture' => $request->input('picture'),
+                'phone' => $request->input('phone'),
+                'name' => $request->input('name'),
+                'email' => $request->input('email'),
+                'auto_buy_feature' => $request->has('auto_buy_feature') ? 1 : 0, // Default to 0 if not set
+                'auto_sell_toggle' => $request->has('auto_sell_toggle') ? 1 : 0, // Default to 0 if not set
+            ]
         );
 
         // Update the user model's avatar and name if provided
@@ -188,7 +196,7 @@ class ProfileController extends Controller
             $user->name = $request->input('name');
         }
         $user->save();
-
+        $profile->save();
         // Prepare the JSON response
         return response()->json([
             'name' => $profile->name ?? $user->username,

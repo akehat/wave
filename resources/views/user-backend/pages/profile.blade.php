@@ -230,7 +230,6 @@ footer {
   <div class="card-body">
     <form id="profileForm" action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data" style="display: none;">
       @csrf
-      @method('PUT')
 
       <div class="form-group mb-3">
         <label for="name">Name:</label>
@@ -253,7 +252,7 @@ footer {
         <label for="auto_buy_feature">Auto Buy Feature:</label>
         <div class="form-check form-switch">
           <input class="form-check-input" type="checkbox" id="auto_buy_feature" name="auto_buy_feature" value="1" {{ $profile->auto_buy_feature ? 'checked' : '' }}>
-          <label class="form-check-label" for="auto_buy_feature">{{ $profile->auto_buy_feature ? 'Enabled' : 'Disabled' }}</label>
+          <label class="form-check-label" for="auto_buy_feature" >{{ $profile->auto_buy_feature ? 'Enabled' : 'Disabled' }}</label>
         </div>
       </div>
       <div class="form-group mb-3">
@@ -269,11 +268,11 @@ footer {
 
     <div id="profileDetails">
       <img class="w-8 h-8 rounded-full" src="{{ $profile->picture ?? $user->avatar() . '?' . time() }}" alt="{{ $user->name }}'s Avatar">
-      <p><strong>Name:</strong> {{ $profile->name ?? $user->username }}</p>
-      <p><strong>Email:</strong> {{ $profile->email ?? $user->email }}</p>
-      <p><strong>Phone:</strong> {{ $profile->phone ?? 'Not Provided' }}</p>
-      <p><strong>Auto Buy Feature:</strong> {{ $profile->auto_buy_feature ? 'Enabled' : 'Disabled' }}</p>
-      <p><strong>Auto Sell Toggle:</strong> {{ $profile->auto_sell_toggle ? 'Enabled' : 'Disabled' }}</p>
+      <p><strong>Name:</strong> <span id="nameP">{{ $profile->name ?? $user->username }}</span></p>
+      <p><strong>Email:</strong> <span id='emailP'>{{ $profile->email ?? $user->email }}</span></p>
+      <p><strong>Phone:</strong> <span id="phoneP">{{ $profile->phone ?? 'Not Provided' }}</span></p>
+      <p><strong>Auto Buy Feature:</strong> <span id="autoBuyP">{{ $profile->auto_buy_feature ? 'Enabled' : 'Disabled' }}</span></p>
+      <p><strong>Auto Sell Toggle:</strong> <span id="autoSellP">{{ $profile->auto_sell_toggle ? 'Enabled' : 'Disabled' }}</span></p>
     </div>
   </div>
 </div>
@@ -364,11 +363,11 @@ footer {
                 .then((data) => {
                     // Update the profile details with the new data
                     profileDetails.querySelector("img").src = data.picture || profileDetails.querySelector("img").src;
-                    profileDetails.querySelector("strong:nth-of-type(1)").textContent = `Name: ${data.name}`;
-                    profileDetails.querySelector("strong:nth-of-type(2)").textContent = `Email: ${data.email}`;
-                    profileDetails.querySelector("strong:nth-of-type(3)").textContent = `Phone: ${data.phone || 'Not Provided'}`;
-                    profileDetails.querySelector("strong:nth-of-type(4)").textContent = `Auto Buy Feature: ${data.auto_buy_feature ? 'Enabled' : 'Disabled'}`;
-                    profileDetails.querySelector("strong:nth-of-type(5)").textContent = `Auto Sell Toggle: ${data.auto_sell_toggle ? 'Enabled' : 'Disabled'}`;
+                    profileDetails.querySelector("#nameP").textContent = `${data.name}`;
+                    profileDetails.querySelector("#emailP").textContent = `${data.email}`;
+                    profileDetails.querySelector("#phoneP").textContent = `${data.phone || 'Not Provided'}`;
+                    profileDetails.querySelector("#autoBuyP").textContent = `${data.auto_buy_feature ? 'Enabled' : 'Disabled'}`;
+                    profileDetails.querySelector("#autoSellP").textContent = `${data.auto_sell_toggle ? 'Enabled' : 'Disabled'}`;
 
                     // Hide the form and show the updated profile details
                     profileForm.style.display = "none";
