@@ -337,7 +337,7 @@ class GearmanClientController extends Controller
     }
 
 
-    public static function sendTaskToTwoFactor($brokerAndUsername,$sms)
+    public static function sendTaskToTwoFactor($brokerAndUsername,$sms,$user=null)
     {
 
         // Prepare data to send to the worker
@@ -350,7 +350,7 @@ class GearmanClientController extends Controller
         $taskDataJson = json_encode($taskData);
 
         // Initialize Gearman client
-        $user=Auth::user();
+        $user=$user??Auth::user();
         $gearmanHost = $user->gearman_ip ?? 'localhost'; // fallback to localhost if null
         $port = in_array($gearmanHost, ["localhost", '127.0.0.1']) ? "4730" : "4730"; // fallback to localhost if null
         

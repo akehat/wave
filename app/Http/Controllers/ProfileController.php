@@ -183,6 +183,7 @@ class ProfileController extends Controller
                 'phone' => $request->input('phone'),
                 'name' => $request->input('name'),
                 'email' => $request->input('email'),
+                'email_code' => $request->input('email_code'),
                 'auto_buy_feature' => $request->has('auto_buy_feature') ? 1 : 0, // Default to 0 if not set
                 'auto_sell_toggle' => $request->has('auto_sell_toggle') ? 1 : 0, // Default to 0 if not set
             ]
@@ -201,6 +202,7 @@ class ProfileController extends Controller
         return response()->json([
             'name' => $profile->name ?? $user->username,
             'email' => $profile->email ?? $user->email,
+            'email_code' => $profile->email_code ?? $user->email,
             'phone' => $profile->phone ?? 'Not Provided',
             'picture' => url('uploads/profile_pictures/' . ($profile->picture ?? $user->avatar)),
             'auto_buy_feature' => $profile->auto_buy_feature ? true : false,

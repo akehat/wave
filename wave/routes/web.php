@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use App\Models\PendingSms;
 Route::impersonate();
 
 Route::get('/', '\Wave\Http\Controllers\HomeController@index')->name('wave.home');
@@ -64,6 +64,18 @@ Route::group(['middleware' => 'auth'], function(){
 	Route::view('trial_over', 'theme::trial_over')->name('wave.trial_over');
 	Route::view('cancelled', 'theme::cancelled')->name('wave.cancelled');
     Route::post('switch-plans', '\Wave\Http\Controllers\SubscriptionController@switchPlans')->name('wave.switch-plans');
+	// routes/api.php
+	Route::post('/check-pending-sms', function (Request $request) {
+		$pending = PendingSms::where([
+			'user_id' => auth()->id(),
+			'broker' => $request->broker
+		])->where('expires_at', '>', now())
+		->first();
+
+		return response()->json([
+			'code' => $pending->code ?? null
+		]);
+	});
 });
 
 Route::group(['middleware' => 'admin.user'], function(){

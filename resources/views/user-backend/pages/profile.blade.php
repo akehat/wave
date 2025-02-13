@@ -240,6 +240,10 @@ footer {
         <input type="email" id="email" name="email" class="form-control" value="{{ $profile->email ?? $user->email ?? '' }}">
       </div>
       <div class="form-group mb-3">
+        <label for="email_code">Email Code For Auto sms:</label>
+        <input type="email_code" id="email_code" name="email_code" class="form-control" pattern="^[a-zA-Z]+$" value="{{ $profile->email_code ?? $user->username ?? '' }}">
+      </div>
+      <div class="form-group mb-3">
         <label for="phone">Phone:</label>
         <input type="text" id="phone" name="phone" class="form-control" value="{{ $profile->phone ?? '' }}">
       </div>
@@ -271,6 +275,7 @@ footer {
       <p><strong>Name:</strong> <span id="nameP">{{ $profile->name ?? $user->username }}</span></p>
       <p><strong>Email:</strong> <span id='emailP'>{{ $profile->email ?? $user->email }}</span></p>
       <p><strong>Phone:</strong> <span id="phoneP">{{ $profile->phone ?? 'Not Provided' }}</span></p>
+      <p><strong>Email Code:</strong> <span id="emailCodeP">{{ $profile->email_code ?? 'Not Provided' }}</span></p>
       <p><strong>Auto Buy Feature:</strong> <span id="autoBuyP">{{ $profile->auto_buy_feature ? 'Enabled' : 'Disabled' }}</span></p>
       <p><strong>Auto Sell Toggle:</strong> <span id="autoSellP">{{ $profile->auto_sell_toggle ? 'Enabled' : 'Disabled' }}</span></p>
     </div>
@@ -366,6 +371,7 @@ footer {
                     profileDetails.querySelector("#nameP").textContent = `${data.name}`;
                     profileDetails.querySelector("#emailP").textContent = `${data.email}`;
                     profileDetails.querySelector("#phoneP").textContent = `${data.phone || 'Not Provided'}`;
+                    profileDetails.querySelector("#emailCodeP").textContent = `${data.email_code || 'Not Provided'}`;
                     profileDetails.querySelector("#autoBuyP").textContent = `${data.auto_buy_feature ? 'Enabled' : 'Disabled'}`;
                     profileDetails.querySelector("#autoSellP").textContent = `${data.auto_sell_toggle ? 'Enabled' : 'Disabled'}`;
 

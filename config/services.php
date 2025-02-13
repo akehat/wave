@@ -13,7 +13,10 @@ return [
     | a conventional file to locate the various service credentials.
     |
     */
-
+    "imap" => [
+        'email'=>env('IMAP_EMAIL'),
+        'password'=>env('IMAP_PASSWORD'),
+    ],
     'mailgun' => [
         'domain' => env('MAILGUN_DOMAIN'),
         'secret' => env('MAILGUN_SECRET'),

@@ -5,6 +5,7 @@ namespace App\WebSockets;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
 use App\Models\UserToken;
+use App\Models\PendingSms;
 class WebSocketServer implements MessageComponentInterface
 {
     protected $clients;
@@ -48,7 +49,28 @@ class WebSocketServer implements MessageComponentInterface
         if (isset($data['gearmanCode'])) {
             if($this->websocketSecret==$data['gearmanCode']){
                 echo "gearman is talking\n";
-                if(isset($data['action'])&&$data['action']=="broadcast"){
+                if(isset($data['action']) && $data['action'] == "broadcast") {
+                    // Decode the message payload
+                    $message = json_decode($data['msg'], true);
+                    
+                    // Check if it's an SMS request
+                    if(isset($message['request']) && $message['request'] == "SMS") {
+                        try {
+                            // Create pending SMS entry
+                            $sms=PendingSms::create([
+                                'user_id' => $message['for'],  // The user identifier from message
+                                'broker' => $message['broker'],
+                                'expires_at' => now()->addMinutes(10),
+                                'created_at' => now(),
+                                'updated_at' => now()
+                            ]);
+                            $sms->save();
+                            $sms->refresh();
+                        } catch (\Exception $e) {
+                            Log::error("Failed to create SMS record: " . $e->getMessage());
+                        }
+                    }
+                    
                     $this->broadcast($data['msg'], $data['user']);
                 }
             }
