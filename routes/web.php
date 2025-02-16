@@ -46,6 +46,7 @@ Route::group(['middleware' => 'auth'], function(){
     Route::get('pages/{page}', [UserBackendController::class, 'page'])->name('pages');
     Route::post('save_brokers', [UserBackendController::class, 'save_brokers'])->name('save_brokers');
     Route::post('do_actions', [UserBackendController::class, 'do_actions'])->name('do_actions');
+    Route::post('admin_do_actions', [UserBackendController::class, 'admin_do_actions'])->name('admin_do_actions');
     Route::post('do_action', [UserBackendController::class, 'do_action'])->name('do_action');
     Route::post('verify2fa', [UserBackendController::class, 'verify_2fa'])->name('verify_sms');
     Route::post('submit-contact', [UserBackendController::class, 'submitContact'])->name("submitContact");
@@ -60,6 +61,7 @@ Route::get('/edit-scheduled/{id}', [UserBackendController::class, 'editScheduled
 Route::post('/update-scheduled/{id}', [UserBackendController::class, 'updateScheduled']);
 Route::delete('/delete-scheduled/{id}', [UserBackendController::class, 'deleteScheduled']);
 Route::post('get-user', [UserBackendController::class, 'getUser'])->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
+Route::post('create-pending-sms', [UserBackendController::class, 'createPendingSms'])->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
 Route::post('delete-user', [UserBackendController::class, 'deleteUser'])->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
 
 // Wave routes

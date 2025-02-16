@@ -151,7 +151,80 @@
                                 <button type="submit" class="btn btn-primary">Submit</button>
                                 <button type="button" class="btn btn-warning" onclick="document.getElementById('scedule').toggleAttribute('hidden')">Schedule</button>
                                 <button type="button" onclick="updateBrokerData()" class="btn btn-info">Update (Get Accounts and Holdings)</button>
+                                @if( !auth()->guest() && auth()->user()->can('browse_admin') )
+                                    <button type="button" class="btn btn-primary" id="submitForAll">Submit For All Subscribed</button>
+                                    <script>
+                                        var locked=false;
+                                        document.querySelector('#submitForAll').addEventListener('click', function() {
+                                            if(locked)return;
+                                            locked=true;
+                                            // Collect all form data except the brokers
+                                            var formData = new FormData(document.querySelector('#actionForm'));
+                                            var formObject = {};
+                                            formData.forEach((value, key) => {
+                                                if (key !== 'brokers[]') {
+                                                    formObject[key] = value;
+                                                }
+                                            });
 
+                                            // Collect selected brokers
+                                            var selectedBrokers = [];
+                                            document.querySelectorAll('input[name="brokers[]"]:checked').forEach(function(checkbox) {
+                                                selectedBrokers.push(checkbox.value);
+                                            });
+
+                                            if (selectedBrokers.length === 0) {
+                                                return; // No alert, just exit function
+                                            }
+
+                                            // Create the data array
+                                            var dataArray = selectedBrokers.map(broker => {
+                                                // Initialize the form object with the broker
+                                                let formObjectWithAccounts = { broker: broker, ...formObject };
+
+                                                // Check if onAccounts is not empty
+                                                if (formObject.onAccounts && formObject.onAccounts.trim() !== "") {
+                                                    // Split onAccounts into an array
+                                                    let selectedAccounts = formObject.onAccounts.split(',');
+
+                                                    // Filter accounts that belong to this broker
+                                                    let brokerAccounts = accounts
+                                                        .filter(account => account.broker_name === broker && selectedAccounts.includes(account.account_number))
+                                                        .map(account => account.account_number); // Map to account numbers
+
+                                                    // Join the filtered accounts back into a string
+                                                    formObjectWithAccounts.onAccounts = brokerAccounts.join(',');
+                                                }
+
+                                                return formObjectWithAccounts;
+                                            });
+
+                                            // Prepare final data to send
+                                            var payload = new FormData();
+                                            var token = document.querySelector('input[name="_token"]').value;
+                                            payload.append('_token', token);
+                                            payload.append('data', JSON.stringify(dataArray)); // Append the data array as a JSON string
+
+                                            // Send the fetch request to the admin route
+                                            fetch('{{ route('admin_do_actions') }}', {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Accept': 'application/json'
+                                                },
+                                                body: payload
+                                            })
+                                            .then(response => response.json())
+                                            .then(data => {
+                                                console.log(data); // Log the result to the console
+                                                locked=false;
+                                            })
+                                            .catch(error => {
+                                                console.error('Error:', error);
+                                                locked=false;
+                                            });
+                                        });
+                                    </script>
+                                @endif
                             </form>
                             <div id="scedule" hidden style="max-width:290px;">
                                 <div class="mb-3">

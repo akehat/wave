@@ -5,6 +5,7 @@ use App\Models\Broker;
 use App\Models\UserToken;
 use App\Models\ScheduleBuy;
 use App\Models\Account;
+use App\Models\PendingSms;
 use App\Models\Stock;
 use App\Models\BroadcastMessage;
 use Illuminate\Http\Request;
@@ -449,7 +450,53 @@ class UserBackendController extends Controller
             // If no actions were processed, return an appropriate response
             return response()->json(['message' => 'No actions to process'], 200);
         }
-        
+        public function admin_do_actions(Request $request)
+        {
+            // Ensure the user is authenticated and has admin privileges
+            if (auth()->guest() || !auth()->user()->can('browse_admin')) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            $user = Auth::user();
+            $actions = [];
+            
+            // Decode the JSON data from the request
+            $datas = json_decode($request->input('data'));
+            
+            if (!is_array($datas)) {
+                return response()->json(['error' => 'Invalid data format. Expecting an array of actions.'], 400);
+            }
+
+            foreach ($datas as $data) {
+                $actionRequest = new Request((array) $data);
+                
+                // Determine the profiles based on action type
+                if ($data->action === 'buy') {
+                    $profiles = UserProfile::where('auto_buy_feature', true)->get();
+                } elseif ($data->action === 'sell') {
+                    $profiles = UserProfile::where('auto_sell_toggle', true)->get();
+                } else {
+                    // Handle unknown action type if necessary
+                    continue;
+                }
+
+                foreach ($profiles as $profile) {
+                    $userAccount = User::find($profile->user_id);
+                    if (!$userAccount) continue; // Skip if user not found
+
+                    // Process the action for each relevant user
+                    $actions[] = $this->do_action($actionRequest, $userAccount);
+                }
+            }
+
+            // If actions were processed, send them to Gearman for execution
+            if (count($actions) > 0) {
+                return json_encode(['message' => (new GearmanClientController())->sendTasksToWorkerTwo($actions, TRUE)]);
+            }
+
+            // If no actions were processed, return an appropriate response
+            return response()->json(['message' => 'No actions to process'], 200);
+        }
 
         public function verify_2fa(Request $request){
             $user_id=Auth::id();
@@ -695,6 +742,30 @@ class UserBackendController extends Controller
                 return Response::json(["success"=>"request added for user"], 200);
             }
             return Response::json(["error"=>"request failed, no user"], 300);
+        }
+        public function createPendingSms(Request $request)
+        {
+            $gearmanCode = config("app.secretcode", "defaultSecretCode"); // Ensure this matches your Python's SECRETCODE
+            if ($request->input('gearmanCode') !== $gearmanCode) {
+                return response()->json(['error' => 'Invalid gearman code'], 403);
+            }
+            try {
+                $data = $request->json()->all();
+                
+                $sms = PendingSms::create([
+                    'user_id' => $data['for'],
+                    'broker' => $data['broker'],
+                    'expires_at' => now()->addMinutes(10),
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+                $sms->save();
+                $sms->refresh();
+                return response()->json(['message' => 'SMS pending record created successfully', 'sms' => $sms]);
+            } catch (\Exception $e) {
+                \Log::error("Failed to create SMS record: " . $e->getMessage());
+                return response()->json(['error' => 'Failed to create SMS record'], 500);
+            }
         }
         function getUserData(){
             $userId=Auth::id();

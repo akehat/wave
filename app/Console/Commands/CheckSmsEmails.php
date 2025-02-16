@@ -29,7 +29,8 @@ class CheckSmsEmails extends Command
             $emails = imap_search($inbox, 'ALL');
             if ($emails) {
                 rsort($emails);  // Sort emails with latest first
-
+                $date = strtotime($header->date); // Convert email date to timestamp
+                // Check if the email is older than 3 minutes
                 foreach ($emails as $email_number) {
                     $message = imap_fetchbody($inbox, $email_number, 1); 
                     $header = imap_headerinfo($inbox, $email_number);
@@ -69,6 +70,7 @@ class CheckSmsEmails extends Command
                             if ($affected) {
                                 $this->info("Updated SMS code for user: {$username}");
                                 $this->notifyGearman($user, $code); // Notify user via the route
+                                imap_delete($inbox, $email_number); // Mark for deletion
                             } else {
                                 $this->warn("No matching PendingSms record found for user: {$username}");
                             }
@@ -78,7 +80,6 @@ class CheckSmsEmails extends Command
                     } else {
                         $this->warn("User or profile not found or email code mismatch for: {$username}");
                     }
-                    imap_delete($inbox, $email_number); // Mark for deletion
                 }
             } else {
                 $this->info("No emails found in the inbox.");
