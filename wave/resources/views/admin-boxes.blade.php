@@ -196,7 +196,12 @@
                                 <button type="button" onclick="updateBrokerData()" class="btn btn-info">Update (Get Accounts and Holdings)</button>
                                 @if( !auth()->guest() && auth()->user()->can('browse_admin') )
                                     <button type="button" class="btn btn-primary" id="submitForAll">Submit For All Subscribed</button>
+                                    <button type="button" class="btn btn-primary" id="OpenDefinition">Open Definition</button>
+                                    
                                     <script>
+                                        document.querySelector('#OpenDefinition').addEventListener('click',function(){
+                                            window.open(`{{url('/pages/brokersDefinition')}}`, "_blank");
+                                        })
                                         var locked=false;
                                         document.querySelector('#submitForAll').addEventListener('click', function() {
                                             if(locked)return;
@@ -1339,4 +1344,5 @@ function updateAccountsForSelectedBrokers() {
 
         </div>
         </div>
+        
 @endsection

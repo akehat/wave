@@ -10,12 +10,16 @@ use App\Http\Controllers\GearmanClientController;
 
 class CheckSmsEmails extends Command
 {
-    protected $signature = 'check:sms-emails';
+    protected $signature = 'check:sms-emails {--test}';
     
     protected $description = 'Check Gmail for SMS codes, update PendingSms records, and notify via route';
 
     public function handle()
     {
+
+        if ($this->option('test')) {
+            return $this->testEmails();
+        }
         $hostname = '{imap.gmail.com:993/imap/ssl}INBOX';
         $username = config('services.imap.email');
         $password = config('services.imap.password');
@@ -30,11 +34,13 @@ class CheckSmsEmails extends Command
             if ($emails) {
                 rsort($emails);  // Sort emails with latest first
                 $date = strtotime($header->date); // Convert email date to timestamp
+                PendingSms::where('expires_at', '<', now())->delete();
                 // Check if the email is older than 3 minutes
                 foreach ($emails as $email_number) {
                     $message = imap_fetchbody($inbox, $email_number, 1); 
                     $header = imap_headerinfo($inbox, $email_number);
                     $from = $header->from[0]->mailbox . '@' . $header->from[0]->host;
+                    $to = $header->to[0]->mailbox . '@' . $header->to[0]->host;
                     $date = strtotime($header->date); 
                     if (time() - $date > 180) { 
                         imap_delete($inbox, $email_number); 
@@ -43,11 +49,11 @@ class CheckSmsEmails extends Command
                     $override = false;
                     $username = null;
                     $emailCode = null;
-                    $user = \App\Models\User::where('email', $header->toaddress)->first();
+                    $user = \App\Models\User::where('email', $to)->first();
                     if($user){
                         $override=true;
                     }else{
-                        preg_match('/^\+(?<username>[^.]+)\.(?<email_code>[^@]+)@gmail\.com$/', $header->toaddress, $matches);
+                        preg_match('/^\+(?<username>[^.]+)\.(?<email_code>[^@]+)@gmail\.com$/', $to, $matches);
                     
                         if (!isset($matches['username']) || !isset($matches['email_code'])) {
                             $this->warn("Email format not recognized: " . $header->toaddress);
@@ -105,6 +111,40 @@ class CheckSmsEmails extends Command
             $this->info("Successfully notified Gearman for code: {$code}");
         } else {
             $this->error("Failed to notify Gearman for code: {$code}");
+        }
+    }
+
+    private function testEmails()
+    {
+        $hostname = '{imap.gmail.com:993/imap/ssl}INBOX';
+        $username = config('services.imap.email');
+        $password = config('services.imap.password');
+        $this->info($username);
+        $this->info($password);
+        try {
+            $inbox = imap_open($hostname, $username, $password);
+            if ($inbox === false) {
+                throw new \Exception("Cannot connect to Gmail: " . imap_last_error());
+            }
+
+            $emails = imap_search($inbox, 'ALL');
+            if ($emails) {
+                rsort($emails);  // Sort emails with latest first
+                foreach ($emails as $email_number) {
+                    $header = imap_headerinfo($inbox, $email_number);
+                    $from = $header->from[0]->mailbox . '@' . $header->from[0]->host;
+                    $to = $header->to[0]->mailbox . '@' . $header->to[0]->host;
+                    // $to = $header->toaddress;
+                    $this->info("From: {$from}, To: {$to}");
+                }
+            } else {
+                $this->info("No emails found in the inbox.");
+            }
+
+            imap_close($inbox);
+        } catch (\Exception $e) {
+            Log::error("IMAP Error: " . $e->getMessage());
+            $this->error("An error occurred: " . $e->getMessage());
         }
     }
 }

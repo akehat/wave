@@ -174,6 +174,7 @@
                                             });
 
                                             if (selectedBrokers.length === 0) {
+                                                $.alert('Please select at least one broker.');
                                                 return; // No alert, just exit function
                                             }
 
@@ -220,6 +221,7 @@
                                             })
                                             .catch(error => {
                                                 console.error('Error:', error);
+                                                $.alert('An error occurred. Please try again.');
                                                 locked=false;
                                             });
                                         });
