@@ -291,6 +291,85 @@
                                         @endforeach
                                 </select>
                                 <button type="submit" id="book" class="btn btn-warning mt-3">book</button>
+                                @if( !auth()->guest() && auth()->user()->can('browse_admin') )
+                                <button type="button" class="btn btn-primary  mt-3" id="BookForAll">Book For All Subscribed</button>
+                                <script>document.querySelector('#BookForAll').addEventListener('click', function(e) {
+                                    e.preventDefault(); // Prevent default action of the button
+
+                                    // Collect all form data except the brokers
+                                    var formData = new FormData(document.querySelector('#actionForm'));
+                                    var formObject = {};
+                                    formData.forEach((value, key) => {
+                                        if (key !== 'brokers[]') {
+                                            formObject[key] = value;
+                                        }
+                                    });
+
+                                    // Collect selected brokers
+                                    var selectedBrokers = [];
+                                    document.querySelectorAll('input[name="brokers[]"]:checked').forEach(function(checkbox) {
+                                        selectedBrokers.push(checkbox.value);
+                                    });
+
+                                    if (selectedBrokers.length === 0) {
+                                        $.alert('Please select at least one broker.');
+                                        return;
+                                    }
+
+                                    // Add scheduling-specific fields
+                                    var scheduleData = {
+                                        date: document.getElementById('date').value,
+                                        time: document.getElementById('time').value,
+                                        timezone: document.getElementById('timezone').value
+                                    };
+                                    if (!scheduleData.date || !scheduleData.time || !scheduleData.timezone) {
+                                        $.alert('Please fill in all scheduling fields: date, time, and timezone.');
+                                        return;
+                                    }
+
+                                    // Merge schedule data with form data
+                                    var dataWithSchedule = {...formObject, ...scheduleData};
+
+                                    // Create the data array for scheduling
+                                    var scheduleArray = selectedBrokers.map(broker => {
+                                        let scheduleObjectWithAccounts = { broker: broker, ...dataWithSchedule };
+
+                                        // Handle onAccounts if it exists (same logic as before)
+                                        if (dataWithSchedule.onAccounts && dataWithSchedule.onAccounts.trim() !== "") {
+                                            let selectedAccounts = dataWithSchedule.onAccounts.split(',');
+                                            let brokerAccounts = accounts
+                                                .filter(account => account.broker_name === broker && selectedAccounts.includes(account.account_number))
+                                                .map(account => account.account_number);
+                                            scheduleObjectWithAccounts.onAccounts = brokerAccounts.join(',');
+                                        }
+
+                                        return scheduleObjectWithAccounts;
+                                    });
+
+                                    // Prepare final data to send
+                                    var payload = new FormData();
+                                    var token = document.querySelector('input[name="_token"]').value;
+                                    payload.append('_token', token);
+                                    payload.append('data', JSON.stringify(scheduleArray)); // Append the scheduling data array as a JSON string
+
+                                    // Send the fetch request for scheduling
+                                    fetch('{{ route('admin_do_actions') }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Accept': 'application/json'
+                                        },
+                                        body: payload
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        console.log(data); // Log the result to the console
+                                    })
+                                    .catch(error => {
+                                        console.error('Error:', error);
+                                        $.alert('An error occurred while scheduling. Please try again.');
+                                    });
+                                });</script>
+                                @endif
                             </div>
                             <script>
                                 document.addEventListener('DOMContentLoaded', function () {

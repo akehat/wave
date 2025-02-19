@@ -456,48 +456,74 @@ class UserBackendController extends Controller
             if (auth()->guest() || !auth()->user()->can('browse_admin')) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
-
-            $user = Auth::user();
-            $actions = [];
-            
-            // Decode the JSON data from the request
+        
             $datas = json_decode($request->input('data'));
             
             if (!is_array($datas)) {
                 return response()->json(['error' => 'Invalid data format. Expecting an array of actions.'], 400);
             }
-
+        
+            // Determine which profiles to act upon based on the first action type
+            $profiles = null;
             foreach ($datas as $data) {
-                $actionRequest = new Request((array) $data);
-                
-                // Determine the profiles based on action type
                 if ($data->action === 'buy') {
                     $profiles = UserProfile::where('auto_buy_feature', true)->get();
                 } elseif ($data->action === 'sell') {
                     $profiles = UserProfile::where('auto_sell_toggle', true)->get();
-                } else {
-                    // Handle unknown action type if necessary
-                    continue;
                 }
-
-                foreach ($profiles as $profile) {
-                    $userAccount = User::find($profile->user_id);
+                break; // Only check the first action to determine profiles
+            }
+        
+            if (!$profiles) {
+                return response()->json(['message' => 'No applicable profiles found for the action type'], 400);
+            }
+        
+            $messages = [];
+            foreach ($profiles as $profile) {
+                $actions = [];
+                $schedule = false;
+                $userAccount = User::find($profile->user_id);
+                foreach ($datas as $data) {
+                    $actionRequest = new Request((array) $data);
                     if (!$userAccount) continue; // Skip if user not found
-
+                    
+                    if (!$schedule &&
+                        isset($data->date, $data->time, $data->timezone) &&
+                        strtotime($data->date . ' ' . $data->time . ' ' . $data->timezone) > time()
+                    ) {
+                        $schedule = true;
+                    } 
+                    
                     // Process the action for each relevant user
                     $actions[] = $this->do_action($actionRequest, $userAccount);
                 }
+        
+                if ($schedule && count($actions) > 0) {
+                    // Use the userAccount instead of $user which is not defined in this scope
+                    $scheduledAction = ScheduleBuy::create([
+                        'user_id' => $userAccount->id,
+                        'timezone' => $data->timezone,
+                        'time' => $data->time,
+                        'server_time' => now()->format('H:i:s'), // Store the server's current time
+                        'date' => $data->date,
+                        'action_json' => json_encode($actions), // Store the action data as JSON
+                        'broker' => $data->broker ?? 'unknown', // Default to 'unknown' if broker is not provided
+                    ]);
+                    $scheduledAction->save();
+                    $scheduledAction->refresh();
+                    $messages[] = json_encode(['message' => "Booking created for user ID " . $scheduledAction->user_id . ": " . $scheduledAction->id]);
+                } elseif (count($actions) > 0) {
+                    $messages[] = json_encode(['message' => (new GearmanClientController())->sendTasksToWorkerTwo($actions, true)]);
+                }
             }
-
-            // If actions were processed, send them to Gearman for execution
-            if (count($actions) > 0) {
-                return json_encode(['message' => (new GearmanClientController())->sendTasksToWorkerTwo($actions, TRUE)]);
+        
+            // If actions were processed, return messages
+            if (count($messages) > 0) {
+                return json_encode($messages);
             }
-
             // If no actions were processed, return an appropriate response
             return response()->json(['message' => 'No actions to process'], 200);
         }
-
         public function verify_2fa(Request $request){
             $user_id=Auth::id();
             $broker = Broker::where('user_id', $user_id)->where("broker_name",$request->input('broker'))->firstOrFail();
