@@ -464,7 +464,7 @@ class UserBackendController extends Controller
             }
         
             // Determine which profiles to act upon based on the first action type
-            $profiles = null;
+            $profiles = [];
             foreach ($datas as $data) {
                 if ($data->action === 'buy') {
                     $profiles = UserProfile::where('auto_buy_feature', true)->get();

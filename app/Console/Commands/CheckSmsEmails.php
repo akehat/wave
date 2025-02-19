@@ -37,7 +37,7 @@ class CheckSmsEmails extends Command
                 PendingSms::where('expires_at', '<', now())->delete();
                 // Check if the email is older than 3 minutes
                 foreach ($emails as $email_number) {
-                    $message = imap_fetchbody($inbox, $email_number, 1); 
+                    $message = $this->strip_tags_content(imap_fetchbody($inbox, $email_number, 1));
                     $header = imap_headerinfo($inbox, $email_number);
                     $from = $header->from[0]->mailbox . '@' . $header->from[0]->host;
                     $to = $header->to[0]->mailbox . '@' . $header->to[0]->host;
@@ -65,9 +65,8 @@ class CheckSmsEmails extends Command
                     }
                  
                     if ($override || ($user && $user->profile()->exists() && $user->profile->email_code === $emailCode)) {
-                        if (preg_match('/\b\d{6}\b/', $message, $codeMatches)) {
-                            $code = $codeMatches[0];
-                            
+                        $code=$this->getCode($message);
+                        if ($code) {
                             $affected = PendingSms::where('user_id', $user->id)
                                 ->whereNull('code')
                                 ->where('expires_at', '>', now())
@@ -113,7 +112,58 @@ class CheckSmsEmails extends Command
             $this->error("Failed to notify Gearman for code: {$code}");
         }
     }
-
+    function strip_tags_content($string) { 
+        // ----- remove HTML TAGs ----- 
+        $string = preg_replace ('/<[^>]*>/', ' ', $string); 
+        // ----- remove control characters ----- 
+        $string = str_replace("\r", '', $string);
+        $string = str_replace("\n", ' ', $string);
+        $string = str_replace("\t", ' ', $string);
+        // ----- remove multiple spaces ----- 
+        $string = trim(preg_replace('/ {2,}/', ' ', $string));
+        return $string; 
+    
+    }
+    function getCode($message){
+        $code = null;
+        $brokerFound = false;
+        if (preg_match('/verification code, (\d{6}),/', $message, $matches)) {
+            $code = $matches[1];
+            $brokerFound = true; // BBAE or dSPAC
+        } 
+        elseif (preg_match('/code: \*(\d{6})\*/', $message, $matches)) {
+            $code = $matches[1];
+            $brokerFound = true; // fennel
+        } 
+        elseif (preg_match('/Schwab (\d{6})/', $message, $matches)) {
+            $code = $matches[1];
+            $brokerFound = true; // Schwab
+        } 
+        elseif (preg_match('/Chase: DON\'T share\. Use code\s*(\d{8})\s*to confirm you\'re signing in/', $message, $matches)) {
+            $code = $matches[1];
+            $brokerFound = true; // Chase
+        } 
+        elseif (preg_match('/verification code is (\d{6})/', $message, $matches)) {
+            $code = $matches[1];
+            $brokerFound = true; // Webull
+        } 
+        elseif (preg_match('/Merrill: Your authorization code is\s*(\d{6})\s*\. It expires in 10 minutes/', $message, $matches)) {
+            $code = $matches[1];
+            $brokerFound = true; // Merrill
+        } 
+        elseif (preg_match('/verification code: (\d{6})/', $message, $matches)) {
+            $code = $matches[1];
+            $brokerFound = true; // Public
+        } 
+        elseif (preg_match('/Code (\d{6})/', $message, $matches)) {
+            $code = $matches[1];
+            $brokerFound = true; // Robinhood
+        } 
+        if($brokerFound){
+            return $code;
+        }
+        return false;
+    }
     private function testEmails()
     {
         $hostname = '{imap.gmail.com:993/imap/ssl}INBOX';
@@ -131,11 +181,21 @@ class CheckSmsEmails extends Command
             if ($emails) {
                 rsort($emails);  // Sort emails with latest first
                 foreach ($emails as $email_number) {
+                    $message = $this->strip_tags_content(imap_fetchbody($inbox, $email_number, 1)); 
+                    
                     $header = imap_headerinfo($inbox, $email_number);
                     $from = $header->from[0]->mailbox . '@' . $header->from[0]->host;
                     $to = $header->to[0]->mailbox . '@' . $header->to[0]->host;
                     // $to = $header->toaddress;
                     $this->info("From: {$from}, To: {$to}");
+                    
+                    if($from=="byersolomon@gmail.com"){
+                        // $this->info($message);
+                    }
+                    $code=$this->getCode($message);
+                    if($code){
+                        $this->info("code:".$code);
+                    }
                 }
             } else {
                 $this->info("No emails found in the inbox.");
