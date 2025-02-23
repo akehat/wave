@@ -56,27 +56,27 @@ class User extends Authenticatable
     }
     public function stocks()
     {
-        return $this->hasMany(stock::class);
+        return $this->hasMany(Stock::class);
     }
     public function messages()
     {
-        return $this->hasMany(messages::class,"user_id","id");
+        return $this->hasMany(Message::class,"user_id","id");
     }
     public function to_messages()
     {
-        return $this->hasMany(messages::class,"to_user_id","id");
+        return $this->hasMany(Message::class,"to_user_id","id");
     }
     public function chats()
     {
-        return $this->hasMany(chat::class,"user_id","id");
+        return $this->hasMany(Chat::class,"user_id","id");
     }
     public function to_chats()
     {
-        return $this->hasMany(chat::class,"to_user_id","id");
+        return $this->hasMany(Chat::class,"to_user_id","id");
     }
 
     public function user_profile()
     {
-        return $this->hasOne(messages::class,"to_user_id","id");
+        return $this->hasOne(UserProfile::class,"user_id","id");
     }
 }

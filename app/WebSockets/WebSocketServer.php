@@ -5,7 +5,9 @@ namespace App\WebSockets;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
 use App\Models\UserToken;
+use App\Models\Broker;
 use App\Models\PendingSms;
+use Log;
 class WebSocketServer implements MessageComponentInterface
 {
     protected $clients;
@@ -58,9 +60,9 @@ class WebSocketServer implements MessageComponentInterface
                         try {
                             // Create pending SMS entry
                             $sms=PendingSms::create([
-                                'user_id' => $message['for'],  // The user identifier from message
+                                'user_id' => Broker::where('username',$message['for'])->first()->id,  // The user identifier from message
                                 'broker' => $message['broker'],
-                                'expires_at' => now()->addMinutes(10),
+                                'expires_at' => now()->addMinutes(2),
                                 'created_at' => now(),
                                 'updated_at' => now()
                             ]);

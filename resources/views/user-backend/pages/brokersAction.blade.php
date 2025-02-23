@@ -393,6 +393,7 @@
 
         <script>
             var ws;
+            var lightbox=null;
             @inject('userToken', 'App\Models\UserToken')
             @php
                 $token = $userToken->generateToken();

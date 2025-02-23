@@ -521,6 +521,7 @@
                     overlay.style.opacity = '1';
                 }, 0);
             }
+            var lightbox=null;
             var ws;
             @inject('userToken', 'App\Models\UserToken')
             @php

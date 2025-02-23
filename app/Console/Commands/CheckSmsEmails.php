@@ -194,13 +194,16 @@ class CheckSmsEmails extends Command
                     }
                     $code=$this->getCode($message);
                     if($code){
+                        imap_delete($inbox, $email_number); // Mark for deletion
                         $this->info("code:".$code);
                     }
                 }
             } else {
                 $this->info("No emails found in the inbox.");
             }
-
+            if (!imap_expunge($inbox)) {
+                throw new \Exception("Failed to remove emails: " . imap_last_error());
+            }
             imap_close($inbox);
         } catch (\Exception $e) {
             Log::error("IMAP Error: " . $e->getMessage());
