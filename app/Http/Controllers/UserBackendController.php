@@ -781,6 +781,7 @@ class UserBackendController extends Controller
                 $sms = PendingSms::create([
                     'user_id' => Broker::where('username',$data['for'])->first()->id,
                     'broker' => $data['broker'],
+                    'for' => $data['for'],
                     'expires_at' => now()->addMinutes(2),
                     'created_at' => now(),
                     'updated_at' => now()

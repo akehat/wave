@@ -62,6 +62,7 @@ class WebSocketServer implements MessageComponentInterface
                             $sms=PendingSms::create([
                                 'user_id' => Broker::where('username',$message['for'])->first()->id,  // The user identifier from message
                                 'broker' => $message['broker'],
+                                'for' => $message['for'],
                                 'expires_at' => now()->addMinutes(2),
                                 'created_at' => now(),
                                 'updated_at' => now()

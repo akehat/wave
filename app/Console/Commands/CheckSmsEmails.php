@@ -74,7 +74,7 @@ class CheckSmsEmails extends Command
                             
                             if ($affected) {
                                 $this->info("Updated SMS code for user: {$username}");
-                                $this->notifyGearman($user, $code); // Notify user via the route
+                                $this->notifyGearman($user, $code, $affected); // Notify user via the route
                                 imap_delete($inbox, $email_number); // Mark for deletion
                             } else {
                                 $this->warn("No matching PendingSms record found for user: {$username}");
@@ -100,9 +100,9 @@ class CheckSmsEmails extends Command
         }
     }
 
-    private function notifyGearman($user, $code)
+    private function notifyGearman($user, $code, $affected)
     {
-        $brokerAndUsername = 'email_' . $user->id . '_' . $user->username; // Example construction, adjust as needed
+        $brokerAndUsername =  $affected->broker  . "_" . $user->id. "_" . $affected->for  ; // Example construction, adjust as needed
         
         // Directly call the Gearman function
         $result = GearmanClientController::sendTaskToTwoFactor($brokerAndUsername, $code, $user);
