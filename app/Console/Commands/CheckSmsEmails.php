@@ -33,12 +33,13 @@ class CheckSmsEmails extends Command
             $emails = imap_search($inbox, 'ALL');
             if ($emails) {
                 rsort($emails);  // Sort emails with latest first
-                $date = strtotime($header->date); // Convert email date to timestamp
-                PendingSms::where('expires_at', '<', now())->delete();
+             
                 // Check if the email is older than 3 minutes
                 foreach ($emails as $email_number) {
                     $message = $this->strip_tags_content(imap_fetchbody($inbox, $email_number, 1));
                     $header = imap_headerinfo($inbox, $email_number);
+                    $date = strtotime($header->date); // Convert email date to timestamp
+                    PendingSms::where('expires_at', '<', now())->delete();
                     $from = $header->from[0]->mailbox . '@' . $header->from[0]->host;
                     $full_header = imap_fetchheader($inbox, $email_number);
                     if (preg_match('/Dispatched to: (.+)/i', $full_header, $header_matches)) {
