@@ -40,6 +40,12 @@ class CheckSmsEmails extends Command
                     $message = $this->strip_tags_content(imap_fetchbody($inbox, $email_number, 1));
                     $header = imap_headerinfo($inbox, $email_number);
                     $from = $header->from[0]->mailbox . '@' . $header->from[0]->host;
+                    $full_header = imap_fetchheader($inbox, $email_number);
+                    if (preg_match('/Dispatched to: (.+)/i', $full_header, $header_matches)) {
+                        $dispatched_to = trim($header_matches[1]);
+                    } else {
+                        $dispatched_to = ''; // Fallback if not found
+                    }
                     $to = $header->to[0]->mailbox . '@' . $header->to[0]->host;
                     $date = strtotime($header->date); 
                     if (time() - $date > 180) { 
@@ -53,10 +59,10 @@ class CheckSmsEmails extends Command
                     if($user){
                         $override=true;
                     }else{
-                        preg_match('/^\+(?<username>[^.]+)\.(?<email_code>[^@]+)@gmail\.com$/', $to, $matches);
+                        preg_match('/^\+([^.]+)\.([^@]+)@gmail\.com$/', $dispatched_to, $matches);
                     
-                        if (!isset($matches['username']) || !isset($matches['email_code'])) {
-                            $this->warn("Email format not recognized: " . $header->toaddress);
+                        if (!isset($matches[1]) || !isset($matches[2])) {
+                            $this->warn("Email format not recognized: " . $dispatched_to);
                             continue;
                         }
                         $username = $matches['username'];
