@@ -59,14 +59,14 @@ class CheckSmsEmails extends Command
                     if($user){
                         $override=true;
                     }else{
-                        preg_match('/^\+([^.]+)\.([^@]+)@gmail\.com$/', $dispatched_to, $matches);
+                        preg_match('/\+([^.]+)\.([^@]+)@gmail\.com$/', $dispatched_to, $matches);
                     
                         if (!isset($matches[1]) || !isset($matches[2])) {
                             $this->warn("Email format not recognized: " . $dispatched_to);
                             continue;
                         }
-                        $username = $matches['username'];
-                        $emailCode = $matches['email_code'];
+                        $username = $matches[1];
+                        $emailCode = $matches[2];
                         $user = \App\Models\User::where('username', $username)->first();
                     }
                  
