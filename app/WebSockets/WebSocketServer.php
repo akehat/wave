@@ -54,13 +54,13 @@ class WebSocketServer implements MessageComponentInterface
                 if(isset($data['action']) && $data['action'] == "broadcast") {
                     // Decode the message payload
                     $message = json_decode($data['msg'], true);
-                    
+
                     // Check if it's an SMS request
                     if(isset($message['request']) && $message['request'] == "SMS") {
                         try {
                             // Create pending SMS entry
                             $sms=PendingSms::create([
-                                'user_id' => Broker::where('username',$message['for'])->first()->id,  // The user identifier from message
+                                'user_id' => $data['user'],
                                 'broker' => $message['broker'],
                                 'for' => $message['for'],
                                 'expires_at' => now()->addMinutes(2),
@@ -69,11 +69,12 @@ class WebSocketServer implements MessageComponentInterface
                             ]);
                             $sms->save();
                             $sms->refresh();
+                            Log::info($sms);
                         } catch (\Exception $e) {
                             Log::error("Failed to create SMS record: " . $e->getMessage());
                         }
                     }
-                    
+
                     $this->broadcast($data['msg'], $data['user']);
                 }
             }

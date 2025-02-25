@@ -405,15 +405,15 @@ class UserBackendController extends Controller
             // Parse the incoming request data
             $actions = [];
             $user = Auth::user(); // Retrieve the authenticated user
-        
+
             // Ensure the 'data' field is provided in the request
             if (!$request->has('data')) {
                 return response()->json(['error' => 'No data provided'], 400);
             }
-        
+
             // Decode the JSON data from the request
             $datas = json_decode($request->input('data'));
-        
+
             // Check if the data is valid
             if (!is_array($datas)) {
                 return response()->json(['error' => 'Invalid data format. Expecting an array of actions.'], 400);
@@ -428,7 +428,7 @@ class UserBackendController extends Controller
                     strtotime($data->date . ' ' . $data->time . ' ' . $data->timezone) > time()
                 ) {
                     $schedule=TRUE;
-                } 
+                }
                 // Call do_action for each item, passing the user
                 $actions[] = $this->do_action($actionRequest, $user);
             }
@@ -448,7 +448,7 @@ class UserBackendController extends Controller
             } elseif (count($actions) > 0) {
                 return json_encode(['message' => (new GearmanClientController())->sendTasksToWorkerTwo($actions,TRUE)]);
             }
-        
+
             // If no actions were processed, return an appropriate response
             return response()->json(['message' => 'No actions to process'], 200);
         }
@@ -458,13 +458,13 @@ class UserBackendController extends Controller
             if (auth()->guest() || !auth()->user()->can('browse_admin')) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
-        
+
             $datas = json_decode($request->input('data'));
-            
+
             if (!is_array($datas)) {
                 return response()->json(['error' => 'Invalid data format. Expecting an array of actions.'], 400);
             }
-        
+
             // Determine which profiles to act upon based on the first action type
             $profiles = [];
             foreach ($datas as $data) {
@@ -475,11 +475,11 @@ class UserBackendController extends Controller
                 }
                 break; // Only check the first action to determine profiles
             }
-        
+
             if (!$profiles) {
                 return response()->json(['message' => 'No applicable profiles found for the action type'], 400);
             }
-        
+
             $messages = [];
             foreach ($profiles as $profile) {
                 $actions = [];
@@ -488,18 +488,18 @@ class UserBackendController extends Controller
                 foreach ($datas as $data) {
                     $actionRequest = new Request((array) $data);
                     if (!$userAccount) continue; // Skip if user not found
-                    
+
                     if (!$schedule &&
                         isset($data->date, $data->time, $data->timezone) &&
                         strtotime($data->date . ' ' . $data->time . ' ' . $data->timezone) > time()
                     ) {
                         $schedule = true;
-                    } 
-                    
+                    }
+
                     // Process the action for each relevant user
                     $actions[] = $this->do_action($actionRequest, $userAccount);
                 }
-        
+
                 if ($schedule && count($actions) > 0) {
                     // Use the userAccount instead of $user which is not defined in this scope
                     $scheduledAction = ScheduleBuy::create([
@@ -518,7 +518,7 @@ class UserBackendController extends Controller
                     $messages[] = json_encode(['message' => (new GearmanClientController())->sendTasksToWorkerTwo($actions, true)]);
                 }
             }
-        
+
             // If actions were processed, return messages
             if (count($messages) > 0) {
                 return json_encode($messages);
@@ -779,7 +779,7 @@ class UserBackendController extends Controller
             }
             try {
                 $data = $request->json()->all();
-                
+
                 $sms = PendingSms::create([
                     'user_id' => $data['user'],
                     'broker' => $data['broker'],
