@@ -63,6 +63,22 @@ Route::delete('/delete-scheduled/{id}', [UserBackendController::class, 'deleteSc
 Route::post('get-user', [UserBackendController::class, 'getUser'])->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
 Route::post('create-pending-sms', [UserBackendController::class, 'createPendingSms'])->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
 Route::post('delete-user', [UserBackendController::class, 'deleteUser'])->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
+use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\AdminSubscriptionController;
 
+Route::get('/plans', [SubscriptionController::class, 'index'])->name('plans');
+Route::post('/subscribe/{plan}', [SubscriptionController::class, 'subscribe'])->name('subscribe');
+Route::post('/cancel', [SubscriptionController::class, 'cancel'])->name('cancel');
+
+// Admin routes (assuming 'auth' and 'admin' middleware exist)
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/admin/subscriptions', [AdminSubscriptionController::class, 'index'])->name('admin.subscriptions');
+    Route::get('/admin/subscribe/{user}', [AdminSubscriptionController::class, 'create'])->name('admin.subscribe.create');
+    Route::post('/admin/subscribe/{user}', [AdminSubscriptionController::class, 'subscribe'])->name('admin.subscribe');
+    Route::post('/admin/cancel/{user}', [AdminSubscriptionController::class, 'cancel'])->name('admin.cancel');
+});
+
+// Stripe webhook route (Cashier handles events)
+Route::stripeWebhooks('webhook');
 // Wave routes
 Wave::routes();

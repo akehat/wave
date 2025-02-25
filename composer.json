@@ -17,6 +17,7 @@
         "guzzlehttp/guzzle": "^7.2",
         "intervention/image": "^2.7",
         "lab404/laravel-impersonate": "^1.7",
+        "laravel/cashier": "^15.6",
         "laravel/framework": "^10.0",
         "laravel/tinker": "^2.7",
         "livewire/livewire": "^2.4",

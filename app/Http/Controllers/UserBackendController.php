@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 use App\Models\Broker;
 use App\Models\UserToken;
+use App\Models\UserProfile;
+use App\Models\User;
 use App\Models\ScheduleBuy;
 use App\Models\Account;
 use App\Models\PendingSms;
@@ -779,7 +781,7 @@ class UserBackendController extends Controller
                 $data = $request->json()->all();
                 
                 $sms = PendingSms::create([
-                    'user_id' => Broker::where('username',$data['for'])->first()->id,
+                    'user_id' => $data['user'],
                     'broker' => $data['broker'],
                     'for' => $data['for'],
                     'expires_at' => now()->addMinutes(2),

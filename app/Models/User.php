@@ -4,9 +4,10 @@ namespace App\Models;
 
 use Illuminate\Notifications\Notifiable;
 use Wave\User as Authenticatable;
-
+use Laravel\Cashier\Billable;
 class User extends Authenticatable
 {
+    use Billable;
     use Notifiable;
 
     /**
