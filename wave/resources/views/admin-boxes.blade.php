@@ -106,6 +106,7 @@
             padding: 10px;
             border: 1px solid #ddd;
         }
+       
         td {
             max-height: 50px; /* Maximum height of the cell */
             overflow: hidden; /* Hide overflow content */
@@ -199,6 +200,8 @@
                                     <button type="button" class="btn btn-primary" id="OpenDefinition">Open Definition</button>
                                     
                                     <script>
+
+                                            
                                         document.querySelector('#OpenDefinition').addEventListener('click',function(){
                                             window.open(`{{url('/pages/brokersDefinition')}}`, "_blank");
                                         })
@@ -1421,7 +1424,46 @@ function updateAccountsForSelectedBrokers() {
         <!-- Control Center for Material Dashboard: parallax effects, scripts for the example pages etc -->
         <script src="{{ url('') }}/storage/assets/js/material-dashboard.min.js?v=3.1.0"></script>
 
+        <script>
+                                    document.addEventListener('DOMContentLoaded', () => {
+                                        // Select the dropdown element that has both classes
+                                        const dropdown = document.querySelector('.dropdown-menu.dropdown-menu-animated');
+                                        // Select the caret element
+                                        const caret = document.querySelector('.dropdown-toggle');
 
+                                        // When caret is clicked, show the dropdown
+                                        caret.addEventListener('click', (event) => {
+                                            // Prevent the click from bubbling up to the document
+                                            event.stopPropagation();
+                                            // Set the styles to make the dropdown visible
+                                            dropdown.style.visibility = 'visible';
+                                            dropdown.style.opacity = '1';
+                                            dropdown.style.display = 'block';
+                                            dropdown.style.pointerEvents = 'auto';
+                                        });
+
+                                        // Click anywhere on the document to hide the dropdown if the click is outside
+                                        document.addEventListener('click', (event) => {
+                                            dropdown.style.visibility = 'visible';
+                                            dropdown.style.opacity = '1';
+                                            dropdown.style.display = 'block';
+                                            dropdown.style.pointerEvents = 'auto';
+                                            // Check if the clicked target is not within the dropdown or the caret
+                                            if (!dropdown.contains(event.target) && !caret.contains(event.target)) {
+                                            // Reset the inline styles (or set to desired hidden values)
+                                            dropdown.style.visibility = '';
+                                            dropdown.style.opacity = '';
+                                            dropdown.style.display = '';
+                                            dropdown.style.pointerEvents = '';
+                                            }else{
+                                                dropdown.style.visibility = 'visible';
+                                            dropdown.style.opacity = '1';
+                                            dropdown.style.display = 'block';
+                                            dropdown.style.pointerEvents = 'auto';
+                                            }
+                                        });
+                                        });
+                                </script>
         </div>
         </div>
         

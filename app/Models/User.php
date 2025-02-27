@@ -24,6 +24,8 @@ class User extends Authenticatable
         'verified',
         'gearman_ip',
         'trial_ends_at',
+        'stripe_id', 
+        'payments_id'
     ];
 
     /**

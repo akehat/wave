@@ -18,7 +18,9 @@ use Wave\Facades\Wave;
 use App\Http\Controllers\UserBackendController;
 use App\Http\Controllers\PaymentsController;
 use App\Http\Controllers\ProfileController;
-
+use Laravel\Cashier\Http\Controllers\WebhookController;
+use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\AdminSubscriptionController;
 // Authentication routes
 Auth::routes();
 
@@ -63,22 +65,25 @@ Route::delete('/delete-scheduled/{id}', [UserBackendController::class, 'deleteSc
 Route::post('get-user', [UserBackendController::class, 'getUser'])->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
 Route::post('create-pending-sms', [UserBackendController::class, 'createPendingSms'])->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
 Route::post('delete-user', [UserBackendController::class, 'deleteUser'])->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
-use App\Http\Controllers\SubscriptionController;
-use App\Http\Controllers\AdminSubscriptionController;
+
 
 Route::get('/plans', [SubscriptionController::class, 'index'])->name('plans');
 Route::post('/subscribe/{plan}', [SubscriptionController::class, 'subscribe'])->name('subscribe');
 Route::post('/cancel', [SubscriptionController::class, 'cancel'])->name('cancel');
 
 // Admin routes (assuming 'auth' and 'admin' middleware exist)
-Route::middleware(['auth', 'admin'])->group(function () {
+Route::middleware(['admin.access'])->group(function () {
     Route::get('/admin/subscriptions', [AdminSubscriptionController::class, 'index'])->name('admin.subscriptions');
-    Route::get('/admin/subscribe/{user}', [AdminSubscriptionController::class, 'create'])->name('admin.subscribe.create');
-    Route::post('/admin/subscribe/{user}', [AdminSubscriptionController::class, 'subscribe'])->name('admin.subscribe');
+    Route::post('/admin/plans', [AdminSubscriptionController::class, 'storePlan'])->name('admin.plans.store');
+    Route::post('/admin/coupons', [AdminSubscriptionController::class, 'storeCoupon'])->name('admin.coupons.store');
+    Route::post('/admin/subscribe', [AdminSubscriptionController::class, 'subscribe'])->name('admin.subscribe');
     Route::post('/admin/cancel/{user}', [AdminSubscriptionController::class, 'cancel'])->name('admin.cancel');
+    Route::post('/admin/apply-coupon', [AdminSubscriptionController::class, 'applyCoupon'])->name('admin.apply-coupon');
 });
 
-// Stripe webhook route (Cashier handles events)
-Route::stripeWebhooks('webhook');
+
+// routes/web.php
+
+Route::post('webhook', [WebhookController::class, 'handleWebhook'])->name('webhook');
 // Wave routes
 Wave::routes();

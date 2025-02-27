@@ -27,7 +27,15 @@ return [
     | services the application utilizes. Set this in your ".env" file.
     |
     */
-
+    "stripe"=>[
+        "public_key"=>env("STRIPE_PUBLIC_KEY","
+        pk_test_51J3JQvK5z1Z
+        "),
+        "private_key"=>env("STRIPE_SECRET_KEY","
+        sk_test_51J3JQvK5z1Z
+        "),
+        
+    ],
     'env' => env('APP_ENV', 'production'),
     'send_email_limit' => env('SEND_EMAIL_LIMIT',10),
     /*
@@ -198,7 +206,7 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
-
+        Laravel\Cashier\CashierServiceProvider::class,
     ],
 
     /*
