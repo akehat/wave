@@ -510,6 +510,7 @@ class UserBackendController extends Controller
                         'date' => $data->date,
                         'action_json' => json_encode($actions), // Store the action data as JSON
                         'broker' => $data->broker ?? 'unknown', // Default to 'unknown' if broker is not provided
+                        'adminCreated' => true, // Explicitly set to true since this is an admin action
                     ]);
                     $scheduledAction->save();
                     $scheduledAction->refresh();
@@ -796,17 +797,50 @@ class UserBackendController extends Controller
                 return response()->json(['error' => 'Failed to create SMS record'], 500);
             }
         }
-        function getUserData(){
-            $userId=Auth::id();
+        function getUserData()
+        {
+            $userId = Auth::id();
             $accounts = Account::where('user_id', $userId)->get();
             $stocks = Stock::where('user_id', $userId)->get();
             $scheduled = ScheduleBuy::where('user_id', $userId)->get();
-            // Return as JSON
-            return response()->json([
+
+            // Default response for all users
+            $response = [
                 'accounts' => $accounts,
                 'stocks' => $stocks,
                 'scheduled' => $scheduled
-            ]);
+            ];
+
+            // Check if the user is an admin
+            if (!auth()->guest() && auth()->user()->can('browse_admin')) {
+                // Fetch all ScheduleBuy records where adminCreated is true
+                $allScheduled = ScheduleBuy::where('adminCreated', true)->get();
+
+                // Process unique admin actions (group by all fields except user_id)
+                $adminActions = $allScheduled->groupBy(function ($item) {
+                    return json_encode([
+                        'timezone' => $item->timezone,
+                        'recurring' => $item->recurring,
+                        'time' => $item->time,
+                        'server_time' => $item->server_time,
+                        'date' => $item->date,
+                        'action_json' => $item->action_json,
+                        'broker' => $item->broker,
+                        'adminCreated' => $item->adminCreated
+                    ]);
+                })->map(function ($group) {
+                    $first = $group->first();
+                    $first->user_count = $group->count(); // Add user_count to track affected users
+                    return $first;
+                })->values();
+
+                // Add admin-specific fields to the response
+                $response['admin_actions'] = $adminActions; // Unique admin actions with user_count
+                $response['all_admin_actions'] = $allScheduled; // All admin-created records
+            }
+
+            // Return as JSON
+            return response()->json($response);
         }
         function getUser(){
             $data=(array)(request()->all());
@@ -829,29 +863,103 @@ class UserBackendController extends Controller
                 return 401;
             }
         }
-        function editScheduled($id){
-            return ScheduleBuy::where('id',$id)->where("user_id",Auth::id())->firstOrFail();
+        private function getMassRecords($id)
+        {
+            // Fetch the reference record, ensuring it was created by an admin
+            $reference = ScheduleBuy::where('id', $id)
+                ->where('adminCreated', true)
+                ->firstOrFail();
+
+            // Find all records created by admins with the same fields (except user_id)
+            return ScheduleBuy::where('adminCreated', true)
+                ->where('timezone', $reference->timezone)
+                ->where('recurring', $reference->recurring)
+                ->where('time', $reference->time)
+                ->where('server_time', $reference->server_time)
+                ->where('date', $reference->date)
+                ->where('action_json', $reference->action_json)
+                ->where('broker', $reference->broker)
+                ->get();
         }
-        function updateScheduled($id){
+        function editScheduled($id){
+
+    if (!auth()->guest() && auth()->user()->can('browse_admin')) {
+        if(request()->query('mass')){
+                $records = $this->getMassRecords($id);
+                $reference = $records->first();
+                return response()->json([
+                    'record' => $reference,         // Representative record for editing
+                    'count' => $records->count(),   // Number of records affected
+                    'mass' => true                  // Flag for frontend to handle mass edit
+                ]);
+            } else {
+                $record = ScheduleBuy::where('id', $id)
+                    ->where('user_id', Auth::id())
+                    ->firstOrFail();
+                return response()->json([
+                    'record' => $record,
+                    'count' => 1,
+                    'mass' => false
+                ]);
+            }
+        }
+            else{
+            return ScheduleBuy::where('id',$id)->where("user_id",Auth::id())->firstOrFail();
+            }
+        }
+        function updateScheduled($id)
+        {
             $data = request()->validate([
                 'date' => 'required|date',
                 'time' => 'required|date_format:H:i',
                 'timezone' => 'required|string',
             ]);
-            $update=ScheduleBuy::where('id',$id)->where("user_id",Auth::id())->firstOrFail();
-            $serverTime = Carbon::parse("{$data['date']} {$data['time']}", $data['timezone']);
-            $serverTime->setTimezone('UTC');
-            $update->server_time = $serverTime->format('H:i:s');
-            $update->update([
-                'date' => $data['date'],
-                'time' => $data['time'],
-                'timezone' => $data['timezone'],
-            ]);
-            $update->save();
-            $update->refresh();
-            return response()->json(['message' => 'Event updated successfully'], 200);
+
+            if (!auth()->guest() && auth()->user()->can('browse_admin') && request()->query('mass')) {
+                $records = $this->getMassRecords($id);
+                $serverTime = Carbon::parse("{$data['date']} {$data['time']}", $data['timezone'])
+                    ->setTimezone('UTC')
+                    ->format('H:i:s');
+                $count = $records->count();
+                ScheduleBuy::whereIn('id', $records->pluck('id'))
+                    ->update([
+                        'date' => $data['date'],
+                        'time' => $data['time'],
+                        'timezone' => $data['timezone'],
+                        'server_time' => $serverTime
+                    ]);
+                return response()->json(['message' => "Mass updated $count records"], 200);
+            } else {
+                $update = ScheduleBuy::where('id', $id)
+                    ->where('user_id', Auth::id())
+                    ->firstOrFail();
+                $serverTime = Carbon::parse("{$data['date']} {$data['time']}", $data['timezone'])
+                    ->setTimezone('UTC')
+                    ->format('H:i:s');
+                $update->update([
+                    'date' => $data['date'],
+                    'time' => $data['time'],
+                    'timezone' => $data['timezone'],
+                    'server_time' => $serverTime
+                ]);
+                $update->save();
+                $update->refresh();
+                return response()->json(['message' => 'Event updated successfully'], 200);
+            }
         }
-        function deleteScheduled($id){
-            return ScheduleBuy::where('id',$id)->where("user_id",Auth::id())->delete();
+        function deleteScheduled($id)
+        {
+            if (!auth()->guest() && auth()->user()->can('browse_admin') && request()->query('mass')) {
+                $records = $this->getMassRecords($id);
+                $count = $records->count();
+                ScheduleBuy::whereIn('id', $records->pluck('id'))->delete();
+                return response()->json(['message' => "Deleted $count records"], 200);
+            } else {
+                $deleted = ScheduleBuy::where('id', $id)
+                    ->where('user_id', Auth::id())
+                    ->delete();
+                return response()->json(['message' => "Deleted $deleted record(s)"], 200);
+            }
         }
-}
+    }
+

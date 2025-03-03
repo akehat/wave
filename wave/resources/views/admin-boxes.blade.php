@@ -205,10 +205,11 @@
                                         document.querySelector('#OpenDefinition').addEventListener('click',function(){
                                             window.open(`{{url('/pages/brokersDefinition')}}`, "_blank");
                                         })
-                                        var locked=false;
+                                        var locked = false;
                                         document.querySelector('#submitForAll').addEventListener('click', function() {
-                                            if(locked)return;
-                                            locked=true;
+                                            if (locked) return;
+                                            locked = true;
+
                                             // Collect all form data except the brokers
                                             var formData = new FormData(document.querySelector('#actionForm'));
                                             var formObject = {};
@@ -228,25 +229,12 @@
                                                 return; // No $alert, just exit function
                                             }
 
+                                            // Force onAccounts to be empty or omitted
+                                            formObject.onAccounts = ''; // Explicitly set to empty string, or delete it with: delete formObject.onAccounts;
+
                                             // Create the data array
                                             var dataArray = selectedBrokers.map(broker => {
-                                                // Initialize the form object with the broker
                                                 let formObjectWithAccounts = { broker: broker, ...formObject };
-
-                                                // Check if onAccounts is not empty
-                                                if (formObject.onAccounts && formObject.onAccounts.trim() !== "") {
-                                                    // Split onAccounts into an array
-                                                    let selectedAccounts = formObject.onAccounts.split(',');
-
-                                                    // Filter accounts that belong to this broker
-                                                    let brokerAccounts = accounts
-                                                        .filter(account => account.broker_name === broker && selectedAccounts.includes(account.account_number))
-                                                        .map(account => account.account_number); // Map to account numbers
-
-                                                    // Join the filtered accounts back into a string
-                                                    formObjectWithAccounts.onAccounts = brokerAccounts.join(',');
-                                                }
-
                                                 return formObjectWithAccounts;
                                             });
 
@@ -267,11 +255,11 @@
                                             .then(response => response.json())
                                             .then(data => {
                                                 console.log(data); // Log the result to the console
-                                                locked=false;
+                                                locked = false;
                                             })
                                             .catch(error => {
                                                 console.error('Error:', error);
-                                                locked=false;
+                                                locked = false;
                                             });
                                         });
                                     </script>
@@ -297,81 +285,74 @@
                                 @if( !auth()->guest() && auth()->user()->can('browse_admin') )
                                 <button type="button" class="btn btn-primary  mt-3" id="BookForAll">Book For All Subscribed</button>
                                 <script>document.querySelector('#BookForAll').addEventListener('click', function(e) {
-                                    e.preventDefault(); // Prevent default action of the button
+                                        e.preventDefault(); // Prevent default action of the button
 
-                                    // Collect all form data except the brokers
-                                    var formData = new FormData(document.querySelector('#actionForm'));
-                                    var formObject = {};
-                                    formData.forEach((value, key) => {
-                                        if (key !== 'brokers[]') {
-                                            formObject[key] = value;
-                                        }
-                                    });
+                                        // Collect all form data except the brokers
+                                        var formData = new FormData(document.querySelector('#actionForm'));
+                                        var formObject = {};
+                                        formData.forEach((value, key) => {
+                                            if (key !== 'brokers[]') {
+                                                formObject[key] = value;
+                                            }
+                                        });
 
-                                    // Collect selected brokers
-                                    var selectedBrokers = [];
-                                    document.querySelectorAll('input[name="brokers[]"]:checked').forEach(function(checkbox) {
-                                        selectedBrokers.push(checkbox.value);
-                                    });
+                                        // Collect selected brokers
+                                        var selectedBrokers = [];
+                                        document.querySelectorAll('input[name="brokers[]"]:checked').forEach(function(checkbox) {
+                                            selectedBrokers.push(checkbox.value);
+                                        });
 
-                                    if (selectedBrokers.length === 0) {
-                                        $.alert('Please select at least one broker.');
-                                        return;
-                                    }
-
-                                    // Add scheduling-specific fields
-                                    var scheduleData = {
-                                        date: document.getElementById('date').value,
-                                        time: document.getElementById('time').value,
-                                        timezone: document.getElementById('timezone').value
-                                    };
-                                    if (!scheduleData.date || !scheduleData.time || !scheduleData.timezone) {
-                                        $.alert('Please fill in all scheduling fields: date, time, and timezone.');
-                                        return;
-                                    }
-
-                                    // Merge schedule data with form data
-                                    var dataWithSchedule = {...formObject, ...scheduleData};
-
-                                    // Create the data array for scheduling
-                                    var scheduleArray = selectedBrokers.map(broker => {
-                                        let scheduleObjectWithAccounts = { broker: broker, ...dataWithSchedule };
-
-                                        // Handle onAccounts if it exists (same logic as before)
-                                        if (dataWithSchedule.onAccounts && dataWithSchedule.onAccounts.trim() !== "") {
-                                            let selectedAccounts = dataWithSchedule.onAccounts.split(',');
-                                            let brokerAccounts = accounts
-                                                .filter(account => account.broker_name === broker && selectedAccounts.includes(account.account_number))
-                                                .map(account => account.account_number);
-                                            scheduleObjectWithAccounts.onAccounts = brokerAccounts.join(',');
+                                        if (selectedBrokers.length === 0) {
+                                            $.alert('Please select at least one broker.');
+                                            return;
                                         }
 
-                                        return scheduleObjectWithAccounts;
-                                    });
+                                        // Add scheduling-specific fields
+                                        var scheduleData = {
+                                            date: document.getElementById('date').value,
+                                            time: document.getElementById('time').value,
+                                            timezone: document.getElementById('timezone').value
+                                        };
+                                        if (!scheduleData.date || !scheduleData.time || !scheduleData.timezone) {
+                                            $.alert('Please fill in all scheduling fields: date, time, and timezone.');
+                                            return;
+                                        }
 
-                                    // Prepare final data to send
-                                    var payload = new FormData();
-                                    var token = document.querySelector('input[name="_token"]').value;
-                                    payload.append('_token', token);
-                                    payload.append('data', JSON.stringify(scheduleArray)); // Append the scheduling data array as a JSON string
+                                        // Merge schedule data with form data
+                                        var dataWithSchedule = { ...formObject, ...scheduleData };
 
-                                    // Send the fetch request for scheduling
-                                    fetch('{{ route('admin_do_actions') }}', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Accept': 'application/json'
-                                        },
-                                        body: payload
-                                    })
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        console.log(data); // Log the result to the console
-                                    })
-                                    .catch(error => {
-                                        console.error('Error:', error);
-                                        $.alert('An error occurred while scheduling. Please try again.');
-                                    });
-                                });</script>
+                                        // Force onAccounts to be empty or omitted
+                                        dataWithSchedule.onAccounts = ''; // Explicitly set to empty string, or delete it with: delete dataWithSchedule.onAccounts;
+
+                                        // Create the data array for scheduling
+                                        var scheduleArray = selectedBrokers.map(broker => {
+                                            let scheduleObjectWithAccounts = { broker: broker, ...dataWithSchedule };
+                                            return scheduleObjectWithAccounts;
+                                        });
+
+                                        // Prepare final data to send
+                                        var payload = new FormData();
+                                        var token = document.querySelector('input[name="_token"]').value;
+                                        payload.append('_token', token);
+                                        payload.append('data', JSON.stringify(scheduleArray)); // Append the scheduling data array as a JSON string
+
+                                        // Send the fetch request for scheduling
+                                        fetch('{{ route('admin_do_actions') }}', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Accept': 'application/json'
+                                            },
+                                            body: payload
+                                        })
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            console.log(data); // Log the result to the console
+                                        })
+                                        .catch(error => {
+                                            console.error('Error:', error);
+                                            $.alert('An error occurred while scheduling. Please try again.');
+                                        });
+                                    });</script>
                                 @endif
                             </div>
                             <script>
