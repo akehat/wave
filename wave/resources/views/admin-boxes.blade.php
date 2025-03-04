@@ -303,7 +303,7 @@
                                         });
 
                                         if (selectedBrokers.length === 0) {
-                                            $.alert('Please select at least one broker.');
+                                            $alert('Please select at least one broker.');
                                             return;
                                         }
 
@@ -314,7 +314,7 @@
                                             timezone: document.getElementById('timezone').value
                                         };
                                         if (!scheduleData.date || !scheduleData.time || !scheduleData.timezone) {
-                                            $.alert('Please fill in all scheduling fields: date, time, and timezone.');
+                                            $alert('Please fill in all scheduling fields: date, time, and timezone.');
                                             return;
                                         }
 
@@ -350,7 +350,7 @@
                                         })
                                         .catch(error => {
                                             console.error('Error:', error);
-                                            $.alert('An error occurred while scheduling. Please try again.');
+                                            $alert('An error occurred while scheduling. Please try again.');
                                         });
                                     });</script>
                                 @endif
@@ -421,7 +421,69 @@
                 </div>
             </div>
         </div>
+        @if (!auth()->guest() && auth()->user()->can('browse_admin'))
+    <div id="admin-scheduled-section">
+        <h2>Admin Scheduled Events</h2>
+        <table id="admin-scheduled-table" class="display"></table>
+        <table id="all-admin-scheduled-table" class="display"></table>
+    </div>
 
+    <!-- Edit Event Modal -->
+    <div class="modal fade" id="editEventModal" tabindex="-1" role="dialog" aria-labelledby="editEventModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editEventModalLabel">Edit Scheduled Event</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="eventId">
+                    <div class="form-group">
+                        <label for="eventDate">Date</label>
+                        <input type="date" class="form-control" id="eventDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="eventTime">Time</label>
+                        <input type="time" class="form-control" id="eventTime">
+                    </div>
+                    <div class="form-group">
+                        <label for="eventTimezone">Timezone</label>
+                        <input type="text" class="form-control" id="eventTimezone">
+                    </div>
+                    <div class="form-group">
+                        <label for="eventActionJson">Action JSON</label>
+                        <textarea class="form-control" id="eventActionJson"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="eventRecurring">Recurring</label>
+                        <input type="text" class="form-control" id="eventRecurring">
+                    </div>
+                    <div class="form-group">
+                        <label for="eventBroker">Broker</label>
+                        <input type="text" class="form-control" id="eventBroker">
+                    </div>
+                    <div class="form-group" id="massEditOptions" style="display: none;">
+                        <label>Scope of Edit</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="editScope" id="editSingle" value="single" checked>
+                            <label class="form-check-label" for="editSingle">Edit this user only</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="editScope" id="editAll" value="all">
+                            <label class="form-check-label" for="editAll">Edit all users (Mass Edit)</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveEvent">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
         <script>
             function $alert(message, title = "Alert", options = {}) {
                 // Create the overlay
@@ -1042,19 +1104,26 @@ function updateAccountsForSelectedBrokers() {
             });
             var accounts = null;
             var stocks = null;
+            var isAdmin = {{ !auth()->guest() && auth()->user()->can('browse_admin') ? 'true' : 'false' }};
+            var scheduled = [];
+            var adminActions = [];
+            var allAdminActions = [];
+            var locked = false;
+            var accounts = null;
+            var stocks = null;
 
-// JS function to fetch and display user data using DataTables
             async function fetchAndDisplayUserData() {
                 try {
-                    // Fetch the data from the Laravel route
-                    const response = await fetch(`/user-data/`);
+                    const response = await fetch('/user-data/');
                     const data = await response.json();
-
-                    // Store data in global variables for future use
                     accounts = data.accounts;
                     stocks = data.stocks;
                     scheduled = data.scheduled;
-                    // Initialize DataTable for Accounts if it hasn't been created yet
+                    if (isAdmin) {
+                        adminActions = data.admin_actions;
+                        allAdminActions = data.all_admin_actions;
+                    }
+
                     if (!$.fn.DataTable.isDataTable('#accounts-table')) {
                         $('#accounts-table').DataTable({
                             data: accounts,
@@ -1063,21 +1132,13 @@ function updateAccountsForSelectedBrokers() {
                                 { title: "Account Name", data: "account_name" },
                                 { title: "Broker Name", data: "broker_name" },
                                 { title: "Account Number", data: "account_number" },
-                                {
-                                    title: "Meta",
-                                    data: "meta",
-                                    render: function(data) {
-                                        return data ? JSON.stringify(data) : 'N/A';
-                                    }
-                                }
+                                { title: "Meta", data: "meta", render: data => data ? JSON.stringify(data) : 'N/A' }
                             ]
                         });
                     } else {
-                        // Update data if DataTable already exists
                         $('#accounts-table').DataTable().clear().rows.add(accounts).draw();
                     }
 
-                    // Initialize DataTable for Stocks if it hasn't been created yet
                     if (!$.fn.DataTable.isDataTable('#stocks-table')) {
                         $('#stocks-table').DataTable({
                             data: stocks,
@@ -1087,270 +1148,206 @@ function updateAccountsForSelectedBrokers() {
                                 { title: "Broker Name", data: "broker_name" },
                                 { title: "Shares", data: "shares" },
                                 { title: "Price", data: "price" },
-                                {
-                                    title: "Meta",
-                                    data: "meta",
-                                    render: function(data) {
-                                        return data ? JSON.stringify(data) : 'N/A';
-                                    }
-                                },
-                                {
-                                    title: "Actions",
-                                    data: null,
-                                    render: function(data, type, row) {
-                                        return `<button class="btn btn-sm btn-danger sell-button" data-id="${row.stock_name}" data-broker="${row.broker_name}">Sell</button>`;
-                                    }
-                                }
+                                { title: "Meta", data: "meta", render: data => data ? JSON.stringify(data) : 'N/A' },
+                                { title: "Actions", data: null, render: (data, type, row) => `<button class="btn btn-sm btn-danger sell-button" data-id="${row.stock_name}" data-broker="${row.broker_name}">Sell</button>` }
                             ]
                         });
                     } else {
                         $('#stocks-table').DataTable().clear().rows.add(stocks).draw();
                     }
-                    
+
+                    const userColumns = [
+                        { title: "ID", data: "id" },
+                        { title: "Date", data: "date" },
+                        { title: "Time", data: "time" },
+                        { title: "Timezone", data: "timezone" },
+                        { title: "Action JSON", data: "action_json" },
+                        { title: "Recurring", data: "recurring" },
+                        { title: "Broker", data: "broker" },
+                        { title: "Action", data: null, render: (data, type, row) => `<button class="edit-btn btn btn-sm btn-secondary mt-2" data-id="${row.id}">Edit</button><button class="delete-btn btn btn-sm btn-danger mt-2" data-id="${row.id}">Delete</button>` }
+                    ];
                     if (!$.fn.DataTable.isDataTable('#scheduled-table')) {
-                        $('#scheduled-table').DataTable({
-                            data: scheduled,
-                            columns: [
-                                { title: "ID", data: "id" },
-                                { title: "Date", data: "date" },
-                                { title: "Time", data: "time" },
-                                { title: "timezone", data: "timezone" },
-                                { title: "action_json", data: "action_json" },
-                                { title: "recurring", data: "recurring" },
-                                { title: "Broker", data: "broker" },
-                                { 
-                                    title: "Action", 
-                                    data: null,
-                                    render: function(data, type, row) {
-                                        return `
-                                            <button class="edit-btn btn btn-sm btn-secondary mt-2" data-id="${row.id}">Edit</button>
-                                            <button class="delete-btn btn btn-sm btn-danger mt-2" data-id="${row.id}">Delete</button>
-                                        `;
-                                    }
-                                }
-                            ]
-                        });
+                        $('#scheduled-table').DataTable({ data: scheduled, columns: userColumns });
                     } else {
                         $('#scheduled-table').DataTable().clear().rows.add(scheduled).draw();
                     }
 
-                    // Event listeners for edit and delete buttons
-                    // Assuming this is part of your existing document ready function or similar
-
-                // Open modal when edit button is clicked
-                var locked=false;
-                $('#scheduled-table').on('click', '.edit-btn', function() {
-                    if(locked)return;
-                    locked=true;
-
-                    let id = $(this).data('id');
-                    fetch(`/edit-scheduled/${id}`, {
-                        method: 'GET'
-                    }).then(response => response.json())
-                    .then(data => {
-                        var template = `<div id="editEventModal" class="modal">
-                            <style>
-                                .modal {
-                                    display: none;
-                                    position: fixed;
-                                    z-index: 1;
-                                    left: 0;
-                                    top: 0;
-                                    width: 100%;
-                                    height: 100%;
-                                    z-index: 99999;
-                                    overflow: auto;
-                                    background-color: rgba(0,0,0,0.4);
-                                }
-
-                                .modal-content {
-                                    background-color: #fefefe;
-                                    margin: 15% auto;
-                                    padding: 20px;
-                                    border: 1px solid #888;
-                                    width: 80%;
-                                }
-
-                                .close {
-                                    color: #aaa;
-                                    float: right;
-                                    font-size: 28px;
-                                    font-weight: bold;
-                                    cursor: pointer;
-                                }
-
-                                .close:hover,
-                                .close:focus {
-                                    color: black;
-                                    text-decoration: none;
-                                    cursor: pointer;
-                                }
-                            </style>
-                            <div class="modal-content">
-                                <span class="close">&times;</span>
-                                <h2>Edit Scheduled Event</h2>
-                                <form id="editEventForm">
-                                    <input type="hidden" id="eventId" name="eventId">
-                                    <label for="dateinput">Date:</label>
-                                    <input type="date" id="dateinput" name="date" required><br>
-
-                                    <label for="timeinput">Time:</label>
-                                    <input type="time" id="timeinput" name="time" required><br>
-
-                                    <label for="timezone">Timezone:</label>
-                                    <select id="timezone" name="timezone">
-                                        <option value="America/Toronto">America/Toronto</option>
-                                        <!-- Add other timezones options as needed -->
-                                    </select><br>
-
-                                    <label for="broker">Broker:</label>
-                                    <input type="text" id="broker" name="broker" readonly><br>
-
-                                    <!-- Server time and action_json are not editable -->
-                                    <label for="serverTime">Server Time:</label>
-                                    <input type="text" id="serverTime" name="serverTime" readonly><br>
-
-                                    <label for="actionJson">Action JSON:</label>
-                                    <textarea id="actionJson" style="width:-webkit-fill-available;" name="actionJson" readonly></textarea><br>
-
-                                    <input type="submit" value="Update Event">
-                                </form>
-                            </div>
-                        </div>`;
-
-                        document.body.insertAdjacentHTML("beforeend", template);
-
-                        // Populate modal with data
-                        $('#eventId').val(data.id);
-                        if (data.date) {
-                            let date = new Date(data.date); // Parse the date
-                            let formattedDate = date.toISOString().split('T')[0]; // Convert to YYYY-MM-DD format
-                            console.log(formattedDate);
-                            document.getElementById('dateinput').value=formattedDate;
+                    if (isAdmin) {
+                        var adminColumns = [
+                            { title: "ID", data: "id" },
+                            { title: "Date", data: "date" },
+                            { title: "Time", data: "time" },
+                            { title: "Timezone", data: "timezone" },
+                            { title: "Action JSON", data: "action_json" },
+                            { title: "Recurring", data: "recurring" },
+                            { title: "Broker", data: "broker" },
+                            { title: "User Count", data: "user_count" },
+                            { title: "Action", data: null, render: (data, type, row) => `<button class="edit-btn btn btn-sm btn-secondary mt-2" data-id="${row.id}" data-admin="true">Edit</button><button class="delete-btn btn btn-sm btn-danger mt-2" data-id="${row.id}" data-mass="true">Delete All</button>` }
+                        ];
+                        if (!$.fn.DataTable.isDataTable('#admin-scheduled-table')) {
+                            $('#admin-scheduled-table').DataTable({ data: adminActions, columns: adminColumns });
+                        } else {
+                            $('#admin-scheduled-table').DataTable().clear().rows.add(adminActions).draw();
                         }
-
-                        // Formatting the time
-                        if (data.time) {
-                            let timeParts = data.time.split(':');
-                            if (timeParts.length >= 2) {
-                                // Ensure only the hour and minute are used
-                                $('#timeinput').val(timeParts[0].padStart(2, '0') + ':' + timeParts[1].padStart(2, '0'));
-                            } else {
-                                console.error('Invalid time format:', data.time);
-                            }
+                        var adminColumns = [
+                            { title: "ID", data: "id" },
+                            { title: "Date", data: "date" },
+                            { title: "Time", data: "time" },
+                            { title: "Timezone", data: "timezone" },
+                            { title: "Action JSON", data: "action_json" },
+                            { title: "Recurring", data: "recurring" },
+                            { title: "Broker", data: "broker" },
+                            { title: "Action", data: null, render: (data, type, row) => `<button class="edit-btn btn btn-sm btn-secondary mt-2" data-id="${row.id}" data-admin="true">Edit</button><button class="delete-btn btn btn-sm btn-danger mt-2" data-id="${row.id}" data-mass="true">Delete All</button>` }
+                        ];
+                        if (!$.fn.DataTable.isDataTable('#all-admin-scheduled-table')) {
+                            $('#all-admin-scheduled-table').DataTable({ data: allAdminActions, columns: adminColumns });
+                        } else {
+                            $('#all-admin-scheduled-table').DataTable().clear().rows.add(allAdminActions).draw();
                         }
-                        $('#timezone').val(data.timezone);
-                        $('#broker').val(data.broker);
-                        $('#serverTime').val(data.server_time);
-                        $('#actionJson').val(data.action_json);
-                        
-                        // Show the modal
-                        $('#editEventModal').css('display', 'block');
-
-                        // Close modal when clicking on close button
-                        $('.close').on('click', function() {
-                            $('#editEventModal').css('display', 'none');
-                            $('#editEventModal').remove();
-                        });
-
-                        // Close modal when clicking outside of it
-                        $(document).on('click', function(event) {
-                            if (!$(event.target).closest('.modal-content').length && !$(event.target).is('.edit-btn')) {
-                                $('#editEventModal').css('display', 'none');
-                                $('#editEventModal').remove();
-                            }
-                        });
-
-                        $('#editEventForm').submit(function(e) {
-                            e.preventDefault();
-                            let formData = {
-                                id: $('#eventId').val(),
-                                _token: $('input[name="_token"]').val(),
-                                date: $('#dateinput').val(),
-                                time: $('#timeinput').val(),
-                                timezone: $('#timezone').val(),
-                            };
-
-                            fetch(`/update-scheduled/${formData.id}`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify(formData)
-                            }).then(response => {
-                                if(response.ok) {
-                                    $alert('Event updated successfully');
-                                    // Close modal and refresh data
-                                    $('#editEventModal').css('display', 'none');
-                                    $('#editEventModal').remove(); // Remove the modal from the DOM
-                                    fetchAndDisplayUserData();
-                                } else {
-                                    $alert('Failed to update event');
-                                }
-                            });
-                        });
-                    });
-                    settimeout(()=>{locked=false;},200);
-                });
-
-                $('#scheduled-table').off('click', '.delete-btn').on('click', '.delete-btn', function() {
-                                    let id = $(this).data('id');
-                                    if (confirm("Are you sure you want to delete this scheduled event?")) {
-                                        fetch(`/delete-scheduled/${id}`, {
-                                            method: 'DELETE',
-                                            headers: {
-                                                'X-CSRF-TOKEN': $('input[name="_token"]').val()
-                                            }
-                                        }).then(response => {
-                                            if (response.ok) {
-                                                $alert('Event deleted successfully');
-                                                fetchAndDisplayUserData(); // Refresh the table
-                                            }
-                                        });
                     }
-                });
                 } catch (error) {
-                    console.error('Error fetching user data:'+ error);
+                    console.error('Error fetching user data:', error);
+                    $alert('Error fetching user data.');
                 }
             }
-            $(document).on('click', '.sell-button', function() {
-                        var stockId = $(this).data('id');
-                        var brokerName = $(this).data('broker');
 
-                        // Use jQuery Confirm for user confirmation
-                        $.confirm({
-                            title: 'Confirm Sell',
-                            content: `Do you want to sell ${stockId} stocks across all brokers or only from broker <strong>${brokerName}</strong>?`,
-                            buttons: {
-                                allBrokers: {
-                                    text: 'All Brokers',
-                                    action: function() {
-                                        // Select all brokers in the form
-                                        $('input[name="brokers[]"]').prop('checked', true).trigger('change');
-                                        scrollToFormAndPrefill('sell', stockId, brokerName);
-                                    }
-                                },
-                                specificBroker: {
-                                    text: `Only ${brokerName}`,
-                                    action: function() {
-                                        // Uncheck all brokers first
-                                        $('input[name="brokers[]"]').prop('checked', false);
+            $(document).ready(function() {
+                $('#scheduled-table').on('click', '.edit-btn', function() {
+                    if (locked) return;
+                    locked = true;
+                    editEvent($(this).data('id'), false);
+                });
 
-                                        // Check only the relevant broker
-                                        $(`input[name="brokers[]"][value="${brokerName}"]`).prop('checked', true).trigger('change');
-                                        scrollToFormAndPrefill('sell', stockId, brokerName);
-                                    }
-                                },
-                                cancel: {
-                                    text: 'Cancel',
-                                    action: function() {
-                                        // Do nothing
-                                    }
-                                }
+                $('#admin-scheduled-table').on('click', '.edit-btn', function() {
+                    if (locked) return;
+                    locked = true;
+                    editEvent($(this).data('id'), true);
+                });
+                $('#all-admin-scheduled-table').on('click', '.edit-btn', function() {
+                    if (locked) return;
+                    locked = true;
+                    editEvent($(this).data('id'), false);
+                });
+                function editEvent(id, isAdminEdit) {
+                    fetch(`/edit-scheduled/${id}${isAdminEdit ? '?mass=true' : ''}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const record = isAdminEdit ? data.record : data;
+                            $('#eventId').val(record.id);
+                            $('#eventDate').val(record.date);
+                            $('#eventTime').val(record.time);
+                            $('#eventTimezone').val(record.timezone);
+                            $('#eventActionJson').val(JSON.stringify(record.action_json));
+                            $('#eventRecurring').val(record.recurring);
+                            $('#eventBroker').val(record.broker);
+
+                            if (isAdminEdit && isAdmin) {
+                                $('#massEditOptions').show();
+                                $('#editAll').next('label').text(`Edit all users (${record.user_count} records)`);
+                            } else {
+                                $('#massEditOptions').hide();
                             }
-                        });
-                    });
 
+                            $('#editEventModal').modal('show');
+                        })
+                        .catch(error => {
+                            console.error('Error fetching event:', error);
+                            $alert('Failed to load event data.');
+                        })
+                        .finally(() => setTimeout(() => { locked = false; }, 200));
+                }
+
+                $('#saveEvent').on('click', function() {
+                    if (locked) return;
+                    locked = true;
+
+                    const id = $('#eventId').val();
+                    const mass = isAdmin && $('#editAll').is(':checked');
+                    const url = `/update-scheduled/${id}${mass ? '?mass=true' : ''}`;
+                    const updatedEvent = {
+                        date: $('#eventDate').val(),
+                        time: $('#eventTime').val(),
+                        timezone: $('#eventTimezone').val(),
+                        action_json: $('#eventActionJson').val(), // Kept as string since readonly
+                        recurring: $('#eventRecurring').val(),
+                        broker: $('#eventBroker').val()
+                    };
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': $('input[name="_token"]').val()
+                        },
+                        body: JSON.stringify(updatedEvent)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        $alert(data.message || 'Event(s) updated successfully');
+                        $('#editEventModal').modal('hide');
+                        fetchAndDisplayUserData();
+                    })
+                    .catch(error => {
+                        console.error('Error updating event:', error);
+                        $alert('Failed to update event(s).');
+                    })
+                    .finally(() => setTimeout(() => { locked = false; }, 200));
+                });
+
+                $('#scheduled-table').on('click', '.delete-btn', function() {
+                    if (locked) return;
+                    locked = true;
+                    deleteEvent($(this).data('id'), false);
+                });
+
+                $('#admin-scheduled-table').on('click', '.delete-btn', function() {
+                    if (locked) return;
+                    locked = true;
+                    deleteEvent($(this).data('id'), true);
+                });
+                $('#all-admin-scheduled-table').on('click', '.delete-btn', function() {
+                    if (locked) return;
+                    locked = true;
+                    deleteEvent($(this).data('id'), true);
+                });
+
+                function deleteEvent(id, isMass) {
+                    const event = isMass ? adminActions.find(s => s.id === id) : scheduled.find(s => s.id === id);
+                    const message = isMass ? `Delete this group affecting ${event.user_count} records?` : 'Delete this event?';
+                    $.confirm({
+                        title: 'Confirm Deletion',
+                        content: message,
+                        buttons: {
+                            confirm: function() {
+                                fetch(`/delete-scheduled/${id}${isMass ? '?mass=true' : ''}`, {
+                                    method: 'DELETE',
+                                    headers: { 'X-CSRF-TOKEN': $('input[name="_token"]').val() }
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    $alert(data.message || 'Event(s) deleted successfully');
+                                    fetchAndDisplayUserData();
+                                })
+                                .catch(error => {
+                                    console.error('Error deleting event:', error);
+                                    $alert('Failed to delete event(s).');
+                                })
+                                .finally(() => setTimeout(() => { locked = false; }, 200));
+                            },
+                            cancel: function() { locked = false; }
+                        }
+                    });
+                }
+
+                $('#editEventModal').on('hidden.bs.modal', function() {
+                    $('#editEventForm')[0].reset();
+                    $('#massEditOptions').hide();
+                    setTimeout(() => { locked = false; }, 200);
+                });
+
+                // Initial fetch
+                fetchAndDisplayUserData();
+            });
                     // Helper function to scroll to the form and prefill details
                     function scrollToFormAndPrefill(action, stockId, brokerName) {
                         // Prefill the form with the action and broker details
@@ -1365,7 +1362,7 @@ function updateAccountsForSelectedBrokers() {
                     }
 
 
-            fetchAndDisplayUserData()
+            // fetchAndDisplayUserData()
             document.getElementById('checkAllButton').addEventListener('click', function() {
                 // Get all checkboxes within the brokers div
                 var checkboxes = document.querySelectorAll('#brokers input[type="checkbox"]');

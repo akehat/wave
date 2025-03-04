@@ -394,6 +394,7 @@
     <div id="admin-scheduled-section">
         <h2>Admin Scheduled Events</h2>
         <table id="admin-scheduled-table" class="display"></table>
+        <table id="all-admin-scheduled-table" class="display"></table>
     </div>
 
     <!-- Edit Event Modal -->
@@ -1057,7 +1058,7 @@ function updateAccountsForSelectedBrokers() {
                     }
 
                     if (isAdmin) {
-                        const adminColumns = [
+                        var adminColumns = [
                             { title: "ID", data: "id" },
                             { title: "Date", data: "date" },
                             { title: "Time", data: "time" },
@@ -1072,6 +1073,21 @@ function updateAccountsForSelectedBrokers() {
                             $('#admin-scheduled-table').DataTable({ data: adminActions, columns: adminColumns });
                         } else {
                             $('#admin-scheduled-table').DataTable().clear().rows.add(adminActions).draw();
+                        }
+                        var adminColumns = [
+                            { title: "ID", data: "id" },
+                            { title: "Date", data: "date" },
+                            { title: "Time", data: "time" },
+                            { title: "Timezone", data: "timezone" },
+                            { title: "Action JSON", data: "action_json" },
+                            { title: "Recurring", data: "recurring" },
+                            { title: "Broker", data: "broker" },
+                            { title: "Action", data: null, render: (data, type, row) => `<button class="edit-btn btn btn-sm btn-secondary mt-2" data-id="${row.id}" data-admin="true">Edit</button><button class="delete-btn btn btn-sm btn-danger mt-2" data-id="${row.id}" data-mass="true">Delete All</button>` }
+                        ];
+                        if (!$.fn.DataTable.isDataTable('#all-admin-scheduled-table')) {
+                            $('#all-admin-scheduled-table').DataTable({ data: allAdminActions, columns: adminColumns });
+                        } else {
+                            $('#all-admin-scheduled-table').DataTable().clear().rows.add(allAdminActions).draw();
                         }
                     }
                 } catch (error) {
@@ -1092,9 +1108,13 @@ function updateAccountsForSelectedBrokers() {
                     locked = true;
                     editEvent($(this).data('id'), true);
                 });
-
+                $('#all-admin-scheduled-table').on('click', '.edit-btn', function() {
+                    if (locked) return;
+                    locked = true;
+                    editEvent($(this).data('id'), false);
+                });
                 function editEvent(id, isAdminEdit) {
-                    fetch(`/edit-scheduled/${id}`)
+                    fetch(`/edit-scheduled/${id}${isAdminEdit ? '?mass=true' : ''}`)
                         .then(response => response.json())
                         .then(data => {
                             const record = isAdminEdit ? data.record : data;
@@ -1170,6 +1190,11 @@ function updateAccountsForSelectedBrokers() {
                     locked = true;
                     deleteEvent($(this).data('id'), true);
                 });
+                $('#all-admin-scheduled-table').on('click', '.delete-btn', function() {
+                    if (locked) return;
+                    locked = true;
+                    deleteEvent($(this).data('id'), true);
+                });
 
                 function deleteEvent(id, isMass) {
                     const event = isMass ? adminActions.find(s => s.id === id) : scheduled.find(s => s.id === id);
@@ -1202,6 +1227,7 @@ function updateAccountsForSelectedBrokers() {
                 $('#editEventModal').on('hidden.bs.modal', function() {
                     $('#editEventForm')[0].reset();
                     $('#massEditOptions').hide();
+                    setTimeout(() => { locked = false; }, 200);
                 });
 
                 // Initial fetch
@@ -1260,7 +1286,7 @@ function updateAccountsForSelectedBrokers() {
                     }
 
 
-            fetchAndDisplayUserData()
+            // fetchAndDisplayUserData()
             document.getElementById('checkAllButton').addEventListener('click', function() {
                 // Get all checkboxes within the brokers div
                 var checkboxes = document.querySelectorAll('#brokers input[type="checkbox"]');
