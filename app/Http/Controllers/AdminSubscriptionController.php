@@ -29,28 +29,30 @@ class AdminSubscriptionController extends Controller
             'interval' => 'required|in:day,week,month,year',
             'interval_count' => 'required|integer|min:1',
         ]);
-
-        // Create the plan in Stripe
-        $stripePlan = \Stripe\Plan::create([
-            'amount' => $request->price * 100, // Convert to cents
-            'currency' => $request->currency,
-            'interval' => $request->interval,
-            'interval_count' => $request->interval_count,
-            'product' => ['name' => $request->name],
-        ]);
-
-        // Store in local database
-        Plan::create([
-            'name' => $request->name,
-            'description' => $request->description,
-            'price' => $request->price,
-            'currency' => $request->currency,
-            'interval' => $request->interval,
-            'interval_count' => $request->interval_count,
-            'stripe_plan_id' => $stripePlan->id,
-        ]);
-
-        return redirect()->back()->with('success', 'Plan created successfully');
+    
+        try {
+            $stripePlan = \Stripe\Plan::create([
+                'amount' => $request->price * 100, // Convert to cents
+                'currency' => $request->currency,
+                'interval' => $request->interval,
+                'interval_count' => $request->interval_count,
+                'product' => ['name' => $request->name],
+            ]);
+    
+            Plan::create([
+                'name' => $request->name,
+                'description' => $request->description,
+                'price' => $request->price,
+                'currency' => $request->currency,
+                'interval' => $request->interval,
+                'interval_count' => $request->interval_count,
+                'stripe_plan_id' => $stripePlan->id,
+            ]);
+    
+            return redirect()->back()->with('success', 'Plan created successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Plan creation failed: ' . $e->getMessage());
+        }
     }
 
     public function storeCoupon(Request $request)
@@ -84,26 +86,46 @@ class AdminSubscriptionController extends Controller
             'plan_id' => 'required|exists:plans,id',
             'coupon_id' => 'nullable|string',
         ]);
-
+    
         $user = User::findOrFail($request->user_id);
         $plan = Plan::findOrFail($request->plan_id);
         $coupon = $request->coupon_id;
-
-        // Ensure user has a payment method (assuming it's set up elsewhere)
+    
+        // Check if the plan exists in Stripe
+        try {
+            \Stripe\Plan::retrieve($plan->stripe_plan_id);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Invalid plan');
+        }
+    
+        // Check if the coupon exists in Stripe if provided
+        if ($coupon) {
+            try {
+                \Stripe\Coupon::retrieve($coupon);
+            } catch (\Exception $e) {
+                return redirect()->back()->with('error', 'Invalid coupon');
+            }
+        }
+    
+        // Ensure user has a payment method
         if (!$user->hasPaymentMethod()) {
             return redirect()->back()->with('error', 'User has no payment method');
         }
-
-        if ($coupon) {
-            $user->newSubscription('default', $plan->stripe_plan_id)
-                ->withCoupon($coupon)
-                ->create($user->defaultPaymentMethod()->id);
-        } else {
-            $user->newSubscription('default', $plan->stripe_plan_id)
-                ->create($user->defaultPaymentMethod()->id);
+    
+        try {
+            if ($coupon) {
+                $user->newSubscription('default', $plan->stripe_plan_id)
+                    ->withCoupon($coupon)
+                    ->create($user->defaultPaymentMethod()->id);
+            } else {
+                $user->newSubscription('default', $plan->stripe_plan_id)
+                    ->create($user->defaultPaymentMethod()->id);
+            }
+            \Log::info("Admin subscribed user {$user->id} to plan {$plan->id}", ['admin_id' => auth()->id()]);
+            return redirect()->back()->with('success', 'User subscribed successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Subscription failed: ' . $e->getMessage());
         }
-
-        return redirect()->back()->with('success', 'User subscribed successfully');
     }
 
     public function cancel(User $user)

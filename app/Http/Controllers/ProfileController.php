@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\UserProfile;
 use App\Models\Payment;
+use App\Models\Plan;
 use App\Models\Chat;
 use App\Models\Card;
 use App\Models\User;
@@ -16,7 +17,7 @@ use Log;
 class ProfileController extends Controller
 {
     // Show the user profile page
-    public function index()
+public function index()
 {
     $user = Auth::user();
     $profile = UserProfile::firstOrCreate(
@@ -34,13 +35,13 @@ class ProfileController extends Controller
     $chats = Chat::where('user_id', $user->id)
              ->orWhere('to_user_id', $user->id)
              ->get();
-    // Collect messages from the fetched chats
     $messages = $chats->flatMap(function ($chat) {
         return $chat->messages; // Assuming 'messages' is a relationship on the Chat model
     });
     $cards = Card::where('user_id', $user->id)->get();
+    $plans = Plan::all(); // Add this line to fetch all plans
 
-    return view('user-backend.pages.profile', compact('profile', 'payments', 'chats',"cards","user",'messages'));
+    return view('user-backend.pages.profile', compact('profile', 'payments', 'chats', 'cards', 'user', 'messages', 'plans'));
 }
 
 

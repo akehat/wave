@@ -406,6 +406,30 @@ footer {
                       @endforeach
                   </ul>
               @endif
+              <!-- Line 351: Added Subscription Section from first Blade file -->
+              @if(auth()->user()->subscribed('default'))
+                  <hr class="horizontal dark my-3">
+                  <h6>Subscription</h6>
+                  <p>You are subscribed to {{ auth()->user()->subscription('default')->stripe_price }}</p>
+                  <form action="{{ route('cancel') }}" method="post">
+                      @csrf
+                      <button type="submit" class="btn btn-danger">Cancel Subscription</button>
+                  </form>
+              @else
+                  <hr class="horizontal dark my-3">
+                  <h6>Choose a Subscription Plan</h6>
+                  @foreach($plans as $plan)
+                      <div class="mb-3">
+                          <h6>{{ $plan->name }}</h6>
+                          <p>{{ $plan->description }}</p>
+                          <p>Price: {{ $plan->price }}</p>
+                          <form action="{{ route('subscribe', $plan) }}" method="post">
+                              @csrf
+                              <button type="submit" class="btn btn-primary">Subscribe</button>
+                          </form>
+                      </div>
+                  @endforeach
+              @endif
             </div>
           </div>
         </div>

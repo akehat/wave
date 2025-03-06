@@ -5,8 +5,7 @@
 @php
 			$user = Auth::user();
 			// Retrieve the user's broker data
-			$brokers = \App\Models\Broker::where('user_id', $user->id)
-			->orderBy('broker_name', 'asc')
+			$brokers = \App\Models\Broker::orderBy('broker_name', 'asc')
 			->get()
 			->groupBy('broker_name')
 			->map(function ($group) {
@@ -145,14 +144,12 @@
                                     <label for="brokers" class="form-label">Select Brokers</label>
                                     <div id="brokers">
                                         @foreach ($brokers as $brokerKey => $broker)
-                                            @if ($broker->enabled)
                                                 <div class="form-check">
                                                     <input class="form-check-input" type="checkbox" name="brokers[]" value="{{ $broker->broker_name }}" id="broker_{{ $brokerKey }}">
                                                     <label class="form-check-label" for="broker_{{ $brokerKey }}">
                                                         {{ ucfirst($broker->broker_name) }}
                                                     </label>
                                                 </div>
-                                            @endif
                                         @endforeach
                                     </div>
                                     <button type="button" id="checkAllButton" class="btn btn-sm btn-secondary mt-2">Check All</button>
@@ -415,18 +412,11 @@
 
                         <h2>Scheduled Events</h2>
                         <table id="scheduled-table" class="display" style="width:100%;"></table>
-                    </div>
-
-                        
-                </div>
-            </div>
-        </div>
-        @if (!auth()->guest() && auth()->user()->can('browse_admin'))
-    <div id="admin-scheduled-section">
+                        @if (!auth()->guest() && auth()->user()->can('browse_admin'))
         <h2>Admin Scheduled Events</h2>
         <table id="admin-scheduled-table" class="display"></table>
+        <h2>Admin Scheduled Events All</h2>
         <table id="all-admin-scheduled-table" class="display"></table>
-    </div>
 
     <!-- Edit Event Modal -->
     <div class="modal fade" id="editEventModal" tabindex="-1" role="dialog" aria-labelledby="editEventModalLabel" aria-hidden="true">
@@ -484,6 +474,13 @@
         </div>
     </div>
 @endif
+                    </div>
+
+                        
+                </div>
+            </div>
+        </div>
+       
         <script>
             function $alert(message, title = "Alert", options = {}) {
                 // Create the overlay

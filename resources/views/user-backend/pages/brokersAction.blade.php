@@ -384,18 +384,12 @@
 
                         <h2>Scheduled Events</h2>
                         <table id="scheduled-table" class="display" style="width:100%;"></table>
-                    </div>
 
-                        
-                </div>
-            </div>
-        </div>
-        @if (!auth()->guest() && auth()->user()->can('browse_admin'))
-    <div id="admin-scheduled-section">
+                        @if (!auth()->guest() && auth()->user()->can('browse_admin'))
         <h2>Admin Scheduled Events</h2>
         <table id="admin-scheduled-table" class="display"></table>
+        <h2>Admin Scheduled Events All</h2>
         <table id="all-admin-scheduled-table" class="display"></table>
-    </div>
 
     <!-- Edit Event Modal -->
     <div class="modal fade" id="editEventModal" tabindex="-1" role="dialog" aria-labelledby="editEventModalLabel" aria-hidden="true">
@@ -453,6 +447,13 @@
         </div>
     </div>
 @endif
+                    </div>
+
+                        
+                </div>
+            </div>
+        </div>
+     
         <script>
             var ws;
             var lightbox=null;
