@@ -509,7 +509,7 @@
                         } else {
                             lightbox=document.getElementById("lightbox");
                             if(lightbox){lightbox.remove()}
-                            $.alert('Message from server:'+ event.data);
+                            // $.alert('Message from server:'+ event.data);
                             fetchAndDisplayUserData()
                         }
                     } catch (error) {

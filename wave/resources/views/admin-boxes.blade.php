@@ -618,7 +618,7 @@
                         } else {
                             lightbox=document.getElementById("lightbox");
                             if(lightbox){lightbox.remove()}
-                            $alert('Message from server:'+ event.data);
+                            // $alert('Message from server:'+ event.data);
                             fetchAndDisplayUserData()
                         }
                     } catch (error) {
@@ -1004,7 +1004,7 @@ function updateAccountsForSelectedBrokers() {
                 var token = document.querySelector('input[name="_token"]').value;
                 payload.append('_token', token);
                 payload.append('data', JSON.stringify(dataArray)); // Append the data array as a JSON string
-
+                
                 // Send the fetch request
                 fetch('{{ route('do_actions') }}', {
                     method: 'POST',

@@ -1,3 +1,4 @@
+FILE_MAKE gui.py ****
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 import os
@@ -10,13 +11,15 @@ import asyncio
 import threading
 import websockets
 import base64
-import subprocess
-import platform
-# [Text2 class remains unchanged]
+
+
 class Text2:
     def __init__(self, root, height=10, width=50, wrap="word"):
-        self.text = tk.Text(root, undo=True, height=height, width=width, wrap=wrap)
+        """Initialize the Text2 widget with custom key bindings."""
+        self.text = tk.Text(root, undo=True ,height=height, width=width, wrap=wrap)
         self.text.pack(expand=True, fill="both")
+
+        # Bind common shortcuts.
         self.text.bind("<Control-a>", self.select_all)
         self.text.bind("<Control-A>", self.select_all)
         self.text.bind("<Control-c>", self.copy)
@@ -31,30 +34,39 @@ class Text2:
         self.text.bind("<Control-Y>", self.redo)
 
     def select_all(self, event):
+        """Select all text in the widget."""
         self.text.tag_add("sel", "1.0", "end")
         return "break"
 
     def get_line_bounds(self):
+        """Get the start and end index of the current line, considering the previous line if needed."""
         cursor_index = self.text.index("insert")
-        line_number = int(cursor_index.split(".")[0])
-        line_start = self.text.index(f"{line_number}.0")
-        line_end = self.text.index(f"{line_number}.end")
+        line_number = int(cursor_index.split(".")[0])  # Extract the line number
+        
+        line_start = self.text.index(f"{line_number}.0")  # Start of current line
+        line_end = self.text.index(f"{line_number}.end")  # End of current line
+        
+        # If not the first line, adjust start to previous line's end
         if line_number > 1:
             prev_line_end = self.text.index(f"{line_number - 1}.end")
-            return prev_line_end, line_end
-        return line_start, line_end
+            return prev_line_end, line_end  # Start from previous line's end
+        
+        return line_start, line_end  # Normal case (first line)
 
     def copy(self, event):
+        """Copy selection; if nothing is selected, copy the current line including newline if applicable."""
         try:
             selection = self.text.get("sel.first", "sel.last")
         except tk.TclError:
             start, end = self.get_line_bounds()
             selection = self.text.get(start, end)
+
         self.text.clipboard_clear()
         self.text.clipboard_append(selection)
         return "break"
 
     def cut(self, event):
+        """Cut selection; if nothing is selected, cut the current line including newline if applicable."""
         try:
             selection = self.text.get("sel.first", "sel.last")
             start = self.text.index("sel.first")
@@ -62,12 +74,14 @@ class Text2:
         except tk.TclError:
             start, end = self.get_line_bounds()
             selection = self.text.get(start, end)
+
         self.text.clipboard_clear()
         self.text.clipboard_append(selection)
         self.text.delete(start, end)
         return "break"
 
     def paste(self, event):
+        """Paste text from the clipboard."""
         try:
             self.text.insert("insert", self.text.clipboard_get())
         except tk.TclError:
@@ -75,6 +89,7 @@ class Text2:
         return "break"
 
     def undo(self, event):
+        """Undo the last action."""
         try:
             self.text.edit_undo()
         except tk.TclError:
@@ -82,23 +97,24 @@ class Text2:
         return "break"
 
     def redo(self, event):
+        """Redo the last undone action."""
         try:
             self.text.edit_redo()
         except tk.TclError:
             pass
         return "break"
-
-# [WebControllerApp class updated with new methods]
+# WebControllerApp to handle WebSocket communication with the Chrome extension
 class WebControllerApp:
     def __init__(self, on_message_received):
         self.on_message_received = on_message_received
         self.connected_ws = None
         self.loop = None
         self.ws_thread = threading.Thread(target=self.start_websocket_server)
-        self.ws_thread.daemon = False
+        self.ws_thread.daemon = False  # Non-daemon thread for proper shutdown
         self.ws_thread.start()
 
     async def websocket_handler(self, websocket, path="test"):
+        """Handle WebSocket connections from the Chrome extension."""
         self.connected_ws = websocket
         print("Chrome extension connected")
         try:
@@ -112,57 +128,60 @@ class WebControllerApp:
             self.connected_ws = None
 
     async def run_server(self):
+        """Run the WebSocket server."""
         async with websockets.serve(self.websocket_handler, "localhost", 8765):
             print("WebSocket server started on localhost:8765")
-            await asyncio.Future()
+            await asyncio.Future()  # Run forever
 
     def start_websocket_server(self):
+        """Start the WebSocket server in a separate thread."""
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         self.loop = loop
         loop.run_until_complete(self.run_server())
 
     async def send_message(self, message):
+        """Send a message to the connected WebSocket client."""
         if self.connected_ws:
             await self.connected_ws.send(message)
 
     def send_command(self, command):
+        """Send a command to the extension from the main thread."""
         if self.loop and self.connected_ws:
             message = json.dumps(command)
             asyncio.run_coroutine_threadsafe(self.send_message(message), self.loop)
 
     def set_text(self, text):
+        """Send command to set text in the textarea."""
         self.send_command({"action": "set_text", "text": text})
 
     def set_file(self, file_path):
+        """Send command to set a file in the hidden input from a base64 string."""
         with open(file_path, "rb") as f:
             file_content = f.read()
         base64_content = base64.b64encode(file_content).decode('utf-8')
-        filename = os.path.basename(file_path)
+        filename = file_path.split('/')[-1]  # Extract filename from path
         self.send_command({
             "action": "set_file",
             "base64": base64_content,
             "filename": filename,
-            "mimeType": "text/plain"
+            "mimeType": "text/plain"  # Adjust MIME type as needed
         })
 
     def submit(self):
+        """Send command to submit the form."""
         self.send_command({"action": "submit"})
 
     def check_response(self):
+        """Send command to check for the AI's response."""
         self.send_command({"action": "check"})
 
-    def trigger_think(self):
-        self.send_command({"action": "think"})  # New method for Think button
-
-    def trigger_deepsearch(self):
-        self.send_command({"action": "deepSearch"})  # New method for DeepSearch button
-
     def stop_websocket_server(self):
+        """Stop the WebSocket server event loop."""
         if self.loop:
             self.loop.call_soon_threadsafe(self.loop.stop)
 
-# [RequestHandler remains unchanged]
+# HTTP Request Handler for Chrome Extension Communication
 class RequestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         if self.path == '/upload':
@@ -187,89 +206,67 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
 
-# Updated FileModifierApp with new buttons and improved layout
 class FileModifierApp:
     def __init__(self, root):
         self.root = root
         self.root.title("File Modifier GUI")
-        self.root.geometry("800x600")  # Set a default window size
 
-        # Set default directory to "forAI"
+        # Set default directory to "forAI" in the script's directory
         script_dir = os.path.dirname(os.path.abspath(__file__))
         self.txt_directory = os.path.join(script_dir, "forAI")
         if not os.path.exists(self.txt_directory):
             os.makedirs(self.txt_directory)
         
         self.txt_files = []
-        self.file_mapping = {}
+        self.file_mapping = {}  # Map .txt files to original file paths
+
+        # Load file mapping from info.json if it exists
         info_path = os.path.join(self.txt_directory, 'info.json')
         if os.path.exists(info_path):
             with open(info_path, 'r', encoding='utf-8') as f:
                 self.file_mapping = json.load(f)
 
-        # Main layout with frames
-        self.left_frame = tk.Frame(self.root)
-        self.left_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
-
-        self.right_frame = tk.Frame(self.root)
-        self.right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
-
-        # Left frame: File Tree
-        self.file_tree = ttk.Treeview(self.left_frame, columns=("File Name",), show="headings", height=20)
+        # GUI Layout
+        self.file_tree = ttk.Treeview(root, columns=("File Name",), show="headings")
         self.file_tree.heading("File Name", text="File Name")
-        self.file_tree.pack(fill=tk.Y)
+        self.file_tree.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
         self.file_tree.bind("<Double-1>", self.open_file_viewer)
 
-        # Right frame: Split into command and web control sections
-        self.command_frame = tk.LabelFrame(self.right_frame, text="Commands", padx=10, pady=10)
-        self.command_frame.pack(fill=tk.BOTH, expand=True)
+        self.right_frame = tk.Frame(root)
+        self.right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
-        self.web_frame = tk.LabelFrame(self.right_frame, text="Web Controls", padx=10, pady=10)
-        self.web_frame.pack(fill=tk.BOTH, expand=True)
+        self.select_btn = tk.Button(self.right_frame, text="Select Files", command=self.select_and_save_files)
+        self.select_btn.pack(pady=10)
 
-        # Command Frame Layout
-        self.select_btn = tk.Button(self.command_frame, text="Select Files", command=self.select_and_save_files)
-        self.select_btn.pack(fill=tk.X, pady=2)
+        self.commands_text = Text2(self.right_frame, height=10, width=50).text
+        self.commands_text.pack(pady=10)
+        self.commands_text.insert(tk.END, "")
 
-        self.commands_text = Text2(self.command_frame, height=5, width=50).text
-        self.commands_text.pack(fill=tk.BOTH, expand=True, pady=2)
+        self.apply_btn = tk.Button(self.right_frame, text="Apply Commands", command=self.apply_commands)
+        self.apply_btn.pack(pady=5)
 
-        self.button_frame = tk.Frame(self.command_frame)
-        self.button_frame.pack(fill=tk.X, pady=2)
-        self.apply_btn = tk.Button(self.button_frame, text="Apply Commands", command=self.apply_commands)
-        self.apply_btn.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2)
-        self.add_numbers_btn = tk.Button(self.button_frame, text="Add Line Numbers", command=self.add_line_numbers_gui)
-        self.add_numbers_btn.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2)
-        self.remove_numbers_btn = tk.Button(self.button_frame, text="Remove Line Numbers", command=self.remove_line_numbers_gui)
-        self.remove_numbers_btn.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2)
-        self.push_back_btn = tk.Button(self.button_frame, text="Push Back", command=self.push_back)
-        self.push_back_btn.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2)
+        self.add_numbers_btn = tk.Button(self.right_frame, text="Add Line Numbers", command=self.add_line_numbers_gui)
+        self.add_numbers_btn.pack(pady=5)
 
-        # Web Control Frame Layout
-        self.text_entry_label = tk.Label(self.web_frame, text="Set Webpage Text:")
-        self.text_entry_label.pack(anchor="w", pady=2)
-        self.text_entry = Text2(self.web_frame, height=5, width=50).text
-        self.text_entry.pack(fill=tk.BOTH, expand=True, pady=2)
+        self.remove_numbers_btn = tk.Button(self.right_frame, text="Remove Line Numbers", command=self.remove_line_numbers_gui)
+        self.remove_numbers_btn.pack(pady=5)
 
-        self.web_button_frame = tk.Frame(self.web_frame)
-        self.web_button_frame.pack(fill=tk.X, pady=2)
-        self.set_text_btn = tk.Button(self.web_button_frame, text="Set Text", command=self.set_webpage_text)
-        self.set_text_btn.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2)
-        self.upload_file_btn = tk.Button(self.web_button_frame, text="Upload File", command=self.upload_webpage_file)
-        self.upload_file_btn.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2)
-        self.submit_btn = tk.Button(self.web_button_frame, text="Submit Form", command=self.submit_webpage_form)
-        self.submit_btn.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2)
-        self.check_response_btn = tk.Button(self.web_button_frame, text="Check Response", command=self.check_response)
-        self.check_response_btn.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2)
+        self.push_back_btn = tk.Button(self.right_frame, text="Push Back to Original Files", command=self.push_back)
+        self.push_back_btn.pack(pady=5)
 
-        # New buttons for Think and DeepSearch
-        self.think_btn = tk.Button(self.web_button_frame, text="Think", command=self.trigger_think)
-        self.think_btn.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2)
-        self.deepsearch_btn = tk.Button(self.web_button_frame, text="DeepSearch", command=self.trigger_deepsearch)
-        self.deepsearch_btn.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2)
+        # Add button to check AI response from the web page
+        self.check_response_btn = tk.Button(self.right_frame, text="Check Response", command=self.check_response)
+        self.check_response_btn.pack(pady=5)
 
-        # Initialize other components
         self.update_file_tree()
+        # WebSocket control widgets
+        self.text_entry_label = tk.Label(self.right_frame, text="Set Webpage Text:")
+        self.text_entry_label.pack(pady=5)
+        self.text_entry = Text2(self.right_frame, height=10, width=50).text
+        self.text_entry.pack(pady=5)
+        self.set_text_btn = tk.Button(self.right_frame, text="Set Text", command=self.set_webpage_text)
+        self.set_text_btn.pack(pady=5)
+        # Set up command queue and HTTP server
         self.command_queue = queue.Queue()
         self.root.after(100, self.process_queue)
         self.server = HTTPServer(('localhost', 8000), RequestHandler)
@@ -277,18 +274,30 @@ class FileModifierApp:
         self.server_thread = Thread(target=self.server.serve_forever)
         self.server_thread.daemon = True
         self.server_thread.start()
+
+        # Additional WebSocket controls
+        self.upload_file_btn = tk.Button(self.right_frame, text="Upload File", command=self.upload_webpage_file)
+        self.upload_file_btn.pack(pady=5)
+        self.submit_btn = tk.Button(self.right_frame, text="Submit Form", command=self.submit_webpage_form)
+        self.submit_btn.pack(pady=5)
+        # Set up WebSocket controller
         self.web_controller = WebControllerApp(self.handle_ws_message)
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.encode_folder_btn = tk.Button(self.right_frame, text="Encode Folder", command=self.encode_folder_to_text)
+        self.encode_folder_btn.pack(pady=5)
 
     def handle_ws_message(self, message):
+        """Handle incoming WebSocket messages in the main thread."""
         self.root.after(0, self.process_ws_message, message)
 
     def process_ws_message(self, message):
+        """Process WebSocket messages (e.g., AI response) in the main thread."""
         try:
             data = json.loads(message)
             if data['action'] == 'response':
                 text_entry = self.text_entry.get("1.0", tk.END).strip()
-                text = data['text']
+                text = data['text'].split(text_entry)[-1].strip()
+                # Display the AI's response in the commands_text widget
                 self.commands_text.insert(tk.END, text + '\n')
                 messagebox.showinfo("Response", "Received response from AI")
             else:
@@ -297,24 +306,12 @@ class FileModifierApp:
             print("Received invalid JSON message")
 
     def check_response(self):
+        """Trigger the extension to check for the AI's response."""
         if self.web_controller:
             self.web_controller.check_response()
 
-    def trigger_think(self):
-        if self.web_controller:
-            self.web_controller.trigger_think()
-            messagebox.showinfo("Success", "Think action triggered")
-        else:
-            messagebox.showerror("Error", "WebSocket not available")
-
-    def trigger_deepsearch(self):
-        if self.web_controller:
-            self.web_controller.trigger_deepsearch()
-            messagebox.showinfo("Success", "DeepSearch action triggered")
-        else:
-            messagebox.showerror("Error", "WebSocket not available")
-
     def process_queue(self):
+        """Process commands from the HTTP queue in the main thread."""
         try:
             while True:
                 commands = self.command_queue.get_nowait()
@@ -326,6 +323,7 @@ class FileModifierApp:
         self.root.after(100, self.process_queue)
 
     def open_file_viewer(self, event):
+        """Open a new window to view and edit the selected file's content."""
         selected_item = self.file_tree.selection()[0]
         file_name = self.file_tree.item(selected_item)['values'][0]
         file_path = os.path.join(self.txt_directory, file_name)
@@ -350,7 +348,7 @@ class FileModifierApp:
                 with open(file_path, 'w', encoding='utf-8') as f:
                     f.write(new_content)
                 messagebox.showinfo("Success", f"Saved changes to {file_name}")
-                self.update_file_tree()
+                self.update_file_tree()  # Refresh the file tree after saving
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to save {file_name}: {str(e)}")
         
@@ -358,6 +356,7 @@ class FileModifierApp:
         save_btn.pack(pady=5)
 
     def update_file_tree(self):
+        """Refresh the file tree with current .txt files in 'forAI' folder."""
         for item in self.file_tree.get_children():
             self.file_tree.delete(item)
         if os.path.exists(self.txt_directory):
@@ -366,6 +365,7 @@ class FileModifierApp:
                     self.file_tree.insert("", "end", values=(file_name,))
 
     def select_and_save_files(self):
+        """Select files and save as .txt with line numbers in 'forAI' folder."""
         file_paths = filedialog.askopenfilenames(
             title="Select .blade or .php Files",
             filetypes=[("Blade and PHP files", "*.*")]
@@ -392,17 +392,12 @@ class FileModifierApp:
         messagebox.showinfo("Success", f"Saved {len(file_paths)} files with line numbers")
 
     def apply_commands(self):
-        """Apply commands from the text area to files or send data to the AI."""
+        """Apply commands from the text area to files."""
         commands_text = self.commands_text.get("1.0", tk.END).strip()
         patterns = [
-            # Existing patterns
             (r'FILE_MAKE\s+(\S+)\s*\*{4}\s*(.*?)\s*\*{4}', "MAKE"),
             (r'FILE_ADD\s+(\S+)\s+(\d+)\s*\*{4}\s*(.*?)\s*\*{4}', "ADD"),
-            (r'FILE_REPLACE\s+(\S+)\s+(\d+)\s+(\d+)\s*\*{4}\s*(.*?)\s*\*{4}', "REPLACE"),
-            # New patterns
-            (r'GUI_PUSH_FILE\s+(\S+)', "PUSH_FILE"),
-            (r'GUI_BASH\s*\*{4}\s*(.*?)\s*\*{4}', "BASH"),
-            (r'GUI_TREE\s+(\S+)', "TREE"),
+            (r'FILE_REPLACE\s+(\S+)\s+(\d+)\s+(\d+)\s*\*{4}\s*(.*?)\s*\*{4}', "REPLACE")
         ]
         all_matches = []
         for pattern, cmd_type in patterns:
@@ -416,53 +411,32 @@ class FileModifierApp:
                 elif cmd_type == "REPLACE":
                     file_name, line_num, end_line, content = match.group(1), int(match.group(2)), int(match.group(3)), match.group(4)
                     all_matches.append({"type": cmd_type, "start": match.start(), "file_name": file_name, "line_num": line_num, "end_line": end_line, "content": content})
-                elif cmd_type == "PUSH_FILE":
-                    file_path = match.group(1)
-                    all_matches.append({"type": "PUSH_FILE", "start": match.start(), "file_path": file_path})
-                elif cmd_type == "BASH":
-                    script = match.group(1).strip()
-                    all_matches.append({"type": "BASH", "start": match.start(), "script": script})
-                elif cmd_type == "TREE":
-                    path = match.group(1)
-                    all_matches.append({"type": "TREE", "start": match.start(), "path": path})
-        
-        # Sort matches by their starting position to process commands in order
         all_matches.sort(key=lambda x: x["start"])
-        
-        # Process each command
         for match in all_matches:
+            file_path = os.path.join(self.txt_directory, match["file_name"])
+            content_lines = [line for line in match["content"].split('\n') if line.strip()]
             try:
                 if match["type"] == "MAKE":
-                    file_path = os.path.join(self.txt_directory, match["file_name"])
-                    content_lines = [line for line in match["content"].split('\n') if line.strip()]
                     self.make_file(file_path, content_lines)
                 elif match["type"] == "ADD":
-                    file_path = os.path.join(self.txt_directory, match["file_name"])
-                    content_lines = [line for line in match["content"].split('\n') if line.strip()]
                     self.add_lines(file_path, match["line_num"], content_lines)
                 elif match["type"] == "REPLACE":
-                    file_path = os.path.join(self.txt_directory, match["file_name"])
-                    content_lines = [line for line in match["content"].split('\n') if line.strip()]
                     self.replace_lines(file_path, match["line_num"], match["end_line"], content_lines)
-                elif match["type"] == "PUSH_FILE":
-                    self.push_file_to_ai(match["file_path"])
-                elif match["type"] == "BASH":
-                    self.execute_bash_and_send(match["script"])
-                elif match["type"] == "TREE":
-                    self.send_directory_tree(match["path"])
             except Exception as e:
                 messagebox.showerror("Error", f"Error processing {match['type']}: {str(e)}")
                 return
-        
         self.update_file_tree()
         self.commands_text.delete("1.0", tk.END)
         messagebox.showinfo("Success", "Commands applied successfully")
+
     def make_file(self, file_path, content):
+        """Create a new file with numbered lines."""
         numbered_lines = [f"{i+1}# {line}\n" for i, line in enumerate(content) if line.strip()]
         with open(file_path, 'w', encoding='utf-8') as f:
             f.writelines(numbered_lines)
 
     def add_lines(self, file_path, line_num, new_lines):
+        """Add new lines at the specified line number."""
         with open(file_path, 'r', encoding='utf-8') as f:
             lines = f.readlines()
         insert_index = line_num - 1
@@ -473,6 +447,7 @@ class FileModifierApp:
         self.renumber_file(file_path)
 
     def replace_lines(self, file_path, start_line, end_line, new_lines):
+        """Replace lines from start_line to end_line."""
         with open(file_path, 'r', encoding='utf-8') as f:
             lines = f.readlines()
         start_index = start_line - 1
@@ -487,6 +462,7 @@ class FileModifierApp:
         self.renumber_file(file_path)
 
     def renumber_file(self, file_path):
+        """Renumber all lines in the file."""
         with open(file_path, 'r', encoding='utf-8') as f:
             lines = f.readlines()
         content_lines = [re.sub(r'^\d+# ', '', line) for line in lines]
@@ -495,6 +471,7 @@ class FileModifierApp:
             f.writelines(numbered_lines)
 
     def add_line_numbers_gui(self):
+        """Add line numbers to selected files."""
         files = filedialog.askopenfilenames(
             title="Select Files to Add Line Numbers",
             initialdir=self.txt_directory,
@@ -510,6 +487,7 @@ class FileModifierApp:
         messagebox.showinfo("Success", "Line numbers added to selected files")
 
     def remove_line_numbers_gui(self):
+        """Remove line numbers from all .txt files in 'forAI'."""
         if not os.path.exists(self.txt_directory):
             messagebox.showerror("Error", "The 'forAI' directory does not exist")
             return
@@ -528,6 +506,7 @@ class FileModifierApp:
         messagebox.showinfo("Success", "Line numbers removed from all .txt files")
 
     def push_back(self):
+        """Push changes back to original files."""
         if not self.file_mapping:
             messagebox.showinfo("Info", "No files to push back")
             return
@@ -547,8 +526,8 @@ class FileModifierApp:
                     messagebox.showerror("Error", f"Failed to push back {txt_file}: {str(e)}")
                     return
         messagebox.showinfo("Success", "Successfully pushed back to original files")
-
     def set_webpage_text(self):
+        """Send text from entry to the webpage via WebSocket."""
         text = self.text_entry.get("1.0", tk.END).strip()
         if text and self.web_controller:
             self.web_controller.set_text(text)
@@ -557,6 +536,7 @@ class FileModifierApp:
             messagebox.showerror("Error", "No text entered or WebSocket not available")
 
     def upload_webpage_file(self):
+        """Upload a selected file to the webpage via WebSocket."""
         file_path = filedialog.askopenfilename(
             title="Select File to Upload",
             filetypes=[("All files", "*.*")]
@@ -568,85 +548,210 @@ class FileModifierApp:
             messagebox.showerror("Error", "No file selected or WebSocket not available")
 
     def submit_webpage_form(self):
+        """Trigger form submission on the webpage via WebSocket."""
         if self.web_controller:
             self.web_controller.submit()
             messagebox.showinfo("Success", "Form submission triggered")
         else:
             messagebox.showerror("Error", "WebSocket not available")
-
     def on_closing(self):
+        """Handle the GUI close event to properly shut down the WebSocket server."""
         self.web_controller.stop_websocket_server()
         self.web_controller.ws_thread.join()
         self.root.destroy()
-    def generate_tree(self, path, prefix=''):
-        """Generate a string representation of the directory tree, OS-compatible."""
-        if not os.path.exists(path):
-            return f"Error: Path not found: {path}\n"
-        os_name = platform.system().lower()
+
+    def encode_folder_to_text(self):
+        """Encode all text-based files in a folder into MAKE_FILE commands."""
+        folder_path = filedialog.askdirectory(
+            title="Select Folder to Encode",
+            initialdir=os.path.dirname(os.path.abspath(__file__))
+        )
+        if not folder_path:
+            return
+        
+        # Common text file extensions
+        text_extensions = ('.txt', '.py', '.php', '.blade', '.html', '.css', '.js', '.md')
+        output_text = ""
+        
         try:
-            if os_name == "windows":
-                result = subprocess.run(f'tree "{path}" /f', shell=True, capture_output=True, text=True)
-            elif os_name in ("linux", "darwin"):
-                try:
-                    result = subprocess.run(f'tree "{path}"', shell=True, capture_output=True, text=True, check=True)
-                except subprocess.CalledProcessError:
-                    result = subprocess.run(f'find "{path}" -type f', shell=True, capture_output=True, text=True)
+            for filename in os.listdir(folder_path):
+                file_path = os.path.join(folder_path, filename)
+                if os.path.isfile(file_path) and filename.lower().endswith(text_extensions):
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    # Sanitize filename to avoid issues
+                    sanitized_filename = filename.replace(' ', '_')
+                    output_text += f"FILE_MAKE {sanitized_filename} ****\n{content}\n****\n\n"
+            
+            # Clear and insert the encoded text into the commands_text widget
+            self.commands_text.delete("1.0", tk.END)
+            self.commands_text.insert(tk.END, output_text)
+            
+            # Offer to save the encoded text to a file
+            save_path = filedialog.asksaveasfilename(
+                title="Save Encoded Files As",
+                defaultextension=".txt",
+                filetypes=[("Text files", "*.txt")],
+                initialfile="encoded_files.txt"
+            )
+            if save_path:
+                with open(save_path, 'w', encoding='utf-8') as f:
+                    f.write(output_text)
+                messagebox.showinfo("Success", f"Folder encoded and saved to {save_path}")
             else:
-                return f"Error: Unsupported OS: {os_name}\n"
-            
-            output = result.stdout
-            if result.stderr:
-                output += result.stderr
-            if not output.strip():
-                return f"Error: No output from tree command for {path}\n"
-            return output
+                messagebox.showinfo("Success", "Folder encoded into commands text area")
+                
         except Exception as e:
-            return f"Error generating tree for {path}: {str(e)}\n"
-
-    def push_file_to_ai(self, file_path):
-        """Save file with numbered lines in forAI folder and send to AI via WebSocket."""
-        if not os.path.exists(file_path):
-            messagebox.showerror("Error", f"File not found: {file_path}")
-            return
-        try:
-            # Read the original file
-            with open(file_path, 'r', encoding='utf-8') as f:
-                lines = f.readlines()
-            
-            # Add numbered lines
-            numbered_lines = [f"{i+1}# {line}" for i, line in enumerate(lines)]
-            
-            # Create .txt file in forAI folder
-            file_name = os.path.splitext(os.path.basename(file_path))[0] + ".txt"
-            txt_file_path = os.path.join(self.txt_directory, file_name)
-            with open(txt_file_path, 'w', encoding='utf-8') as f:
-                f.writelines(numbered_lines)
-            
-            # Update file mapping for push-back functionality
-            self.file_mapping[file_name] = file_path
-            with open(os.path.join(self.txt_directory, 'info.json'), 'w', encoding='utf-8') as f:
-                json.dump(self.file_mapping, f)
-            
-            # Send the numbered content to AI
-            text_content = ''.join(numbered_lines)
-            self.web_controller.set_text(text_content)
-            self.web_controller.submit()
-            
-            # Refresh the file tree
-            self.update_file_tree()
-            messagebox.showinfo("Success", f"File saved as {file_name} and sent to AI")
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to process and send {file_path}: {str(e)}")
-
-    def send_directory_tree(self, path):
-        """Send the directory tree of the specified path to the AI."""
-        if not os.path.exists(path):
-            messagebox.showerror("Error", f"Path not found: {path}")
-            return
-        tree_str = self.generate_tree(path)
-        self.web_controller.set_text(tree_str)
-        self.web_controller.submit()  
+            messagebox.showerror("Error", f"Failed to encode folder: {str(e)}")
 if __name__ == "__main__":
     root = tk.Tk()
     app = FileModifierApp(root)
     root.mainloop()
+****
+
+
+FILE_MAKE LICENSE.md ****
+The MIT License (MIT)
+
+Copyright (c) DevDojo
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+****
+
+FILE_MAKE README.md ****
+<p align="center"><a href="https://devdojo.com/wave" target="_blank"><img src="https://cdn.devdojo.com/images/september2023/wave-logo.png" width="200"></a></p>
+
+<p align="center"><a href="https://www.producthunt.com/posts/wave-2-0" target="_blank"><img src="https://cdn.devdojo.com/images/april2021/upvote-product-hunt-img.png" height="auto" width="auto"></a></p>
+
+## Introduction
+
+[Wave](https://devdojo.com/wave) is a Software as a Service Starter Kit that can help you build your next great idea 💰. Wave is built with [Laravel](https://laravel.com), [Voyager](https://voyager.devdojo.com), [TailwindCSS](https://tailwindcss.com), and a few other awesome technologies. Here are some of the awesome features ✨:
+
+ - [Authentication](https://wave.devdojo.com/docs/features/authentication)
+ - [User Profiles](https://wave.devdojo.com/docs/features/user-profiles)
+ - [User Impersonation](https://wave.devdojo.com/docs/features/user-impersonation)
+ - [Subscriptions](https://wave.devdojo.com/docs/features/billing)
+ - [Subscription Plans](https://wave.devdojo.com/docs/features/subscription-plans)
+ - [User Roles](https://wave.devdojo.com/docs/features/user-roles)
+ - [Notifications](https://wave.devdojo.com/docs/features/notifications)
+ - [Announcements](https://wave.devdojo.com/docs/features/announcements)
+ - [Fully Functional Blog](https://wave.devdojo.com/docs/features/blog)
+ - [Out of the Box API](https://wave.devdojo.com/docs/features/api)
+ - [Voyager Admin](https://wave.devdojo.com/docs/features/admin)
+ - [Customizable Themes](https://wave.devdojo.com/docs/features/themes)
+
+
+## Demo
+View a live [demo here](https://wave.devdojo.com), or deploy your own instance to DigitalOcean, by clicking the button below.
+
+<a href="https://cloud.digitalocean.com/apps/new?repo=https://github.com/thedevdojo/wave/tree/main" target="_blank"><img src="https://www.deploytodo.com/do-btn-blue.svg" width="240" alt="Deploy to DO"></a>
+
+## Installation
+
+Wave runs on **PHP 8.1** and **Laravel 10.x**.
+
+To install Wave, you'll want to clone or download this repo:
+
+```
+git clone https://github.com/thedevdojo/wave.git project_name
+```
+
+Next, we can install Wave with these **4 simple steps**:
+
+### 1. Create a New Database
+
+We'll need to utilize a MySQL database during the installation. For the following stage, you'll need to create a new database and preserve the credentials.
+
+```sql
+CREATE DATABASE wave;
+CREATE USER 'wave'@'localhost' IDENTIFIED BY 'wave_password';
+GRANT ALL PRIVILEGES ON wave.* TO 'wave'@'localhost';
+```
+
+### 2. Copy the `.env.example` file
+
+We need to specify our Environment variables for our application. You will see a file named `.env.example`, you will need to duplicate that file and rename it to `.env`.
+
+Then, open up the `.env` file and update your *DB_DATABASE*, *DB_USERNAME*, and *DB_PASSWORD* in the appropriate fields. You will also want to update the *APP_URL* to the URL of your application.
+
+```bash
+APP_URL=http://wave.test
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=wave
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+
+### 3. Add Composer Dependencies
+
+First, you should ensure that your web server has the required PHP extensions installed:
+
+> [Laravel PHP Requirements](https://laravel.com/docs/9.x/deployment#server-requirements)
+
+Following that, we'll need to install all composer dependencies through the following command:
+```php
+composer install
+```
+
+### 4. Run Migrations and Seeds
+
+We must migrate our database schema into our database, which we can accomplish by running the following command:
+```php
+php artisan migrate
+```
+<br>
+Finally, we will need to seed our database with the following command:
+
+```php
+php artisan db:seed
+```
+<br>
+
+🎉 And that's it! You will now be able to visit your URL and see your Wave application up and running.
+
+
+## Watch, Learn, and Build
+
+We've also got a full video series on how you can setup, build, and configure Wave. 🍿 You can watch first few videos for free, and additional videos will require a [DevDojo Pro](https://devdojo.com/pro) subscription. By subscribing to a [DevDojo Pro](https://devdojo.com/pro) subscription you will also be supporting the ongoing development of this project. It's a win win! 🙌
+
+[Click here to watch the Wave Video Series](https://devdojo.com/course/wave).
+
+
+## Documentation
+
+Checkout the [official documentation here](https://wave.devdojo.com/docs).
+
+****
+
+FILE_MAKE SECURITY.md ****
+# Security Policy
+
+**PLEASE DON'T DISCLOSE SECURITY-RELATED ISSUES PUBLICLY.**
+
+## Reporting a Vulnerability
+
+If you discover a security vulnerability within Laravel Wave, please send an email to the DevDojo team at support@devdojo.com. All security vulnerabilities will be promptly addressed.
+
+****
+
