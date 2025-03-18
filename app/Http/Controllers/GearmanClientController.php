@@ -89,6 +89,7 @@ class GearmanClientController extends Controller
                 'TORNADO' => $tornado_username && $tornado_password ? [$tornado_username, $tornado_password] : null,
                 'DSPAC' => $dspac_username && $dspac_password ? [$dspac_username, $dspac_password] : null,
                 'BBAE' => $bbae_username && $bbae_password ? [$bbae_username, $bbae_password] : null,
+                'SAYDONEUPDATE' => 'true',
             ];
 
         }

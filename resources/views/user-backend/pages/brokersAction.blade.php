@@ -633,14 +633,14 @@
                 try {
                     // Prepare data for all actions for all selected brokers
                     const dataArray = selectedBrokers.flatMap(broker => {
-                        return ['accounts', 'holdings'].map(action => {
+                        return ['holdings', 'accounts'].map(action => {
                             return {
                                 broker: broker,
                                 action: action
                             };
                         });
                     });
-
+                    dataArray.unshift({ broker: "saydoneupdate", action: "done" });
                     // Prepare final data to send
                     const payload = new FormData();
                     payload.append('_token', document.querySelector('input[name="_token"]').value);
